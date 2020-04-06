@@ -1,6 +1,11 @@
 // Matrix lib
 #pragma once
-#include <header.hpp>
+#include <cstdlib>
+#include <iostream>
+#include <cmath>
+#include <ctime>
+#include <json.hpp>
+using namespace std;
 typedef float (* vFunctionCall)(float args);
 
 class Matrix {
