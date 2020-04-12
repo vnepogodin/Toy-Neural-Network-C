@@ -1,8 +1,6 @@
 // Matrix lib
 #pragma once
 #include <cstdlib>
-#include <iostream>
-#include <cmath>
 #include <ctime>
 #include <json.hpp>
 using namespace std;
