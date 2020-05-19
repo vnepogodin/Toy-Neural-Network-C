@@ -22,14 +22,14 @@
  */
 #define STMT_END while(0)
 
-#define allocSpace(matrix) STMT_START{							\
-    (matrix)->data = (float **)malloc((matrix)->rows);			\
-																\
-    register int i = 0;											\
-    while (i < (matrix)->rows) {								\
+#define allocSpace(matrix) STMT_START{				\
+    (matrix)->data = (float **)malloc((matrix)->rows);		\
+								\
+    register int i = 0;						\
+    while (i < (matrix)->rows) {				\
     	(matrix)->data[i] = (float *)malloc((matrix)->columns); \
-	    i++;													\
-    }															\
+	    i++;						\
+    }								\
 }STMT_END
 
 /**
