@@ -1,8 +1,8 @@
 /* Matrix lib */
 
-#include <stdio.h> // printf
-#include <stdlib.h> // malloc
-#include <time.h> // rand
+#include <stdio.h> /* printf */
+#include <stdlib.h> /* malloc */
+#include <time.h> /* rand, srand */
 
 #include "matrix.h"
 
@@ -22,12 +22,12 @@
  */
 #define STMT_END while(0)
 
-#define allocSpace(matrix) STMT_START{                   		\
+#define allocSpace(matrix) STMT_START{							\
     (matrix)->data = (float **)malloc((matrix)->rows);			\
 																\
     register int i = 0;											\
     while (i < (matrix)->rows) {								\
-    	(matrix)->data[i] = (float *)malloc((matrix)->columns);	\
+    	(matrix)->data[i] = (float *)malloc((matrix)->columns); \
 	    i++;													\
     }															\
 }STMT_END
@@ -45,19 +45,18 @@
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
-    Matrix *m = malloc(sizeof(Matrix));
+	register Matrix *m = malloc(sizeof(Matrix));
     
     m->rows = rows;
     m->columns = columns;
 
     allocSpace(m);
-
-    register float *ptr = &m->data[0][0];
-
-	register int i	 = 0,
-				 end = m->rows * m->columns;
+	
+	register float *ptr = &m->data[0][0];
+    
+    register int i = 0, end = m->rows * m->columns;
     while (i < end) {
-        *ptr++ = 0;
+		*ptr++ = 0;
         i++;
     }
 
@@ -79,14 +78,12 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new(void) {
-    Matrix *m = malloc(sizeof(Matrix));
+    register Matrix *m = malloc(sizeof(Matrix));
 
     m->rows = 1;
     m->columns = 1;
 
     allocSpace(m);
-
-    m->data[0][0] = 0;
 
     m->len = 1;
 
@@ -109,14 +106,14 @@ Matrix* matrix_new(void) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_matrix(const Matrix *m) {
-    Matrix *out = malloc(sizeof(Matrix));
+    register Matrix *t = malloc(sizeof(Matrix));
     
-    out->rows = m->rows;
-    out->columns = m->columns;
+    t->rows = m->rows;
+    t->columns = m->columns;
     
-    allocSpace(out);
+    allocSpace(t);
 
-    register float *ptr     = &out->data[0][0],
+    register float *ptr     = &t->data[0][0],
 				   *ref_ptr = &m->data[0][0];
     
     register int i = 0;
@@ -125,13 +122,13 @@ Matrix* matrix_new_with_matrix(const Matrix *m) {
         i++;
     }
 
-    out->len = i;
+    t->len = i;
 
-    return out;
+    return t;
 }
 
-// Deconstructor
-void matrix_free(Matrix *m)  {
+/* Deconstructor */
+void matrix_free(register Matrix *m)  {
     free(m->data);
     m->data = NULL;
 }
@@ -151,8 +148,9 @@ void matrix_free(Matrix *m)  {
  * and with a reference data
  *
  */
-void matrix_equal(Matrix *a, const Matrix *b) {
+void matrix_equal(register Matrix *a, const Matrix *b) {
     matrix_free(a);
+	
 	a->rows = b->rows;
     a->columns = b->columns;
         
@@ -185,7 +183,7 @@ void matrix_equal(Matrix *a, const Matrix *b) {
  * Subtract data of a #Matrix
  *
  */
-void matrix_subtract(Matrix *a, const Matrix *b) {
+void matrix_subtract(register Matrix *a, const Matrix *b) {
     register float *ptr		= &a->data[0][0],
 				   *ref_ptr = &b->data[0][0];
 	
@@ -222,12 +220,12 @@ void matrix_subtract(Matrix *a, const Matrix *b) {
  * or multiply data of a #Matrix
  *
  */
-void matrix_multiply(Matrix *a, const Matrix *b) {
+void matrix_multiply(register Matrix *a, const Matrix *b) {
     if (a->columns <= b->rows) {
         a->rows = b->rows;
         a->columns = b->columns;
-        
-        allocSpace(a);
+
+		allocSpace(a);
 
     	register int i = 0;
     	while (i < a->rows) {
@@ -268,7 +266,7 @@ void matrix_multiply(Matrix *a, const Matrix *b) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_fromArray(const float* arr) {
-    Matrix *t = matrix_new_with_args(2, 1);
+    register Matrix *t = matrix_new_with_args(2, 1);
 
 	register float *ptr = &t->data[0][0];
 
@@ -296,10 +294,12 @@ Matrix* matrix_fromArray(const float* arr) {
  * Returns: the new const float array
  */
 const float* matrix_toArray(const Matrix *m) {
-	float *arr = (float *)malloc(2); // Array[2]
+	/* Array[2] */
+	register float* arr = (float *)malloc(2);
 	
-	register float *ptr = &m->data[0][0]; // pointer to Matrix.data in CPU register
-    
+	/* pointer to Matrix.data in CPU register */
+	register float *ptr = &m->data[0][0];
+
     register int i = 0;
     while (i < m->len) {
 		arr[i] = *ptr++;
@@ -322,10 +322,10 @@ const float* matrix_toArray(const Matrix *m) {
  * Randomize @m data from 0 to 1
  *
  */
-void matrix_randomize(Matrix *m) {
+void matrix_randomize(register Matrix *m) {
     register float *ptr = &m->data[0][0];
     
-    srand(time(0));
+    srand(time(NULL));
 
 	register int i = 0;
     while (i < m->len) {
@@ -350,7 +350,7 @@ void matrix_randomize(Matrix *m) {
  * add @b data to @a data, by @a len
  *
  */
-void matrix_add_matrix(Matrix *a, const Matrix *b) {
+void matrix_add_matrix(register Matrix *a, const Matrix *b) {
     if(b->rows > a->rows) {
 		register float *ptr		= &a->data[0][0],
 					   *ref_ptr = &b->data[0][0];
@@ -386,7 +386,7 @@ void matrix_add_matrix(Matrix *a, const Matrix *b) {
  * Add @n to @a data
  *
  */
-void matrix_add_float(Matrix *a, const float n) {
+void matrix_add_float(register Matrix *a, const float n) {
     register float *ptr = &a->data[0][0];
     
 	register int i = 0;
@@ -397,7 +397,7 @@ void matrix_add_float(Matrix *a, const float n) {
 }
 
 /**
- * matrix_multiply_float:
+ * matrix_multiply_scalar:
  * @m: a #Matrix.
  * @n: a reference const float num.
  * @example:
@@ -410,8 +410,8 @@ void matrix_add_float(Matrix *a, const float n) {
  * Add @n to @a data
  *
  */
-void matrix_multiply_scalar(Matrix *m, const float n) {
-    // Scalar product
+void matrix_multiply_scalar(register Matrix *m, const float n) {
+    /* Scalar product */
     register float *ptr = &m->data[0][0];
 
 	register int i = 0;
@@ -424,7 +424,7 @@ void matrix_multiply_scalar(Matrix *m, const float n) {
 /**
  * matrix_map:
  * @m: a #Matrix.
- * @func: a some function.
+ * @func: a float function.
  * @example:
  * 
  * float func(float num) {
@@ -434,8 +434,7 @@ void matrix_multiply_scalar(Matrix *m, const float n) {
  * @m data equal, return value of @func
  *
  */
-void matrix_map(Matrix *m,  float (*func)(float)) {
-    // Apply a function to every element of matrix
+void matrix_map(register Matrix *m,  float (*func)(float)) {
     register float *ptr = &m->data[0][0];
 
 	register int i = 0;
@@ -476,28 +475,33 @@ void matrix_print(const Matrix *m) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_transpose_static(const Matrix *m) {
-    Matrix *t = matrix_new_with_args(m->rows, m->columns);
-    
-	allocSpace(t);
+	register Matrix *t = matrix_new_with_args(m->rows, m->columns);   
 
-	register float *ptr		= &t->data[0][0],
-				   *ref_ptr = &m->data[0][0];
+	register float *ptr	  = &t->data[0][0],
+				   *m_ptr = &m->data[0][0];
     
 	register int i = 0;
-    while (i < m->len) {
-	    *ptr++ = *ref_ptr++;
+    while (i < t->len) {
+	    *ptr++ = *m_ptr++;
 		i++;
     }
-
-	t->len = i;
 
     return t;
 }
 
+/**
+ * matrix_multiply_static:
+ * @a: a const #Matrix.
+ * @b: a const #Matrix.
+ *
+ * Add to new #Matrix, multiply of @a data and @b data
+ *
+ * Returns: the new #Matrix
+ */
 Matrix* matrix_multiply_static(const Matrix *a, const Matrix *b) {
-    // Matrix product
+    /* Matrix product */
 	if (a->columns != b->rows) {
-		Matrix *t = matrix_new_with_args(b->rows, b->columns);
+		register Matrix *t = matrix_new_with_args(b->rows, b->columns);
 		
 		register int i = 0;
 		while (i < t->rows) {
@@ -515,8 +519,8 @@ Matrix* matrix_multiply_static(const Matrix *a, const Matrix *b) {
 		return t;
 	}
 	
-	// Dot product of values in columns
-	Matrix *t = matrix_new_with_args(a->rows, b->columns);
+	/* Dot product of values in columns */
+	register Matrix *t = matrix_new_with_args(a->rows, b->columns);
 
 	register int i = 0;
 	while (i < t->rows) {
@@ -535,50 +539,68 @@ Matrix* matrix_multiply_static(const Matrix *a, const Matrix *b) {
 	return t;
 }
 
+/**
+ * matrix_subtract_static:
+ * @a: a const #Matrix.
+ * @b: a const #Matrix.
+ * @example:
+ *	
+ *	2 rows, 1 columns	2 rows, 1 columns
+ *
+ *		[321]		  -		 [3.3]
+ *		[74]		  -		 [3.3]
+ *
+ *					 | |
+ *					 \ /
+ *
+ *				   [317.7]
+ *				   [70.7]
+ *
+ * Subtract @a data and @b data.
+ *
+ * Returns: the new #Matrix
+ */
 Matrix* matrix_subtract_static(const Matrix *a, const Matrix *b) {
-    // Return a new Matrix(a - b)
-    if (a->columns >= b->rows) {
-		Matrix *t = matrix_new_with_args(b->rows, b->columns);
+    register Matrix *t;
+	if (a->columns >= b->rows) 
+		t = matrix_new_with_args(b->rows, b->columns);
+	else
+		t = matrix_new_with_args(a->rows, b->columns);
 	
-		register int i = 0;
-		while (i < t->rows) {
-			register int j = 0;
-			while (j < t->columns) {
-				t->data[i][j] = a->data[i][j] - b->data[i][j];
-				j++;
-			}
-			i++;
-		}
-		return t;
+	register float *ptr	  = &t->data[0][0],
+				   *a_ptr = &a->data[0][0],
+				   *b_ptr = &b->data[0][0];	   
+    
+    register int i = 0;
+    while (i < t->len) {
+        *ptr++ = (*a_ptr++) - (*b_ptr++);
+        i++;
     }
-
-	Matrix *t = matrix_new_with_args(a->rows, b->columns);
-	
-	register int i = 0;
-	while (i < t->rows) {
-		register int j = 0;
-	    while (j < t->columns) {
-			t->data[i][j] = a->data[i][j] - b->data[i][j];
-			j++;
-	    }
-	    i++;
-	}
 
 	return t;	
 }
 
+/**
+ * matrix_map_static:
+ * @m: a const #Matrix.
+ * @func: a float func.
+ *
+ *
+ *
+ * Apply a function to every element of matrix.
+ *
+ * Returns: the new #Matrix
+ */
 Matrix* matrix_map_static(const Matrix *m, float (*func)(float)) {
-    Matrix *t = matrix_new_with_args(m->rows, m->columns);
-
-    // Apply a function to every element of matrix
+    register Matrix *t = matrix_new_with_args(m->rows, m->columns);
+	
+	register float *ptr   = &t->data[0][0],
+				   *m_ptr = &m->data[0][0];
+    
     register int i = 0;
-    while (i < m->rows) {
-		register int j = 0;
-		while (j < m->columns) {
-			t->data[i][j] = (*func)(m->data[i][j]);
-			j++;
-		}
-		i++;
+    while (i < t->len) {
+        *ptr++ = (*func)(*m_ptr++);
+        i++;
     }
 
     return t;
