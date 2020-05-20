@@ -1,0 +1,6 @@
+# C++, C project
+language: cpp, c
+
+dist: trusty
+sudo: required
+group: edge
