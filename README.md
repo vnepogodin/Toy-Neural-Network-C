@@ -7,5 +7,5 @@ Port [Toy-Neural-Network-JS](https://github.com/CodingTrain/Toy-Neural-Network-J
 
 ## Libraries used in this project
 
-- [JSON for Modern C++](https://github.com/nlohmann/json) used for Json serialize / deserialize in C++
-- [JSON-C](https://github.com/json-c/json-c) used for Json serialize / deserialize in C
+- [JSON for Modern C++](https://github.com/nlohmann/json) used for Json serialize / deserialize in C++. 
+- [JSON-C](https://github.com/json-c/json-c) used for Json serialize / deserialize in C. 
