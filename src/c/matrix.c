@@ -282,29 +282,29 @@ void matrix_multiply(register Matrix *a, const Matrix *b) {
 
 		allocSpace(a);
 
-    	register int i = 0;
-    	while (i < a->rows) {
+		register int i = 0;
+		while (i < a->rows) {
 			register int j = 0;
 			while (j < b->columns) {
 				register int k = 0;
 				while (k < b->columns) {
 					a->data[i][j] += a->data[i][k] * b->data[k][j];
-				   	k++;
+					k++;
 				}
 				j++;
 			}
-    	    i++;
+			i++;
 		}
-    } else {
-		register float *ptr		= &a->data[0][0],
-				       *ref_ptr = &b->data[0][0];
+	} else {
+		register float	*ptr		= &a->data[0][0],
+						*ref_ptr	= &b->data[0][0];
 
-        register int i = 0;
+		register int i = 0;
 		while (i < a->len) {
 			*ptr++ *= *ref_ptr++;
 			i++;
 		}
-    }
+	}
 }
 
 /**
@@ -321,16 +321,16 @@ void matrix_multiply(register Matrix *a, const Matrix *b) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_fromArray(const float* __restrict arr) {
-    register Matrix *t = matrix_new_with_args(2, 1);
+	register Matrix *t = matrix_new_with_args(2, 1);
 
 	register float *ptr = &t->data[0][0];
 
-    register int i = 0;
-    while (i < t->len) {
-        *ptr++ = arr[i];
-        i++;
-    }
-    
+	register int i = 0;
+	while (i < t->len) {
+		*ptr++ = arr[i];
+		i++;
+	}
+
 	return t;
 }
 
