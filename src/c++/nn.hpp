@@ -16,12 +16,12 @@ public:
 
 // Non member functions
 float sigmoid(float x) {
-    return 1 / (1 + exp(-x));
+    return 1.f / (1.f + exp(-x));
 }
 
 float dsigmoid(float y) {
     // return sigmoid(x) * (1 - sigmoid(x));
-    return y * (1 - y);
+    return y * (1.f - y);
 }
 
 class NeuralNetwork {

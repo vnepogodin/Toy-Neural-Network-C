@@ -10,13 +10,13 @@
 static float* json_strsplit(const char* __restrict _str, const char _delim) {
     register char delim[2] = { _delim, '\0' };
 
-    register char tmp_str[strlen(_str) - 3];
+    register char tmp_str[strlen(_str) - 3U];
 
     /* slice_str */
     register int i = 2;
     register int j = 0;
     
-    register unsigned long end = strlen(_str) - 2;
+    register unsigned long end = strlen(_str) - 2U;
     while (i < end) {
         tmp_str[j] = _str[i];
         ++j;
@@ -39,9 +39,9 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     }
 
     /* Add space for trailing token. */
-    count += last_comma < (tmp_str + strlen(tmp_str) - 1);
+    count += last_comma < (tmp_str + strlen(tmp_str) - 1U);
 
-    register float* result = malloc(count * sizeof(float));
+    register float* result = (float *)malloc(count);
 
     register int idx = 0;
     register char* token = strtok(tmp_str, delim);
@@ -574,7 +574,8 @@ const json_object* matrix_serialize(const Matrix *m) {
     
     register float *ptr = &m->data[0][0];
         
-    register int i = 0, cout = 0;
+    register int i = 0;
+    register int cout = 0;
     while (i < m->rows) {
 		json_object_array_add(temp_arr, json_object_new_double(*ptr));
         ++ptr;
