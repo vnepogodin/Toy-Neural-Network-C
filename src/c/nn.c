@@ -32,7 +32,7 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
  * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *a) {
-    register NeuralNetwork *nn = malloc(sizeof(NeuralNetwork));
+    register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
     nn->input_nodes = a->input_nodes;
     nn->hidden_nodes = a->hidden_nodes;
@@ -62,7 +62,7 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *a) {
  * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hidden_nodes, const int output_nodes) {
-    register NeuralNetwork *nn = malloc(sizeof(NeuralNetwork));
+    register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
     
     nn->input_nodes = input_nodes;
     nn->hidden_nodes = hidden_nodes;
@@ -246,7 +246,7 @@ const json_object* neural_network_serialize(const NeuralNetwork *__restrict nn) 
  * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_copy(const NeuralNetwork *__restrict nn) {
-	register NeuralNetwork *t = malloc(sizeof(NeuralNetwork));
+	register NeuralNetwork *t = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
 	matrix_equal(t->weights_ih, nn->weights_ih);
 	matrix_equal(t->weights_ho, nn->weights_ho);

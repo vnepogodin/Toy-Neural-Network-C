@@ -105,7 +105,7 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
-	register Matrix *m = malloc(sizeof(Matrix));
+	register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
     
     m->rows = rows;
     m->columns = columns;
@@ -141,7 +141,7 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new(void) {
-    register Matrix *m = malloc(sizeof(Matrix));
+    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
 
     m->rows = 1;
     m->columns = 1;
@@ -170,7 +170,7 @@ Matrix* matrix_new(void) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_matrix(const Matrix *m) {
-    register Matrix *t = malloc(sizeof(Matrix));
+    register Matrix *t = (Matrix *)malloc(sizeof(Matrix));
     
     t->rows = m->rows;
     t->columns = m->columns;
