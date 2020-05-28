@@ -20,7 +20,7 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     while (i < end) {
         tmp_str[j] = _str[i];
         ++j;
-        i++;
+        ++i;
     }
     tmp_str[j] = '\0';
 
@@ -86,7 +86,7 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
     register int i = 0;                                         \
     while (i < (matrix)->rows) {                                \
         (matrix)->data[i] = (float *)malloc((matrix)->columns); \
-        i++;                                                    \
+        ++i;                                                    \
     }                                                           \
 }STMT_END
 
@@ -120,7 +120,7 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
 		*ptr = 0;
 
         ++ptr;
-        i++;
+        ++i;
     }
 
     m->len = i;
@@ -186,7 +186,7 @@ Matrix* matrix_new_with_matrix(const Matrix *m) {
 
         ++ptr;
         ++ref_ptr;
-        i++;
+        ++i;
     }
 
     t->len = i;
@@ -232,7 +232,7 @@ void matrix_equal(register Matrix *a, const Matrix *b) {
 
         ++ptr;
         ++b_ptr;
-        i++;
+        ++i;
     }
 
 	a->len = i;
@@ -263,7 +263,7 @@ void matrix_subtract(register Matrix *a, const Matrix *b) {
 
         ++ptr;
         ++b_ptr;
-		i++;
+		++i;
     }
 }
 
@@ -307,11 +307,11 @@ void matrix_multiply(register Matrix *a, const Matrix *b) {
 				register int k = 0;
 				while (k < b->columns) {
 					a->data[i][j] += a->data[i][k] * b->data[k][j];
-					k++;
+					++k;
 				}
-				j++;
+				++j;
 			}
-			i++;
+			++i;
 		}
 	} else {
 		register float *ptr    = &a->data[0][0];
@@ -323,7 +323,7 @@ void matrix_multiply(register Matrix *a, const Matrix *b) {
 
             ++ptr;
             ++b_ptr;
-			i++;
+			++i;
 		}
 	}
 }
@@ -351,7 +351,7 @@ Matrix* matrix_fromArray(const float* __restrict arr) {
 		*ptr = arr[i];
 
         ++ptr;
-		i++;
+		++i;
 	}
 
 	return t;
@@ -383,7 +383,7 @@ const float* matrix_toArray(const Matrix *m) {
 		arr[i] = *ptr;
 
         ++ptr;
-		i++;
+		++i;
     }
 
     return arr;
@@ -412,7 +412,7 @@ void matrix_randomize(register Matrix *m) {
         *ptr = 0.f + (random() * (1.f - 0.f) / RAND_MAX);
 
         ++ptr;
-        i++;
+        ++i;
     }
 }
 
@@ -443,7 +443,7 @@ void matrix_add_matrix(register Matrix *a, const Matrix *b) {
 
             ++ptr;
             ++ref_ptr;
-            i++;
+            ++i;
         }
     } else {
 		register float *ptr		= &a->data[0][0];
@@ -455,7 +455,7 @@ void matrix_add_matrix(register Matrix *a, const Matrix *b) {
 
             ++ptr;
             ++ref_ptr;
-            i++;
+            ++i;
 		}
     }
 }
@@ -482,7 +482,7 @@ void matrix_add_float(register Matrix *a, const float n) {
         *ptr += n;
 
         ++ptr;
-        i++;
+        ++i;
     }
 }
 
@@ -509,7 +509,7 @@ void matrix_multiply_scalar(register Matrix *m, const float n) {
 	    *ptr *= n;
 
         ++ptr;
-		i++;
+		++i;
     }
 }
 
@@ -534,7 +534,7 @@ void matrix_map(register Matrix *m,  float (*func)(float)) {
 		*ptr = (*func)(*ptr);
 
         ++ptr;
-		i++;
+		++i;
     }
 }
 
@@ -559,7 +559,7 @@ void matrix_print(const Matrix *m) {
             cout = 0;
             printf("\n");
         }
-        i++;
+        ++i;
     }
 }
 
@@ -584,7 +584,7 @@ const json_object* matrix_serialize(const Matrix *m) {
             json_object_array_add(json_find(t, "data"), temp_arr);
             temp_arr = json_object_new_array();
             cout = 0;
-            i++;
+            ++i;
         }
     }
 
@@ -611,7 +611,7 @@ Matrix* matrix_transpose_static(const Matrix *m) {
 
         ++ptr;
         ++m_ptr;
-		i++;
+		++i;
     }
 
     return t;
@@ -638,31 +638,30 @@ Matrix* matrix_multiply_static(const Matrix *__restrict a, const Matrix *__restr
 				register int k = 0;
 				while (k < t->columns) {
 					t->data[i][j] += a->data[j][k] * b->data[i][j];
-					k++;
+					++k;
 				}
-				j++;
+				++j;
 			}
-			i++;
+			++i;
 		} 
-		return t;
-	}
-	
-	/* Dot product of values in columns */
-	register Matrix *t = matrix_new_with_args(a->rows, b->columns);
+    } else {
+        /* Dot product of values in columns */
+        register Matrix *t = matrix_new_with_args(a->rows, b->columns);
 
-	register int i = 0;
-	while (i < t->rows) {
-	    register int j = 0;
-		while (j < t->columns) {
-			register int k = 0;
-			while (k < a->columns) {
-				t->data[i][j] += a->data[i][k] * b->data[k][j];
-				k++;
-			}
-			j++;
-	    }
-	    i++;
-	}
+        register int i = 0;
+        while (i < t->rows) {
+            register int j = 0;
+            while (j < t->columns) {
+                register int k = 0;
+                while (k < a->columns) {
+                    t->data[i][j] += a->data[i][k] * b->data[k][j];
+                    ++k;
+                }
+                ++j;
+            }
+            ++i;
+        }
+    }
 	
 	return t;
 }
@@ -706,7 +705,7 @@ Matrix* matrix_subtract_static(const Matrix *a, const Matrix *b) {
         ++ptr;
         ++a_ptr;
         ++b_ptr;
-        i++;
+        ++i;
     }
 
 	return t;	
@@ -735,7 +734,7 @@ Matrix* matrix_map_static(const Matrix *m, float (*func)(float)) {
 
         ++ptr;
         ++m_ptr;
-        i++;
+        ++i;
     }
 
     return t;
@@ -771,7 +770,7 @@ Matrix* matrix_deserialize(const json_object *__restrict t) {
         cout++;
         if(cout == m->columns) {
             cout = 0;
-            i++;
+            ++i;
         }
     }
 

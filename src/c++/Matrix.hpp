@@ -76,10 +76,6 @@ public:
 
     // Operators
     Matrix& operator=(const Matrix& m) {
-        if (this == &m) {
-            return *this;
-        }
-
         if (this->rows != m.rows || this->colums != m.colums) {
             int i = 0;
             while (i < this->rows) {
@@ -348,7 +344,6 @@ public:
                 }
                 i++;
             }
-            return t;
         } else {
             // Dot product of values in column
             Matrix t(a.rows, b.colums);
@@ -366,8 +361,9 @@ public:
                 }
                 i++;
             }
-            return t;
         }
+
+        return t;
     }
     static Matrix subtract(const Matrix& a, const Matrix& b) {
         // Return a new Matrix(a - b)
