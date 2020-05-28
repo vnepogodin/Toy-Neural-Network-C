@@ -8,20 +8,21 @@
 #include "matrix.h"
 
 static float* json_strsplit(const char* __restrict _str, const char _delim) {
-    register char delim[2] = { _delim, 0 };
+    register char delim[2] = { _delim, '\0' };
 
     register char tmp_str[strlen(_str) - 3];
 
     /* slice_str */
-    register int i = 2, j = 0;
-    while (i <= strlen(_str) - 3) {
-        tmp_str[j++] = _str[i];
-        ++i;
+    register int i = 2, j = 0, end = strlen(_str) - 2;
+    while (i < end) {
+        tmp_str[j] = _str[i];
+        ++j;
+        i++;
     }
-    tmp_str[j] = 0;
+    tmp_str[j] = '\0';
 
     register char* tmp = tmp_str;
-    register char* last_comma = 0;
+    register char* last_comma = NULL;
 
     register int count = 0;
 
@@ -43,7 +44,8 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     register char* token = strtok(tmp_str, delim);
 
     while (token) {
-        *(result + idx++) = atof(token);
+        *(result + idx) = atof(token);
+        ++idx;
 
         token = strtok(0, delim);
     }
@@ -111,7 +113,9 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
     
     register int i = 0, end = m->rows * m->columns;
     while (i < end) {
-		*ptr++ = 0;
+		*ptr = 0;
+
+        ++ptr;
         i++;
     }
 
@@ -138,7 +142,8 @@ Matrix* matrix_new(void) {
     m->rows = 1;
     m->columns = 1;
 
-    allocSpace(m);
+    m->data = (float **)malloc(m->rows);
+    m->data[0] = (float *)malloc(m->columns);
 
     m->len = 1;
 
@@ -173,7 +178,10 @@ Matrix* matrix_new_with_matrix(const Matrix *m) {
     
     register int i = 0;
     while (i < m->len) {
-		*ptr++ = *ref_ptr++;
+		*ptr = *ref_ptr;
+
+        ++ptr;
+        ++ref_ptr;
         i++;
     }
 
@@ -212,11 +220,14 @@ void matrix_equal(register Matrix *a, const Matrix *b) {
 	allocSpace(a);
 
 	register float *ptr		= &a->data[0][0],
-				   *ref_ptr = &b->data[0][0];
+				   *b_ptr   = &b->data[0][0];
 	
 	register int i = 0;
     while (i < b->len) {
-		*ptr++ = *ref_ptr++;
+		*ptr = *b_ptr;
+
+        ++ptr;
+        ++b_ptr;
         i++;
     }
 
@@ -240,11 +251,14 @@ void matrix_equal(register Matrix *a, const Matrix *b) {
  */
 void matrix_subtract(register Matrix *a, const Matrix *b) {
     register float *ptr		= &a->data[0][0],
-				   *ref_ptr = &b->data[0][0];
+				   *b_ptr = &b->data[0][0];
 	
 	register int i = 0;
 	while (i < a->len) {
-		*ptr++ -= *ref_ptr++;
+		*ptr -= *b_ptr;
+
+        ++ptr;
+        ++b_ptr;
 		i++;
     }
 }
@@ -296,12 +310,15 @@ void matrix_multiply(register Matrix *a, const Matrix *b) {
 			i++;
 		}
 	} else {
-		register float	*ptr		= &a->data[0][0],
-						*ref_ptr	= &b->data[0][0];
+		register float	*ptr    = &a->data[0][0],
+						*b_ptr  = &b->data[0][0];
 
 		register int i = 0;
 		while (i < a->len) {
-			*ptr++ *= *ref_ptr++;
+			*ptr *= *b_ptr;
+
+            ++ptr;
+            ++b_ptr;
 			i++;
 		}
 	}
@@ -327,7 +344,9 @@ Matrix* matrix_fromArray(const float* __restrict arr) {
 
 	register int i = 0;
 	while (i < t->len) {
-		*ptr++ = arr[i];
+		*ptr = arr[i];
+
+        ++ptr;
 		i++;
 	}
 
@@ -357,7 +376,9 @@ const float* matrix_toArray(const Matrix *m) {
 
     register int i = 0;
     while (i < m->len) {
-		arr[i] = *ptr++;
+		arr[i] = *ptr;
+
+        ++ptr;
 		i++;
     }
 
@@ -384,7 +405,9 @@ void matrix_randomize(register Matrix *m) {
 
 	register int i = 0;
     while (i < m->len) {
-        *ptr++ = 0.f + (random() * (1.f - 0.f) / RAND_MAX);
+        *ptr = 0.f + (random() * (1.f - 0.f) / RAND_MAX);
+
+        ++ptr;
         i++;
     }
 }
@@ -412,7 +435,10 @@ void matrix_add_matrix(register Matrix *a, const Matrix *b) {
 		
 		register int i = 0;
 		while (i < a->len) {
-			*ptr++ += *ref_ptr++;
+			*ptr += *ref_ptr;
+
+            ++ptr;
+            ++ref_ptr;
             i++;
         }
     } else {
@@ -421,7 +447,10 @@ void matrix_add_matrix(register Matrix *a, const Matrix *b) {
 
 		register int i = 0;
         while (i < b->len) {
-			*ptr++ += *ref_ptr;
+			*ptr += *ref_ptr;
+
+            ++ptr;
+            ++ref_ptr;
             i++;
 		}
     }
@@ -446,7 +475,9 @@ void matrix_add_float(register Matrix *a, const float n) {
     
 	register int i = 0;
     while (i < a->len) {
-        *ptr++ += n;
+        *ptr += n;
+
+        ++ptr;
         i++;
     }
 }
@@ -471,7 +502,9 @@ void matrix_multiply_scalar(register Matrix *m, const float n) {
 
 	register int i = 0;
     while (i < m->len) {
-	    *ptr++ *= n;
+	    *ptr *= n;
+
+        ++ptr;
 		i++;
     }
 }
@@ -494,7 +527,9 @@ void matrix_map(register Matrix *m,  float (*func)(float)) {
 
 	register int i = 0;
     while (i < m->len) {
-		*ptr++ = (*func)(*ptr);
+		*ptr = (*func)(*ptr);
+
+        ++ptr;
 		i++;
     }
 }
@@ -511,7 +546,8 @@ void matrix_print(const Matrix *m) {
     
     register int i = 0, cout = 0;
     while (i < m->len) {
-        printf("%f ", *ptr++);
+        printf("%f ", *ptr);
+        ++ptr;
         cout++;
 
         if(cout == m->columns) {
@@ -535,7 +571,8 @@ const json_object* matrix_serialize(const Matrix *m) {
         
     register int i = 0, cout = 0;
     while (i < m->rows) {
-		json_object_array_add(temp_arr, json_object_new_double(*ptr++));
+		json_object_array_add(temp_arr, json_object_new_double(*ptr));
+        ++ptr;
         cout++;
 		
         if(cout == m->columns) {
@@ -565,7 +602,10 @@ Matrix* matrix_transpose_static(const Matrix *m) {
     
 	register int i = 0;
     while (i < t->len) {
-	    *ptr++ = *m_ptr++;
+	    *ptr = *m_ptr;
+
+        ++ptr;
+        ++m_ptr;
 		i++;
     }
 
@@ -656,7 +696,11 @@ Matrix* matrix_subtract_static(const Matrix *a, const Matrix *b) {
     
     register int i = 0;
     while (i < t->len) {
-        *ptr++ = (*a_ptr++) - (*b_ptr++);
+        *ptr = *a_ptr - *b_ptr;
+
+        ++ptr;
+        ++a_ptr;
+        ++b_ptr;
         i++;
     }
 
@@ -682,7 +726,10 @@ Matrix* matrix_map_static(const Matrix *m, float (*func)(float)) {
     
     register int i = 0;
     while (i < t->len) {
-        *ptr++ = (*func)(*m_ptr++);
+        *ptr = (*func)(*m_ptr);
+
+        ++ptr;
+        ++m_ptr;
         i++;
     }
 
@@ -712,7 +759,9 @@ Matrix* matrix_deserialize(const json_object *__restrict t) {
         
     register int i = 0, cout = 0;
     while (i < m->rows) {
-        *ptr++ = json_strsplit(json_object_get_string(json_object_array_get_idx(obj, i)), ',')[cout];
+        *ptr = json_strsplit(json_object_get_string(json_object_array_get_idx(obj, i)), ',')[cout];
+
+        ++ptr;
         cout++;
         if(cout == m->columns) {
             cout = 0;
