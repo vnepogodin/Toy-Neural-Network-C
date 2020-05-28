@@ -378,7 +378,6 @@ public:
                 }
                 i++;
             }
-            return t;
         } else {
             Matrix t(a.rows, b.colums);
             int i = 0;
@@ -389,9 +388,9 @@ public:
                     j++;
                 }
                 i++;
-            }
-            return t;
+            }    
         }
+        return t;
     }
     static Matrix map(const Matrix& m, vFunctionCall func) {
         Matrix t(m.rows, m.colums);
