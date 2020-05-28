@@ -7,12 +7,12 @@
 
 /* Non member functions */
 static float sigmoid(float x) {
-    return 1 / (1 + exp(-x));
+    return 1.f / (1.f + exp(-x));
 }
 
 static float dsigmoid(float y) {
     /* return sigmoid(x) * (1 - sigmoid(x)); */
-    return y * (1 - y);
+    return y * (1.f - y);
 }
 
 static json_object* json_find(const json_object *__restrict j, const char* __restrict key) {

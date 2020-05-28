@@ -13,7 +13,10 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     register char tmp_str[strlen(_str) - 3];
 
     /* slice_str */
-    register int i = 2, j = 0, end = strlen(_str) - 2;
+    register int i = 2;
+    register int j = 0;
+    
+    register unsigned long end = strlen(_str) - 2;
     while (i < end) {
         tmp_str[j] = _str[i];
         ++j;
