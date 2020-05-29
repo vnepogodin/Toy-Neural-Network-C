@@ -8,11 +8,11 @@
 #include "matrix.h"
 
 static float* json_strsplit(const char* __restrict _str, const char _delim) {
-    register char delim[2] = { _delim, '\0' };
+    const register char delim[2] = { _delim, '\0' };
 
-    register char tmp_str[strlen(_str) - 3U];
+    register char tmp_str[strlen(_str) - 1U];
 
-    /* slice_str */
+    /*   slice_str   */
     register int i = 2;
     register int j = 0;
     
@@ -25,7 +25,7 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     }
     tmp_str[j] = '\0';
 
-    register char* tmp = tmp_str;
+    const register char* tmp = tmp_str;
     register char* last_comma = NULL;
 
     register int count = 0;
@@ -40,7 +40,7 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     }
 
     /* Add space for trailing token. */
-    count += last_comma < (tmp_str + strlen(tmp_str) - 1U);
+    count += (last_comma < (tmp_str + strlen(tmp_str) - 1U));
 
     register float* result = (float *)malloc(count);
 
@@ -48,9 +48,10 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
 
     i = 0;
     while (i < count) {
-        *(result + i) = atof(token);
+        result[i] = atof(token);
 
         token = strtok(0, delim);
+       
         ++i;
     }
 
@@ -406,11 +407,11 @@ const float* matrix_toArray(const Matrix *m) {
 void matrix_randomize(register Matrix *m) {
     register float *ptr = &m->data[0][0];
 
-	srandom(time(NULL));
+	unsigned int seed = (unsigned int)time(NULL);
 
 	register int i = 0;
     while (i < m->len) {
-        *ptr = 0.f + (random() * (1.f - 0.f) / RAND_MAX);
+        *ptr = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
 
         ++ptr;
         ++i;
