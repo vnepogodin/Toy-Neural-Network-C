@@ -10,7 +10,7 @@
 static float* json_strsplit(const char* __restrict _str, const char _delim) {
     const register char delim[2] = { _delim, '\0' };
 
-    register char tmp_str[strlen(_str) - 1U];
+    register char tmp_str[strlen(_str) - 2U];
 
     /*   slice_str   */
     register int i = 2;
@@ -407,7 +407,9 @@ const float* matrix_toArray(const Matrix *m) {
 void matrix_randomize(register Matrix *m) {
     register float *ptr = &m->data[0][0];
 
-	unsigned int seed = (unsigned int)time(NULL);
+	register struct timespec ts;
+    
+    unsigned int seed = (unsigned int)((long long)ts.tv_sec ^ ts.tv_nsec);
 
 	register int i = 0;
     while (i < m->len) {
