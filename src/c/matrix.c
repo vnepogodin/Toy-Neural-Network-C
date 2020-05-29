@@ -16,7 +16,7 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     register int i = 2;
     register int j = 0;
     
-    register unsigned long end = strlen(_str) - 2U;
+    register int end = (int)(strlen(_str) - 2U);
     while (i < end) {
         tmp_str[j] = _str[i];
         
