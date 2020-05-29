@@ -3,7 +3,7 @@
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc */
 #include <string.h> /* strlen, strtok */
-#include <time.h> /* random, srandom */
+#include <time.h> /* rand_r */
 
 #include "matrix.h"
 
@@ -40,7 +40,7 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     }
 
     /* Add space for trailing token. */
-    count += (last_comma < (tmp_str + strlen(tmp_str) - 1U));
+    ++count;
 
     register float* result = (float *)malloc(count);
 
