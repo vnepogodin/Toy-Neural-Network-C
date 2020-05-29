@@ -3,23 +3,12 @@
 #include <Matrix.hpp>
 typedef float (* vFunctionCall)(float args);
 
-class ActivationFunction {
-private:
-    // Variables
-    vFunctionCall func, dfunc;
-public:
-    ActivationFunction(vFunctionCall func, vFunctionCall dfunc) {
-        this->func = func;
-        this->dfunc = dfunc;
-    }
-};
-
 // Non member functions
-float sigmoid(float x) {
+static float sigmoid(float x) {
     return 1.f / (1.f + exp(-x));
 }
 
-float dsigmoid(float y) {
+static float dsigmoid(float y) {
     // return sigmoid(x) * (1 - sigmoid(x));
     return y * (1.f - y);
 }
@@ -47,8 +36,8 @@ public:
         this->bias_o = a.bias_o;
 
         // TODO: copy these as well
-        this->setLearningRate();
-        this->setActivationFunction();
+        this->setLearningRate(0.1);
+        this->setActivationFunction(sigmoid);
     }
     NeuralNetwork(const int input_nodes, const int hidden_nodes, const int output_nodes) {
         this->input_nodes = input_nodes;
@@ -66,8 +55,8 @@ public:
         this->bias_o.randomize();
 
         // TODO: copy these as well
-        this->setLearningRate();
-        this->setActivationFunction();
+        this->setLearningRate(0.1);
+        this->setActivationFunction(sigmoid);
     }
 
     // Functions
@@ -88,10 +77,10 @@ public:
         // Sending back to the caller!
         return output.toArray();
     }
-    void setLearningRate(float learning_rate = 0.1) {
+    void setLearningRate(float learning_rate) {
         this->learning_rate = learning_rate;
     }
-    void setActivationFunction(vFunctionCall func = sigmoid) {
+    void setActivationFunction(vFunctionCall func) {
         this->activation_function = func;
     }
     void train(const float *input_array, const float *target_array) {

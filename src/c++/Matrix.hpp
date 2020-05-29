@@ -129,7 +129,8 @@ public:
             i++;
         }
 
-        return *temp;
+        *this = temp;
+        return *this;
     }
 
     // Functions
