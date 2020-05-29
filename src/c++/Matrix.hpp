@@ -76,7 +76,7 @@ public:
 
     // Operators
     Matrix& operator=(const Matrix& m) {
-        if (this->rows != m.rows || this->colums != m.colums) {
+        if ((this->rows != m.rows) || (this->colums != m.colums)) {
             int i = 0;
             while (i < this->rows) {
                 delete[] this->data[i];
