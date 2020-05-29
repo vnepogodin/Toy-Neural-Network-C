@@ -10,7 +10,7 @@
 static float* json_strsplit(const char* __restrict _str, const char _delim) {
     const register char delim[2] = { _delim, '\0' };
 
-    register char* tmp_str = malloc(strlen(_str) - 1U);
+    register char* tmp_str = (char *)malloc(strlen(_str) - 1U);
 
     /*   slice_str   */
     register int i = 2;
