@@ -19,6 +19,7 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     register unsigned long end = strlen(_str) - 2U;
     while (i < end) {
         tmp_str[j] = _str[i];
+        
         ++j;
         ++i;
     }
@@ -30,12 +31,12 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     register int count = 0;
 
     /* Count how many elements will be extracted. */
-    while (*tmp) {
+    while (*tmp != '\0') {
         if (*tmp == _delim) {
             count++;
             last_comma = tmp;
         }
-        tmp++;
+        ++tmp;
     }
 
     /* Add space for trailing token. */
@@ -43,14 +44,14 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
 
     register float* result = (float *)malloc(count);
 
-    register int idx = 0;
     register char* token = strtok(tmp_str, delim);
 
-    while (token) {
-        *(result + idx) = atof(token);
-        ++idx;
+    i = 0;
+    while (i < count) {
+        *(result + i) = atof(token);
 
         token = strtok(0, delim);
+        ++i;
     }
 
     return result;
