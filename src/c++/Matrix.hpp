@@ -121,14 +121,15 @@ public:
             while (j < temp.colums) {
                 int k = 0;
                 while (k < this->colums) {
-                    temp.data[i][j] += (this->data[i][k] * m.data[k][j]);
+                    temp.data[i][j] += this->data[i][k] * m.data[k][j];
                     k++;
                 }
                 j++;
             }
             i++;
         }
-        return *this = temp;
+
+        return *temp;
     }
 
     // Functions
