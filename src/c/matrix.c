@@ -632,9 +632,10 @@ Matrix* matrix_transpose_static(const Matrix *m) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_multiply_static(const Matrix *__restrict a, const Matrix *__restrict b) {
+    register Matrix *t;
     /* Matrix product */
 	if (a->columns != b->rows) {
-		register Matrix *t = matrix_new_with_args(b->rows, b->columns);
+		t = matrix_new_with_args(b->rows, b->columns);
 		
 		register int i = 0;
 		while (i < t->rows) {
@@ -651,7 +652,7 @@ Matrix* matrix_multiply_static(const Matrix *__restrict a, const Matrix *__restr
 		} 
     } else {
         /* Dot product of values in columns */
-        register Matrix *t = matrix_new_with_args(a->rows, b->columns);
+        t = matrix_new_with_args(a->rows, b->columns);
 
         register int i = 0;
         while (i < t->rows) {
