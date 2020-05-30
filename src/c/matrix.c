@@ -2,7 +2,7 @@
 
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc */
-#include <string.h> /* strlen, strtok */
+#include <string.h> /* strlen, strtok, memcpy */
 #include <time.h> /* rand_r */
 
 #include "matrix.h"
@@ -10,31 +10,22 @@
 static float* json_strsplit(const char* __restrict _str, const char _delim) {
     const register char delim[2] = { _delim, '\0' };
 
-    register char* tmp_str = (char *)malloc(strlen(_str) - 1U);
+    register char* tmp = (char *)malloc(strlen(_str) - 3U);
+    tmp[strlen(_str) - 3U] = '\0';
 
-    /*   slice_str   */
-    register size_t i = 2;
-    register size_t j = 0;
-    
-    register size_t end = strlen(_str) - 2U;
-    while (i < end) {
-        tmp_str[j] = _str[i];
-        
-        ++j;
-        ++i;
-    }
-    tmp_str[j] = '\0';
+    /*           slice_str             */
+    memcpy(tmp, _str, strlen(_str) - 2U);
+    ++tmp;
+    ++tmp;
 
-    const register char* tmp = tmp_str;
-    register char* last_comma = NULL;
+    const register char* tmp_str = tmp;
 
     register int count = 0;
 
     /* Count how many elements will be extracted. */
     while (*tmp != '\0') {
         if (*tmp == _delim) {
-            count++;
-            last_comma = tmp;
+            ++count;
         }
         ++tmp;
     }
@@ -46,11 +37,11 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
 
     register char* token = strtok(tmp_str, delim);
 
-    i = 0;
+    register int i = 0;
     while (i < count) {
         result[i] = strtof(token, NULL);
 
-        token = strtok(0, delim);
+        token = strtok(NULL, delim);
        
         ++i;
     }
