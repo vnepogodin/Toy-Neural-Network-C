@@ -13,10 +13,10 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
     register char* tmp_str = (char *)malloc(strlen(_str) - 1U);
 
     /*   slice_str   */
-    register int i = 2;
-    register int j = 0;
+    register size_t i = 2;
+    register size_t j = 0;
     
-    register int end = (int)(strlen(_str) - 2U);
+    register size_t end = strlen(_str) - 2U;
     while (i < end) {
         tmp_str[j] = _str[i];
         
