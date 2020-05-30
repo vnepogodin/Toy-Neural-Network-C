@@ -48,7 +48,7 @@ static float* json_strsplit(const char* __restrict _str, const char _delim) {
 
     i = 0;
     while (i < count) {
-        result[i] = atof(token);
+        result[i] = strtof(token, NULL);
 
         token = strtok(0, delim);
        
