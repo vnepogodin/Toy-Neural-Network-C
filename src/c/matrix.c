@@ -10,13 +10,13 @@
 static float* json_strsplit(const char* __restrict _str, const char _delim) {
     const register char delim[2] = { _delim, '\0' };
 
-    register char* tmp = (char *)malloc(strlen(_str) - 1U);
+    register char* tmp = (char *)malloc(strnlen(_str, strlen(_str) - 2U));
 
     /*           slice_str             */
-    memcpy(tmp, _str, strlen(_str) - 2U);
+    memcpy(tmp, _str, strnlen(_str, strlen(_str) - 2U));
     ++tmp;
     ++tmp;
-    tmp[strlen(_str) - 1U] = '\0';
+    tmp[strnlen(_str, strlen(_str) - 2U)] = '\0';
 
     const register char* tmp_str = tmp;
 
