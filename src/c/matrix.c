@@ -25,7 +25,7 @@
 
 #define length_str(string, cout) STMT_START{   \
     const register char* buf_str = (string);   \
-    while (*(buf_str) != '\0') {                \
+    while (*(buf_str) != '\0') {               \
         ++(cout);                              \
         ++buf_str;                             \
     }                                          \
