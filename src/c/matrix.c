@@ -7,16 +7,44 @@
 
 #include "matrix.h"
 
+/**
+ * STMT_START:
+ *
+ * Used within multi-statement macros so that they can be used in places
+ * where only one statement is expected by the compiler.
+ */
+#define STMT_START do
+
+/**
+ * STMT_END:
+ *
+ * Used within multi-statement macros so that they can be used in places
+ * where only one statement is expected by the compiler.
+ */
+#define STMT_END while(0)
+
+#define length_str(string, cout) STMT_START{   \
+    const register char* buf_str = (string);   \
+    while (*(buf_str) != '\0') {                \
+        ++(cout);                              \
+        ++buf_str;                             \
+    }                                          \
+}STMT_END
+
 static float* json_strsplit(const char* __restrict _str, const char _delim) {
     const register char delim[2] = { _delim, '\0' };
 
-    register char* tmp = (char *)malloc(strnlen(_str, UINT64_MAX));
+    register int size;
 
-    /*               slice_str                 */
-    memcpy(tmp, _str, strnlen(_str, UINT64_MAX));
+    length_str(_str, size);
+
+    register char* tmp = (char *)malloc(size - 1);
+
+    /*       slice_str        */
+    memcpy(tmp, _str, size - 1);
     ++tmp;
     ++tmp;
-    tmp[strnlen(_str, UINT64_MAX)] = '\0';
+    tmp[size - 1] = '\0';
     
     const register char* tmp_str = tmp;
 
@@ -56,22 +84,6 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
 
     return t;
 }
-
-/**
- * STMT_START:
- *
- * Used within multi-statement macros so that they can be used in places
- * where only one statement is expected by the compiler.
- */
-#define STMT_START do
-
-/**
- * STMT_END:
- *
- * Used within multi-statement macros so that they can be used in places
- * where only one statement is expected by the compiler.
- */
-#define STMT_END while(0)
 
 #define allocSpace(matrix) STMT_START{                          \
     (matrix)->data = (float **)malloc((matrix)->rows);          \
