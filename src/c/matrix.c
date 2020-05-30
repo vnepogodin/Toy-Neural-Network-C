@@ -10,14 +10,14 @@
 static float* json_strsplit(const char* __restrict _str, const char _delim) {
     const register char delim[2] = { _delim, '\0' };
 
-    register char* tmp = (char *)malloc(strnlen(_str, strlen(_str) - 2U));
+    register char* tmp = (char *)malloc(strnlen(_str, UINT64_MAX));
 
-    /*           slice_str             */
-    memcpy(tmp, _str, strnlen(_str, strlen(_str) - 2U));
+    /*               slice_str                 */
+    memcpy(tmp, _str, strnlen(_str, UINT64_MAX));
     ++tmp;
     ++tmp;
-    tmp[strnlen(_str, strlen(_str) - 2U)] = '\0';
-
+    tmp[strnlen(_str, UINT64_MAX)] = '\0';
+    
     const register char* tmp_str = tmp;
 
     register int count = 0;
@@ -753,10 +753,10 @@ Matrix* matrix_map_static(const Matrix *m, float (*func)(float)) {
 Matrix* matrix_deserialize(const json_object *__restrict t) {
 	register Matrix *m = matrix_new_with_args(json_object_get_int(json_object_object_get(t, "rows")),
 											  json_object_get_int(json_object_object_get(t, "columns")));
-
-	const json_object *obj = json_find(t, "data");
     
     register float *ptr = &m->data[0][0];
+
+    register float* buf = json_strsplit(json_object_get_string(json_object_array_get_idx(json_find(t, "data"), 0)), ',');
         
     register int i = 0;
     register int cout = 0;
@@ -768,6 +768,9 @@ Matrix* matrix_deserialize(const json_object *__restrict t) {
         if(cout == m->columns) {
             cout = 0;
             ++i;
+
+            if (i != m->rows)
+                buf = json_strsplit(json_object_get_string(json_object_array_get_idx(json_find(t, "data"), i)), ',');
         }
     }
 
