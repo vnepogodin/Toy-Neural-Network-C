@@ -407,9 +407,9 @@ const float* matrix_toArray(const Matrix *m) {
 void matrix_randomize(register Matrix *m) {
     register float *ptr = &m->data[0][0];
 
-	register struct timespec ts;
+	register struct timeval64 ts;
     
-    unsigned int seed = (unsigned int)((long long)ts.tv_sec ^ ts.tv_nsec);
+    unsigned int seed = (unsigned int)(ts.tv_sec ^ ts.tv_usec);
 
 	register int i = 0;
     while (i < m->len) {
