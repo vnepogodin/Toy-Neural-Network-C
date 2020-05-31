@@ -2,6 +2,12 @@
 
 Port [Toy-Neural-Network-JS](https://github.com/CodingTrain/Toy-Neural-Network-JS) to C++ and C
 
+## Examples
+Here are some demos running directly on your computer:
+* [ColorPredictor](https://github.com/ctrlcvnigerguard/ColorPredictor)
+* [Perceptron](https://github.com/ctrlcvnigerguard/Perceptron)
+* [GradientDescent](https://github.com/ctrlcvnigerguard/GradientDescent)
+
 ### Documentation
  For C developers
    * `NeuralNetwork` - The neural network structure
@@ -17,3 +23,7 @@ Port [Toy-Neural-Network-JS](https://github.com/CodingTrain/Toy-Neural-Network-J
 
 * [JSON for Modern C++](https://github.com/nlohmann/json) used for Json serialize / deserialize in C++. 
 * [JSON-C](https://github.com/json-c/json-c) used for Json serialize / deserialize in C. 
+
+## License
+
+This project is licensed under the terms of the MIT license, see LICENSE.
