@@ -2,8 +2,8 @@
 
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc */
-#include <string.h> /* strlen, strtok, memcpy */
-#include <time.h> /* rand_r */
+#include <string.h> /* strtof, strtok */
+#include <time.h> /* rand_r, timeval64 */
 
 #include "matrix.h"
 
@@ -23,50 +23,40 @@
  */
 #define STMT_END while(0)
 
-#define length_str(string, cout) STMT_START{   \
+#define length_str(string, size) STMT_START{   \
     const register char* buf_str = (string);   \
     while (*(buf_str) != '\0') {               \
-        ++(cout);                              \
+        ++(size);                              \
         ++buf_str;                             \
     }                                          \
 }STMT_END
 
-static float* json_strsplit(const char* __restrict _str, const char _delim) {
+static float* json_strsplit(const char* _str, const char _delim, const int columns) {
     const register char delim[2] = { _delim, '\0' };
-
-    register int size;
+    
+    register int size = 0;
 
     length_str(_str, size);
-
+    
     register char* tmp = (char *)malloc(size - 1);
 
-    /*       slice_str        */
-    memcpy(tmp, _str, size - 1);
-    ++tmp;
-    ++tmp;
-    tmp[size - 1] = '\0';
-    
-    const register char* tmp_str = tmp;
-
-    register int count = 0;
-
-    /* Count how many elements will be extracted. */
-    while (*tmp != '\0') {
-        if (*tmp == _delim) {
-            ++count;
-        }
-        ++tmp;
+    /*   slice_str   */
+    register int i = 2;
+    register int j = 0;
+    while (i < size - 2) {
+        tmp[j] = _str[i];
+        
+        ++j;
+        ++i;
     }
+    tmp[j] = '\0';
 
-    /* Add space for trailing token. */
-    ++count;
+    register float* result = (float *)malloc(columns);
 
-    register float* result = (float *)malloc(count);
+    register char* token = strtok(tmp, delim);
 
-    register char* token = strtok(tmp_str, delim);
-
-    register int i = 0;
-    while (i < count) {
+    i = 0;
+    while (i < columns) {
         result[i] = strtof(token, NULL);
 
         token = strtok(NULL, delim);
@@ -767,22 +757,22 @@ Matrix* matrix_deserialize(const json_object *__restrict t) {
 											  json_object_get_int(json_object_object_get(t, "columns")));
     
     register float *ptr = &m->data[0][0];
-
-    register float* buf = json_strsplit(json_object_get_string(json_object_array_get_idx(json_find(t, "data"), 0)), ',');
+    
+    register float* buf = json_strsplit(json_object_get_string(json_object_array_get_idx(json_find(t, "data"), 0)), ',', m->columns);
         
     register int i = 0;
     register int cout = 0;
     while (i < m->rows) {
-        *ptr = json_strsplit(json_object_get_string(json_object_array_get_idx(obj, i)), ',')[cout];
+        *ptr = buf[cout];
 
         ++ptr;
         cout++;
         if(cout == m->columns) {
             cout = 0;
             ++i;
-
+            
             if (i != m->rows)
-                buf = json_strsplit(json_object_get_string(json_object_array_get_idx(json_find(t, "data"), i)), ',');
+                buf = json_strsplit(json_object_get_string(json_object_array_get_idx(json_find(t, "data"), i)), ',', m->columns);
         }
     }
 
