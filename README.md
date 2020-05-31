@@ -3,10 +3,15 @@
 Port [Toy-Neural-Network-JS](https://github.com/CodingTrain/Toy-Neural-Network-JS) to C++ and C
 
 ### Documentation
+ For C developers
+   * `NeuralNetwork` - The neural network structure
+     * `neural_network_predict(nn, input_array)` - Returns the output of a neural network
+     * `neural_network_train(nn, input_array, target_array)` - Trains a neural network
 
-* `NeuralNetwork` - The neural network structure
-  * `neural_network_predict(nn, input_array)` - Returns the output of a neural network
-  * `neural_network_train(nn, input_array, target_array)` - Trains a neural network
+ For C++ developers
+   * `NeuralNetwork` - The neural network class
+     * `predict(input_array)` - Returns the output of a neural network
+     * `train(input_array, target_array)` - Trains a neural network
 
 ## Libraries used in this project
 
