@@ -180,11 +180,15 @@ public:
         return arr;
     }
     void randomize() {
+        struct timeval64 ts;
+
+        unsigned int seed = (unsigned int)(ts.tv_sec ^ ts.tv_usec);
+
         int i = 0;
         while (i < this->rows) {
             int j = 0;
             while (j < this->colums) {
-                this->data[i][j] = 0.f + (rand() * (1.f - 0.f) / RAND_MAX);
+                this->data[i][j] = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
                 j++;
             }
             i++;
