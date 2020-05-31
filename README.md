@@ -5,6 +5,12 @@ Neural Network C/C++ library
 
 Port [Toy-Neural-Network-JS](https://github.com/CodingTrain/Toy-Neural-Network-JS) to C++ and C
 
+### Documentation
+
+* `NeuralNetwork` - The neural network structure
+  * `neural_network_predict(nn, input_array)` - Returns the output of a neural network
+  * `neural_network_train(nn, input_array, target_array)` - Trains a neural network
+
 ## Libraries used in this project
 
 * [JSON for Modern C++](https://github.com/nlohmann/json) used for Json serialize / deserialize in C++. 
