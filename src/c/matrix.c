@@ -43,7 +43,9 @@ static float* json_strsplit(const char* _str, const char _delim, const int colum
     /*   slice_str   */
     register int i = 2;
     register int j = 0;
-    while (i < size - 2) {
+
+    size -= 2;
+    while (i < size) {
         tmp[j] = _str[i];
         
         ++j;
