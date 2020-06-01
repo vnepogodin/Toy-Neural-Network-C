@@ -5,8 +5,20 @@
 #include <ctime> // rand_r, timeval64
 #include <json.hpp> // json
 
+/**
+ * PTR_START(end):
+ *
+ * Used within multi-statement macros so that they can be used in places
+ * where only one statement is expected by the compiler.
+ */
 #define PTR_START(end) int i = 0; while (i < (end)) {
 
+/**
+ * PTR_END:
+ *
+ * Used within multi-statement macros so that they can be used in places
+ * where only one statement is expected by the compiler.
+ */
 #define PTR_END ++i; }
 
 using namespace std;
@@ -389,5 +401,4 @@ private:
             ++i;
         }
     }
-
 };

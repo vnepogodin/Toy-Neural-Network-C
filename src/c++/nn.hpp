@@ -186,5 +186,4 @@ private:
     vFunctionCall activation_function;
 
     Matrix weights_ih, weights_ho, bias_h, bias_o;
-
 };
