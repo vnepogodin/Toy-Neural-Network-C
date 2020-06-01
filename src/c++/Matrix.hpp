@@ -384,7 +384,7 @@ public:
     }
 
 private:
-	// Variables
+    // Variables
     int len;
 
     int rows, columns;
