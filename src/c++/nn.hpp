@@ -1,6 +1,10 @@
 // Other techniques for learning
 #pragma once
+
+#include <cmath> /* exp */
+
 #include <Matrix.hpp>
+
 typedef float (* vFunctionCall)(float args);
 
 // Non member functions
@@ -17,23 +21,24 @@ class NeuralNetwork {
 private:
     // Variables
     int input_nodes, hidden_nodes, output_nodes;
+    
     float learning_rate;
 
-    Matrix weights_ih, weights_ho, bias_h, bias_o;
-
     vFunctionCall activation_function;
+
+    Matrix weights_ih, weights_ho, bias_h, bias_o;
 public:
     // Constructors
-    NeuralNetwork(const NeuralNetwork& a, const int hidden_nodes, const int output_nodes) {
+    NeuralNetwork(const NeuralNetwork& a) {
         this->input_nodes = a.input_nodes;
         this->hidden_nodes = a.hidden_nodes;
         this->output_nodes = a.output_nodes;
 
-        this->weights_ih = a.weights_ih;
-        this->weights_ho = a.weights_ho;
+        this->weights_ih(a.weights_ih);
+        this->weights_ho(a.weights_ho);
 
-        this->bias_h = a.bias_h;
-        this->bias_o = a.bias_o;
+        this->bias_h(a.bias_h);
+        this->bias_o(a.bias_o);
 
         // TODO: copy these as well
         this->setLearningRate(0.1);
@@ -59,6 +64,10 @@ public:
         this->setActivationFunction(sigmoid);
     }
 
+    // Deconstructor
+    virtual ~NeuralNetwork(void) {
+    }
+
     // Functions
     const float* predict(const float *input_array) {
         // Generating the Hidden Outputs
@@ -77,8 +86,8 @@ public:
         // Sending back to the caller!
         return output.toArray();
     }
-    void setLearningRate(float learning_rate) {
-        this->learning_rate = learning_rate;
+    void setLearningRate(const float lr) {
+        this->learning_rate = lr;
     }
     void setActivationFunction(vFunctionCall func) {
         this->activation_function = func;
@@ -154,10 +163,10 @@ public:
     NeuralNetwork copy() {
         NeuralNetwork t = *new NeuralNetwork(this->input_nodes, this->hidden_nodes, this->output_nodes);
 
-        t.weights_ih = this->weights_ih;
-        t.weights_ho = this->weights_ho;
-        t.bias_h = this->bias_h;
-        t.bias_o = this->bias_o;
+        t.weights_ih(this->weights_ih);
+        t.weights_ho(this->weights_ho);
+        t.bias_h(this->bias_h);
+        t.bias_o(this->bias_o);
 
         t.learning_rate = this->learning_rate;
 
@@ -172,7 +181,8 @@ public:
         nn.weights_ho = Matrix::deserialize(t["weights_ho"]);
         nn.bias_h = Matrix::deserialize(t["bias_h"]);
         nn.bias_o = Matrix::deserialize(t["bias_o"]);
-        nn.learning_rate = t["learning_rate"].get<float>();
+
+        nn.setLearningRate(t["learning_rate"].get<float>());
 
         return nn;
     }

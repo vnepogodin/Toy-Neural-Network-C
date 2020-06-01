@@ -1,18 +1,26 @@
 // Matrix lib
 #pragma once
-#include <cstdlib>
-#include <ctime>
-#include <json.hpp>
+
+#include <cstdlib> // malloc
+#include <ctime> // rand_r, timeval64
+#include <json.hpp> // json
+
+#define PTR_START(end) int i = 0; while (i < (end)) {
+
+#define PTR_END ++i; }
+
 using namespace std;
+
 typedef float (* vFunctionCall)(float args);
 
 class Matrix {
 private:
 	// Variables
-	int rows, colums;
-    float **data;
+    int len;
 
-    int l = sizeof(*data) / sizeof(**data);
+	int rows, columns;
+
+    float **data;
 
     // Function
     void allocSpace() {
@@ -21,281 +29,238 @@ private:
         int i = 0;
         while (i < this->rows) {
             this->data[i] = new float [this->colums];
-            i++;
+            ++i;
         }
     }
 public:
-	// Constructors
+    // Constructors
     Matrix(const int rows, const int colums) {
         this->rows = rows;
         this->colums = colums;
 
         this->allocSpace();
 
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                this->data[i][j] = 0;
-                j++;
-            }
-            i++;
-        }
+        float *ptr = &this->data[0][0];
+
+        int end = this->rows * this->columns;
+        PTR_START(end)
+            *ptr = 0;
+
+            ++ptr;
+        PTR_END
+
+        this->len = i;
     }
-    Matrix() {
+    Matrix(void) {
         this->rows = 1;
         this->colums = 1;
-        this->allocSpace();
+
+        this->data = new float *[this->rows];
+        this->data[0] = new float [this->colums];
+
         this->data[0][0] = 0;
+
+        this->len = 1;
     }
     Matrix(const Matrix& m) {
         this->rows = m.rows;
         this->colums = m.colums;
 
         this->allocSpace();
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                this->data[i][j] = m.data[i][j];
-                j++;
-            }
-            i++;
-        }
+
+        float *ptr     = &this->data[0][0];
+        float *ref_ptr = &m.data[0][0];
+
+        PTR_START(m.len)
+            *ptr = *ref_ptr;
+
+            ++ptr;
+            ++ref_ptr;
+        PTR_END
+
+        this->len = i;
     }
 
     // Deconstructor
-    virtual ~Matrix() {
+    virtual ~Matrix(void) {
         int i = 0;
         while (i < this->rows) {
             delete[] this->data[i];
-            i++;
+            ++i;
         }
         delete[] this->data;
     }
 
     // Operators
     Matrix& operator=(const Matrix& m) {
-        if ((this->rows != m.rows) || (this->colums != m.colums)) {
-            int i = 0;
-            while (i < this->rows) {
-                delete[] this->data[i];
-                i++;
-            }
-            delete[] this->data;
-
-            this->rows = m.rows;
-            this->colums = m.colums;
-            this->allocSpace();
-        }
-
         int i = 0;
         while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                this->data[i][j] = m.data[i][j];
-                j++;
-            }
-            i++;
+            delete[] this->data[i];
+            ++i;
         }
+        delete[] this->data;
+
+        this = *new Matrix(m);
 
         return *this;
     }
     Matrix& operator-=(const Matrix& m) {
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                this->data[i][j] -= m.data[i][j];
-                j++;
-            }
-            i++;
-        }
+        float *ptr   = &this->data[0][0];
+        float *m_ptr = &m.data[0][0];
+
+        PTR_START(this->len)
+            *ptr -= *m_ptr;
+
+            ++ptr;
+            ++m_ptr;
+        PTR_END
+
         return *this;
     }
     Matrix& operator*=(const Matrix& m) {
-        Matrix temp(this->rows, m.colums);
-        int i = 0;
-        while (i < temp.rows) {
-            int j = 0;
-            while (j < temp.colums) {
-                int k = 0;
-                while (k < this->colums) {
-                    temp.data[i][j] += this->data[i][k] * m.data[k][j];
-                    k++;
-                }
-                j++;
-            }
-            i++;
-        }
-
-        *this = temp;
-        return *this;
-    }
-
-    // Functions
-    Matrix copy(const Matrix& m) {
-        this->rows = m.rows;
-        this->colums = m.colums;
-
-        this->allocSpace();
-
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                this->data[i][j] = m.data[i][j];
-                j++;
-            }
-            i++;
-        }
-        return m;
-    }
-    static Matrix fromArray(const float* arr) {
-        Matrix t(2, 1);
-
-        int i = 0;
-        while (i < t.rows) {
-            int j = 0;
-            while (j < t.colums) {
-                t.data[i][j] = arr[i];
-                j++;
-            }
-            i++;
-        }
-        return t;
-    }
-    const float* toArray() {
-        float *arr = new float [2];
-
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                arr[i] = this->data[i][j];
-                j++;
-            }
-            i++;
-        }
-        return arr;
-    }
-    void randomize() {
-        struct timeval64 ts;
-
-        unsigned int seed = (unsigned int)(ts.tv_sec ^ ts.tv_usec);
-
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                this->data[i][j] = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
-                j++;
-            }
-            i++;
-        }
-    }
-    void add(const Matrix& a) {
-        if(a.rows > this->rows) {
-            int i = 0;
-            while (i < this->rows) {
-                int j = 0;
-                while (j < this->colums) {
-                    this->data[i][j] += a.data[i][j];
-                    j++;
-                }
-                i++;
-            }
-        } else {
-            int i = 0;
-            while (i < a.rows) {
-                int j = 0;
-                while (j < a.colums) {
-                    this->data[i][j] += a.data[i][j];
-                    j++;
-                }
-                i++;
-            }
-        }
-    }
-    void add(const float n) {
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                this->data[i][j] += n;
-                j++;
-            }
-            i++;
-        }
-    }
-    void multiply(const Matrix& a) {
-        if (this->colums <= a.rows) {
-            this->rows = a.rows;
-            this->colums = a.colums;
+        if (this->columns <= m.rows) {
+            this->rows = m->rows;
+            this->columns = m.columns;
 
             this->allocSpace();
 
             int i = 0;
-            while (i < this->rows){
-                int j = 0;
-                while (j < a.colums) {
-                    int k = 0;
-                    while (k < a.colums) {
-                        this->data[i][j] += this->data[j][k] * a.data[i][j];
-                        k++;
+            while (i < this->rows) {
+                register int j = 0;
+                while (j < m.columns) {
+                    register int k = 0;
+                    while (k < m.columns) {
+                        this->data[i][j] += this->data[i][k] * m.data[k][j];
+                        ++k;
                     }
-                    j++;
+                    ++j;
                 }
-                i++;
+                ++i;
             }
         } else {
-            // hadamard product
-            int i = 0;
-            while (i < this->rows) {
-                int j = 0;
-                while (j < this->rows) {
-                    this->data[i][j] *= a.data[i][j];
-                    j++;
-                }
-                i++;
+            float *ptr    = &this->data[0][0];
+            float *m_ptr  = &m.data[0][0];
+
+            PTR_START(this->len)
+                *ptr *= *b_ptr;
+
+                ++ptr;
+                ++b_ptr;
+            PTR_END
+        }
+
+        return *this;
+    }
+
+    // Functions
+    static Matrix fromArray(const float* arr) {
+        Matrix t(2, 1);
+
+        float *ptr = &t.data[0][0];
+
+        PTR_START(t.len)
+            *ptr = arr[i];
+
+            ++ptr;
+        PTR_END
+
+        return t;
+    }
+    const float* toArray(void) {
+        // Array[2]
+        float* arr = new float [2];
+
+        // pointer to Matrix.data
+        float *ptr = &this->data[0][0];
+
+        PTR_START(this->len)
+            arr[i] = *ptr;
+
+            ++ptr;
+        PTR_END
+
+        return arr;
+    }
+    void randomize(void) {
+        float *ptr = &this->data[0][0];
+
+        struct timeval64 ts;
+
+        unsigned int seed = (unsigned int)(ts.tv_sec ^ ts.tv_usec);
+
+        PTR_START(this->len)
+            *ptr = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
+
+            ++ptr;
+        PTR_END
+    }
+    void add(const Matrix& a) {
+        float *ptr	    = &this->data[0][0];
+        float *ref_ptr  = &a.data[0][0];
+
+        int i = 0;
+
+        if(a.rows > this->rows) {
+            while (i < this->len) {
+                *ptr += *ref_ptr;
+
+                ++ptr;
+                ++ref_ptr;
+                ++i;
+            }
+        } else {
+            while (i < a.len) {
+                *ptr += *ref_ptr;
+
+                ++ptr;
+                ++ref_ptr;
+                ++i;
             }
         }
+    }
+    void add(const float n) {
+        float *ptr = &this->data[0][0];
+
+        PTR_START(this->len)
+            *ptr += n;
+
+            ++ptr;
+        PTR_END
     }
     void multiply(const float n) {
         // Scalar product
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                this->data[i][j] *= n;
-                j++;
-            }
-            i++;
-        }
+        float *ptr = &this->data[0][0];
+
+        PTR_START(this->len)
+            *ptr *= n;
+
+            ++ptr;
+        PTR_END
     }
     void map(vFunctionCall func) {
         // Apply a function to every element of matrix
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                this->data[i][j] = func(this->data[i][j]);
-                j++;
-            }
-            i++;
-        }
+        float *ptr = &this->data[0][0];
+
+        PTR_START(this->len)
+            *ptr = func(*ptr);
+
+            ++ptr;
+        PTR_END
     }
-    void print() {
-        int i = 0;
-        while (i < this->rows) {
-            int j = 0;
-            while (j < this->colums) {
-                cout << this->data[i][j] << " ";
-                j++;
+    void print(void) {
+        float *ptr = &this->data[0][0];
+
+        int cout = 0;
+        PTR_START(this->len)
+            cout << *ptr << " ";
+            ++ptr;
+            cout++;
+
+            if(cout == this->columns) {
+                cout = 0;
+                cout << endl;
             }
-            cout << endl;
-            i++;
-        }
+        PTR_END
     }
     const nlohmann::json serialize(const Matrix& m) const {
         nlohmann::json t;
@@ -309,7 +274,7 @@ public:
                 t["data"] += m.data[i][j];
                 j++;
             }
-            i++;
+            ++i;
         }
 
         return t.dump();
@@ -318,23 +283,25 @@ public:
     // Static functions
     static Matrix transpose(const Matrix& m) {
         Matrix t(m.rows, m.colums);
-        t.allocSpace();
 
-        int i = 0;
-        while (i < t.rows) {
-            int j = 0;
-            while (j < t.rows) {
-                t.data[i][j] = m.data[j][i];
-                j++;
-            }
-            i++;
-        }
+        float *ptr	 = &t.data[0][0];
+        float *m_ptr = &m.data[0][0];
+
+        PTR_START(t.len)
+            *ptr = *m_ptr;
+
+            ++ptr;
+            ++m_ptr;
+        PTR_END
+
         return t;
     }
     static Matrix multiply(const Matrix& a, const Matrix& b) {
+        Matrix t;
+
         // Matrix product
         if (a.colums != b.rows) {
-            Matrix t(b.rows, b.colums);
+            t(b.rows, b.colums);
 
             int i = 0;
             while (i < t.rows) {
@@ -344,15 +311,15 @@ public:
                     int k = 0;
                     while (k < t.colums) {
                         t.data[i][j] += a.data[j][k] * b.data[i][j];
-                        k++;
+                        ++k;
                     }
-                    j++;
+                    ++j;
                 }
-                i++;
+                ++i;
             }
         } else {
             // Dot product of values in column
-            Matrix t(a.rows, b.colums);
+            t(a.rows, b.colums);
 
             int i = 0;
             while (i < t.rows) {
@@ -361,56 +328,49 @@ public:
                     int k = 0;
                     while (k < a.colums) {
                         t.data[i][j] += a.data[i][k] * b.data[k][j];
-                        k++;
+                        ++k;
                     }
-                    j++;
+                    ++j;
                 }
-                i++;
+                ++i;
             }
         }
 
         return t;
     }
     static Matrix subtract(const Matrix& a, const Matrix& b) {
-        // Return a new Matrix(a - b)
-        if (a.colums >= b.rows) {
-            Matrix t(b.rows, b.colums);
-            int i = 0;
-            while (i < t.rows) {
-                int j = 0;
-                while (j < t.colums) {
-                    t.data[i][j] = a.data[i][j] - b.data[i][j];
-                    j++;
-                }
-                i++;
-            }
-        } else {
-            Matrix t(a.rows, b.colums);
-            int i = 0;
-            while (i < t.rows) {
-                int j = 0;
-                while (j < t.colums) {
-                    t.data[i][j] = a.data[i][j] - b.data[i][j];
-                    j++;
-                }
-                i++;
-            }    
-        }
+        Matrix t;
+        if (a.columns >= b.rows)
+            t(b.rows, b.columns);
+        else
+            t(a.rows, b.columns);
+
+        float *ptr	 = &t.data[0][0];
+        float *a_ptr = &a.data[0][0];
+        float *b_ptr = &b.data[0][0];
+
+        PTR_START(t.len)
+            *ptr = *a_ptr - *b_ptr;
+            
+            ++ptr;
+            ++a_ptr;
+            ++b_ptr;
+        PTR_END
+
         return t;
     }
     static Matrix map(const Matrix& m, vFunctionCall func) {
         Matrix t(m.rows, m.colums);
 
-        // Apply a function to every element of matrix
-        int i = 0;
-        while (i < m.rows) {
-            int j = 0;
-            while (j < m.colums) {
-                t.data[i][j] = func(t.data[i][j]);
-                j++;
-            }
-            i++;
-        }
+        float *ptr   = &t.data[0][0];
+        float *m_ptr = &m.data[0][0];
+
+        PTR_START(t.len)
+            *ptr = func(*m_ptr);
+            
+            ++ptr;
+            ++m_ptr;
+        PTR_END
 
         return t;
     }
