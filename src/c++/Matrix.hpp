@@ -129,10 +129,10 @@ public:
             float *m_ptr  = &m.data[0][0];
 
             PTR_START(this->len)
-                *ptr *= *b_ptr;
+                *ptr *= *m_ptr;
 
                 ++ptr;
-                ++b_ptr;
+                ++m_ptr;
             PTR_END
         }
 
