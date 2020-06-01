@@ -19,6 +19,7 @@ static float dsigmoid(float y) {
 
 class NeuralNetwork {
 private:
+
     // Variables
     int input_nodes, hidden_nodes, output_nodes;
     
@@ -28,6 +29,7 @@ private:
 
     Matrix weights_ih, weights_ho, bias_h, bias_o;
 public:
+
     // Constructors
     NeuralNetwork(const NeuralNetwork& a) {
         this->input_nodes = a.input_nodes;

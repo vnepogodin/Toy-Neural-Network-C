@@ -15,6 +15,7 @@ typedef float (* vFunctionCall)(float args);
 
 class Matrix {
 private:
+
 	// Variables
     int len;
 
@@ -28,15 +29,16 @@ private:
 
         int i = 0;
         while (i < this->rows) {
-            this->data[i] = new float [this->colums];
+            this->data[i] = new float [this->columns];
             ++i;
         }
     }
 public:
+
     // Constructors
-    Matrix(const int rows, const int colums) {
+    Matrix(const int rows, const int columns) {
         this->rows = rows;
-        this->colums = colums;
+        this->columns = colums;
 
         this->allocSpace();
 
@@ -53,10 +55,10 @@ public:
     }
     Matrix(void) {
         this->rows = 1;
-        this->colums = 1;
+        this->columns = 1;
 
         this->data = new float *[this->rows];
-        this->data[0] = new float [this->colums];
+        this->data[0] = new float [this->columns];
 
         this->data[0][0] = 0;
 
@@ -64,7 +66,7 @@ public:
     }
     Matrix(const Matrix& m) {
         this->rows = m.rows;
-        this->colums = m.colums;
+        this->columns = m.colums;
 
         this->allocSpace();
 
@@ -265,12 +267,12 @@ public:
     const nlohmann::json serialize(const Matrix& m) const {
         nlohmann::json t;
         t["rows"] = m.rows;
-        t["colums"] = m.colums;
+        t["columns"] = m.colums;
 
         int i = 0;
         while (i < m.rows) {
             int j = 0;
-            while (j < m.colums) {
+            while (j < m.columns) {
                 t["data"] += m.data[i][j];
                 j++;
             }
@@ -282,7 +284,7 @@ public:
 
     // Static functions
     static Matrix transpose(const Matrix& m) {
-        Matrix t(m.rows, m.colums);
+        Matrix t(m.rows, m.columns);
 
         float *ptr	 = &t.data[0][0];
         float *m_ptr = &m.data[0][0];
@@ -300,16 +302,16 @@ public:
         Matrix t;
 
         // Matrix product
-        if (a.colums != b.rows) {
-            t(b.rows, b.colums);
+        if (a.columns != b.rows) {
+            t(b.rows, b.columns);
 
             int i = 0;
             while (i < t.rows) {
                 int j = 0;
-                while (j < t.colums) {
+                while (j < t.columns) {
                     t.data[i][j] = 0;
                     int k = 0;
-                    while (k < t.colums) {
+                    while (k < t.columns) {
                         t.data[i][j] += a.data[j][k] * b.data[i][j];
                         ++k;
                     }
@@ -319,14 +321,14 @@ public:
             }
         } else {
             // Dot product of values in column
-            t(a.rows, b.colums);
+            t(a.rows, b.columns);
 
             int i = 0;
             while (i < t.rows) {
                 int j = 0;
-                while (j < t.colums) {
+                while (j < t.columns) {
                     int k = 0;
-                    while (k < a.colums) {
+                    while (k < a.columns) {
                         t.data[i][j] += a.data[i][k] * b.data[k][j];
                         ++k;
                     }
@@ -360,7 +362,7 @@ public:
         return t;
     }
     static Matrix map(const Matrix& m, vFunctionCall func) {
-        Matrix t(m.rows, m.colums);
+        Matrix t(m.rows, m.columns);
 
         float *ptr   = &t.data[0][0];
         float *m_ptr = &m.data[0][0];
@@ -375,12 +377,12 @@ public:
         return t;
     }
     static Matrix deserialize(const nlohmann::json& t) {
-        Matrix m = *new Matrix(t["rows"].get<int>(), t["colums"].get<int>());
+        Matrix m = *new Matrix(t["rows"].get<int>(), t["columns"].get<int>());
 
         int i = 0;
         while (i < m.rows) {
             int j = 0;
-            while (j < m.colums) {
+            while (j < m.columns) {
                 m.data[i][j] = t["data"][j].get<float>();
                 j++;
             }
