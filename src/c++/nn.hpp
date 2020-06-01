@@ -1,9 +1,8 @@
 // Other techniques for learning
 #pragma once
 
-#include <cmath> /* exp */
-
 #include <Matrix.hpp>
+#include <cmath> /* exp */
 
 typedef float (* vFunctionCall)(float args);
 
@@ -18,18 +17,7 @@ static float dsigmoid(float y) {
 }
 
 class NeuralNetwork {
-private:
-
-    // Variables
-    int input_nodes, hidden_nodes, output_nodes;
-    
-    float learning_rate;
-
-    vFunctionCall activation_function;
-
-    Matrix weights_ih, weights_ho, bias_h, bias_o;
 public:
-
     // Constructors
     NeuralNetwork(const NeuralNetwork& a) {
         this->input_nodes = a.input_nodes;
@@ -188,4 +176,15 @@ public:
 
         return nn;
     }
+
+private:
+    // Variables
+    int input_nodes, hidden_nodes, output_nodes;
+
+    float learning_rate;
+
+    vFunctionCall activation_function;
+
+    Matrix weights_ih, weights_ho, bias_h, bias_o;
+
 };

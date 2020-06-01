@@ -14,27 +14,7 @@ using namespace std;
 typedef float (* vFunctionCall)(float args);
 
 class Matrix {
-private:
-
-	// Variables
-    int len;
-
-	int rows, columns;
-
-    float **data;
-
-    // Function
-    void allocSpace() {
-        this->data = new float *[this->rows];
-
-        int i = 0;
-        while (i < this->rows) {
-            this->data[i] = new float [this->columns];
-            ++i;
-        }
-    }
 public:
-
     // Constructors
     Matrix(const int rows, const int columns) {
         this->rows = rows;
@@ -390,10 +370,24 @@ public:
         }
         return m;
     }
-};
 
-// Operators
-Matrix operator*(const Matrix& a, const Matrix& b) {
-    Matrix t(a);
-    return t *= b;
-}
+private:
+	// Variables
+    int len;
+
+    int rows, columns;
+
+    float **data;
+
+    // Function
+    void allocSpace() {
+        this->data = new float *[this->rows];
+
+        int i = 0;
+        while (i < this->rows) {
+            this->data[i] = new float [this->columns];
+            ++i;
+        }
+    }
+
+};
