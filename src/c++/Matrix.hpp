@@ -30,7 +30,7 @@ public:
     // Constructors
     Matrix(const int rows, const int columns) {
         this->rows = rows;
-        this->columns = colums;
+        this->columns = columns;
 
         this->allocSpace();
 
@@ -58,7 +58,7 @@ public:
     }
     Matrix(const Matrix& m) {
         this->rows = m.rows;
-        this->columns = m.colums;
+        this->columns = m.columns;
 
         this->allocSpace();
 
@@ -259,7 +259,7 @@ public:
     const nlohmann::json serialize(const Matrix& m) const {
         nlohmann::json t;
         t["rows"] = m.rows;
-        t["columns"] = m.colums;
+        t["columns"] = m.columns;
 
         int i = 0;
         while (i < m.rows) {

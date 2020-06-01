@@ -23,8 +23,20 @@
  */
 #define STMT_END while(0)
 
+/**
+ * PTR_START(end):
+ *
+ * Used within multi-statement macros so that they can be used in places
+ * where only one statement is expected by the compiler.
+ */
 #define PTR_START(end) register int i = 0; while (i < (end)) {
 
+/**
+ * PTR_END:
+ *
+ * Used within multi-statement macros so that they can be used in places
+ * where only one statement is expected by the compiler.
+ */
 #define PTR_END ++i; }
 
 #define length_str(string, size) STMT_START{   \
@@ -201,7 +213,6 @@ void matrix_free(register Matrix *__restrict m)  {
 
 /**
  * matrix_equal:
- * @a: a #Matrix.
  * @b: a reference #Matrix.
  * @example:
  *		
@@ -214,10 +225,8 @@ void matrix_free(register Matrix *__restrict m)  {
  * and with a reference data
  *
  */
-void matrix_equal(register Matrix *a, const Matrix *b) {
-    matrix_free(a);
-	
-	a = matrix_new_with_matrix(b);
+Matrix* matrix_equal(const Matrix *b) {	
+	return matrix_new_with_matrix(b);
 }
 
 /**
