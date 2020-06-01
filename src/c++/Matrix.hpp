@@ -87,13 +87,6 @@ public:
 
     // Operators
     Matrix& operator=(const Matrix& m) {
-        int i = 0;
-        while (i < this->rows) {
-            delete[] this->data[i];
-            ++i;
-        }
-        delete[] this->data;
-
         this = *new Matrix(m);
 
         return *this;
