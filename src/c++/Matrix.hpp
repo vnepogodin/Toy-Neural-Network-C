@@ -21,8 +21,6 @@
  */
 #define PTR_END ++i; }
 
-typedef float (* vFunctionCall)(float args);
-
 class Matrix {
 public:
     // Constructors
@@ -231,12 +229,12 @@ public:
             ++ptr;
         PTR_END
     }
-    void map(vFunctionCall func) {
+    void map(float (*func)(float)) {
         // Apply a function to every element of matrix
         float *ptr = &this->data[0][0];
 
         PTR_START(this->len)
-            *ptr = func(*ptr);
+            *ptr = (*func)(*ptr);
 
             ++ptr;
         PTR_END
@@ -353,14 +351,14 @@ public:
 
         return t;
     }
-    static Matrix map(const Matrix& m, vFunctionCall func) {
+    static Matrix map(const Matrix& m, float (*func)(float)) {
         Matrix t(m.rows, m.columns);
 
         float *ptr   = &t.data[0][0];
         float *m_ptr = &m.data[0][0];
 
         PTR_START(t.len)
-            *ptr = func(*m_ptr);
+            *ptr = (*func)(*m_ptr);
             
             ++ptr;
             ++m_ptr;
