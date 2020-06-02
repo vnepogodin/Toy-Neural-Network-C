@@ -27,7 +27,7 @@ public:
 
         // TODO: copy these as well
         this->setLearningRate(a.learning_rate);
-        this->setActivationFunction(a.activation_function);
+        this->activation_function = a.activation_function;
     }
     NeuralNetwork(const int input_nodes, const int hidden_nodes, const int output_nodes)
         : input_nodes(input_nodes), hidden_nodes(hidden_nodes), output_nodes(output_nodes) {
@@ -48,6 +48,12 @@ public:
 
     // Deconstructor
     virtual ~NeuralNetwork(void) {
+        this->activation_function = nullptr;
+
+        this->weights_ih.free();
+        this->weights_ho.free();
+        this->bias_h.free();
+        this->bias_o.free();
     }
 
     // Functions

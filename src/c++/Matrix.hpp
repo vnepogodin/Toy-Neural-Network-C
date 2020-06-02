@@ -391,11 +391,11 @@ private:
 
     // Function
     void allocSpace() {
-        this->data = new float* [this->rows];
+        this->data = (float **)new float* [this->rows];
         
         int i = 0;
         while (i < this->rows) {
-            this->data[i] = new float [this->columns];
+            this->data[i] = (float *)new float [this->columns];
             ++i;
         }
     }
