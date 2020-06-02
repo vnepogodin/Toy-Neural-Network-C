@@ -1,9 +1,9 @@
 // Matrix lib
 #pragma once
 
+#include "json.hpp" // json
 #include <cstdlib> // malloc
 #include <ctime> // rand_r, timeval64
-#include <json.hpp> // json
 
 /**
  * PTR_START(end):
@@ -21,7 +21,7 @@
  */
 #define PTR_END ++i; }
 
-using namespace std;
+using std::printf;
 
 typedef float (* vFunctionCall)(float args);
 
@@ -87,9 +87,7 @@ public:
 
     // Operators
     Matrix& operator=(const Matrix& m) {
-        this = *new Matrix(m);
-
-        return *this;
+        return *new Matrix(m);
     }
     Matrix& operator-=(const Matrix& m) {
         float *ptr   = &this->data[0][0];
@@ -106,16 +104,16 @@ public:
     }
     Matrix& operator*=(const Matrix& m) {
         if (this->columns <= m.rows) {
-            this->rows = m->rows;
+            this->rows = m.rows;
             this->columns = m.columns;
 
             this->allocSpace();
 
             int i = 0;
             while (i < this->rows) {
-                register int j = 0;
+                int j = 0;
                 while (j < m.columns) {
-                    register int k = 0;
+                    int k = 0;
                     while (k < m.columns) {
                         this->data[i][j] += this->data[i][k] * m.data[k][j];
                         ++k;
@@ -239,13 +237,13 @@ public:
 
         int cout = 0;
         PTR_START(this->len)
-            cout << *ptr << " ";
+            printf("%f ", *ptr);
             ++ptr;
             cout++;
 
             if(cout == this->columns) {
                 cout = 0;
-                cout << endl;
+                printf("\n");
             }
         PTR_END
     }
@@ -288,7 +286,7 @@ public:
 
         // Matrix product
         if (a.columns != b.rows) {
-            t(b.rows, b.columns);
+            t = *new Matrix(b.rows, b.columns);
 
             int i = 0;
             while (i < t.rows) {
@@ -306,7 +304,7 @@ public:
             }
         } else {
             // Dot product of values in column
-            t(a.rows, b.columns);
+            t = *new Matrix(a.rows, b.columns);
 
             int i = 0;
             while (i < t.rows) {
@@ -328,9 +326,9 @@ public:
     static Matrix subtract(const Matrix& a, const Matrix& b) {
         Matrix t;
         if (a.columns >= b.rows)
-            t(b.rows, b.columns);
+            t = *new Matrix(b.rows, b.columns);
         else
-            t(a.rows, b.columns);
+            t = *new Matrix(a.rows, b.columns);
 
         float *ptr	 = &t.data[0][0];
         float *a_ptr = &a.data[0][0];
