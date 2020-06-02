@@ -24,7 +24,7 @@ Matrix* matrix_new_with_matrix(const Matrix *);
 void matrix_free(register Matrix *__restrict);
 
 /* Operators */
-Matrix* matrix_equal(const Matrix *);
+void matrix_equal(register Matrix *, const Matrix *);
 void matrix_subtract(register Matrix *, const Matrix *);
 void matrix_multiply(register Matrix *, const Matrix *);
 

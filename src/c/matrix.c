@@ -1,11 +1,11 @@
 /* Matrix lib */
 
+#include "matrix.h"
+
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc */
 #include <string.h> /* strtof, strtok */
 #include <time.h> /* rand_r, timeval64 */
-
-#include "matrix.h"
 
 /**
  * STMT_START:
@@ -213,6 +213,7 @@ void matrix_free(register Matrix *__restrict m)  {
 
 /**
  * matrix_equal:
+ * @a: a #Matrix.
  * @b: a reference #Matrix.
  * @example:
  *		
@@ -225,8 +226,25 @@ void matrix_free(register Matrix *__restrict m)  {
  * and with a reference data
  *
  */
-Matrix* matrix_equal(const Matrix *b) {	
-	return matrix_new_with_matrix(b);
+void matrix_equal(register Matrix *a, const Matrix *b) {
+    matrix_free(a);
+	
+	a->rows = b->rows;
+    a->columns = b->columns;
+        
+	allocSpace(a);
+
+	register float *ptr	    = &a->data[0][0];
+	register float *b_ptr   = &b->data[0][0];
+	
+	PTR_START(b->len)
+		*ptr = *b_ptr;
+
+        ++ptr;
+        ++b_ptr;
+    PTR_END
+
+	a->len = i;
 }
 
 /**

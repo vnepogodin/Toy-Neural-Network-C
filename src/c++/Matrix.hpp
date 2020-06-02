@@ -87,7 +87,24 @@ public:
 
     // Operators
     Matrix& operator=(const Matrix& m) {
-        return *new Matrix(m);
+        this->rows = m.rows;
+        this->columns = m.columns;
+        
+        this->allocSpace();
+        
+        float *ptr     = &this->data[0][0];
+        float *m_ptr   = &m.data[0][0];
+        
+         PTR_START(m.len)
+            *ptr = *m_ptr;
+            
+            ++ptr;
+            ++m_ptr;
+        PTR_END
+        
+        this->len = i;
+
+        return *this;
     }
     Matrix& operator-=(const Matrix& m) {
         float *ptr   = &this->data[0][0];
