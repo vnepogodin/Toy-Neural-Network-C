@@ -1,10 +1,8 @@
 // Other techniques for learning
 #pragma once
 
-#include <Matrix.hpp>
-#include <cmath> /* exp */
-
-typedef float (* vFunctionCall)(float args);
+#include "Matrix.hpp"
+#include <cmath> // exp
 
 // Non member functions
 static float sigmoid(float x) {
@@ -19,26 +17,20 @@ static float dsigmoid(float y) {
 class NeuralNetwork {
 public:
     // Constructors
-    NeuralNetwork(const NeuralNetwork& a) {
-        this->input_nodes = a.input_nodes;
-        this->hidden_nodes = a.hidden_nodes;
-        this->output_nodes = a.output_nodes;
+    NeuralNetwork(const NeuralNetwork& a)
+        : input_nodes(a.input_nodes), hidden_nodes(a.hidden_nodes), output_nodes(a.output_nodes) {
+        this->weights_ih = *new Matrix(a.weights_ih);
+        this->weights_ho = *new Matrix(a.weights_ho);
 
-        this->weights_ih(a.weights_ih);
-        this->weights_ho(a.weights_ho);
-
-        this->bias_h(a.bias_h);
-        this->bias_o(a.bias_o);
+        this->bias_h = *new Matrix(a.bias_h);
+        this->bias_o = *new Matrix(a.bias_o);
 
         // TODO: copy these as well
-        this->setLearningRate(0.1);
-        this->setActivationFunction(sigmoid);
+        this->setLearningRate(a.learning_rate);
+        this->setActivationFunction(a.activation_function);
     }
-    NeuralNetwork(const int input_nodes, const int hidden_nodes, const int output_nodes) {
-        this->input_nodes = input_nodes;
-        this->hidden_nodes = hidden_nodes;
-        this->output_nodes = output_nodes;
-
+    NeuralNetwork(const int input_nodes, const int hidden_nodes, const int output_nodes)
+        : input_nodes(input_nodes), hidden_nodes(hidden_nodes), output_nodes(output_nodes) {
         this->weights_ih = *new Matrix(this->hidden_nodes, this->input_nodes);
         this->weights_ho = *new Matrix(this->output_nodes, this->hidden_nodes);
         this->weights_ih.randomize();
@@ -59,7 +51,7 @@ public:
     }
 
     // Functions
-    const float* predict(const float *input_array) {
+    const float* predict(const float* input_array) {
         // Generating the Hidden Outputs
         Matrix inputs = Matrix::fromArray(input_array);
         Matrix hidden = Matrix::multiply(this->weights_ih, inputs);
@@ -79,10 +71,10 @@ public:
     void setLearningRate(const float lr) {
         this->learning_rate = lr;
     }
-    void setActivationFunction(vFunctionCall func) {
-        this->activation_function = func;
+    void setActivationFunction(float (*func)(float)) {
+        this->activation_function = *func;
     }
-    void train(const float *input_array, const float *target_array) {
+    void train(const float* input_array, const float* target_array) {
         // Generating the Hidden Outputs
         Matrix inputs = Matrix::fromArray(input_array);
         Matrix hidden = Matrix::multiply(this->weights_ih, inputs);
@@ -105,7 +97,7 @@ public:
         // let gradient = outputs * (1 - outputs);
         // Calculate gradient
         Matrix gradients = Matrix::map(outputs, this->activation_function);
-        gradients.multiply(output_errors);
+        gradients *= output_errors;
         gradients.multiply(this->learning_rate);
 
 
@@ -124,8 +116,10 @@ public:
 
         // Calculate hidden gradient
         Matrix hidden_gradient = Matrix::map(hidden, this->activation_function);
-        hidden_gradient.multiply(hidden_errors);
-        hidden_gradient.multiply(this->learning_rate);
+
+        // FIXME
+        hidden_gradient.add(hidden_errors);
+        hidden_gradient.add(this->learning_rate);
 
         // Calcuate input->hidden deltas
         Matrix inputs_T = Matrix::transpose(inputs);
@@ -153,12 +147,12 @@ public:
     NeuralNetwork copy() {
         NeuralNetwork t = *new NeuralNetwork(this->input_nodes, this->hidden_nodes, this->output_nodes);
 
-        t.weights_ih(this->weights_ih);
-        t.weights_ho(this->weights_ho);
-        t.bias_h(this->bias_h);
-        t.bias_o(this->bias_o);
-
-        t.learning_rate = this->learning_rate;
+        t.weights_ih = *new Matrix(this->weights_ih);
+        t.weights_ho = *new Matrix(this->weights_ho);
+        t.bias_h = *new Matrix(this->bias_h);
+        t.bias_o = *new Matrix(this->bias_o);
+        
+        t.setLearningRate(this->learning_rate);
 
         return t;
     }
@@ -183,7 +177,7 @@ private:
 
     float learning_rate;
 
-    vFunctionCall activation_function;
+    float (*activation_function)(float);
 
     Matrix weights_ih, weights_ho, bias_h, bias_o;
 };

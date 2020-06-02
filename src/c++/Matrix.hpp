@@ -21,17 +21,12 @@
  */
 #define PTR_END ++i; }
 
-using std::printf;
-
 typedef float (* vFunctionCall)(float args);
 
 class Matrix {
 public:
     // Constructors
-    Matrix(const int rows, const int columns) {
-        this->rows = rows;
-        this->columns = columns;
-
+    Matrix(const int rows, const int columns) : rows(rows), columns(columns) {
         this->allocSpace();
 
         float *ptr = &this->data[0][0];
@@ -45,10 +40,7 @@ public:
 
         this->len = i;
     }
-    Matrix(void) {
-        this->rows = 1;
-        this->columns = 1;
-
+    Matrix(void) : rows(1), columns(1) {
         this->data = new float *[this->rows];
         this->data[0] = new float [this->columns];
 
@@ -56,10 +48,7 @@ public:
 
         this->len = 1;
     }
-    Matrix(const Matrix& m) {
-        this->rows = m.rows;
-        this->columns = m.columns;
-
+    Matrix(const Matrix& m) : rows(m.rows), columns(m.columns) {
         this->allocSpace();
 
         float *ptr     = &this->data[0][0];
@@ -75,8 +64,11 @@ public:
         this->len = i;
     }
 
-    // Deconstructor
+    // Deconstructors
     virtual ~Matrix(void) {
+    }
+    
+    void free(void) {
         int i = 0;
         while (i < this->rows) {
             delete[] this->data[i];
@@ -86,7 +78,9 @@ public:
     }
 
     // Operators
-    Matrix& operator=(const Matrix& m) {
+    void matrix_equal(const Matrix& m) {
+        this->free();
+        
         this->rows = m.rows;
         this->columns = m.columns;
         
@@ -103,8 +97,6 @@ public:
         PTR_END
         
         this->len = i;
-
-        return *this;
     }
     Matrix& operator-=(const Matrix& m) {
         float *ptr   = &this->data[0][0];
@@ -188,7 +180,7 @@ public:
 
         struct timeval64 ts;
 
-        unsigned int seed = (unsigned int)(ts.tv_sec ^ ts.tv_usec);
+        unsigned int seed = (unsigned int)(ts.tv_sec);
 
         PTR_START(this->len)
             *ptr = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
@@ -401,12 +393,19 @@ private:
 
     // Function
     void allocSpace() {
-        this->data = new float *[this->rows];
-
+        this->data = (float **)new float* [this->rows];
+        
         int i = 0;
         while (i < this->rows) {
-            this->data[i] = new float [this->columns];
+            this->data[i] = (float *)new float [this->columns];
             ++i;
         }
     }
 };
+
+// Non Member Operator
+Matrix operator*(const Matrix& a, const Matrix& b) {
+    Matrix t(a);
+
+    return t *= b;
+}

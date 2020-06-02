@@ -1,9 +1,8 @@
 /* Other techniques for learning */
 
+#include "nn.h"
 #include <stdlib.h> /* malloc */
 #include <math.h> /* exp */
-
-#include "nn.h"
 
 /* Non member functions */
 static float sigmoid(float x) {
