@@ -8,11 +8,11 @@ typedef struct _Matrix Matrix;
 
 struct _Matrix {
     /* Variables */
-	int len;
+    int len;
 
-	int rows, columns;	
+    int rows, columns;
 
-	float **data;
+    float **data;
 };
 
 /* Constructors */

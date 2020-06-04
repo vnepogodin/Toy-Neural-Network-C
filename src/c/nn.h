@@ -12,7 +12,7 @@ struct _NeuralNetwork {
 
     float learning_rate;
 
-	float (*activation_function)(float);
+    float (*activation_function)(float);
 
     Matrix *weights_ih, *weights_ho, *bias_h, *bias_o;    
 };
