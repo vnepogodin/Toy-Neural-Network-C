@@ -37,11 +37,11 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *a) {
     nn->hidden_nodes = a->hidden_nodes;
     nn->output_nodes = a->output_nodes;
 
-    nn->weights_ih = matrix_new_with_matrix(a->weights_ih);
-    nn->weights_ho = matrix_new_with_matrix(a->weights_ho);
+    nn->weights_ih = a->weights_ih;
+    nn->weights_ho = a->weights_ho;
     
-    nn->bias_h = matrix_new_with_matrix(a->bias_h);
-    nn->bias_o = matrix_new_with_matrix(a->bias_o);
+    nn->bias_h = a->bias_h;
+    nn->bias_o = a->bias_o;
 
     /* TODO: copy these as well */
     neural_network_setLearningRate(nn, 0.1);
@@ -247,11 +247,10 @@ const json_object* neural_network_serialize(const NeuralNetwork *__restrict nn) 
 NeuralNetwork* neural_network_copy(const NeuralNetwork *__restrict nn) {
 	register NeuralNetwork *t = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
-    t->weights_ih = matrix_new_with_matrix(nn->weights_ih);
-    t->weights_ho = matrix_new_with_matrix(nn->weights_ho);
-    
-    t->bias_h = matrix_new_with_matrix(nn->bias_h);
-    t->bias_o = matrix_new_with_matrix(nn->bias_o);
+    t->weights_ih = nn->weights_ih;
+	t->weights_ho = nn->weights_ho;
+	t->bias_h = nn->bias_h;
+	t->bias_o = nn->bias_o;
 
 	neural_network_setLearningRate(t, nn->learning_rate);
 	neural_network_setActivationFunction(t, nn->activation_function);

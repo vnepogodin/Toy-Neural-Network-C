@@ -408,7 +408,7 @@ void matrix_randomize(register Matrix *m) {
 
 	register struct timeval64 ts;
     
-    unsigned int seed = (unsigned int)(ts.tv_sec ^ ts.tv_usec);
+    unsigned int seed = (unsigned int)(ts.tv_sec);
 
 	PTR_START(m->len)
         *ptr = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
