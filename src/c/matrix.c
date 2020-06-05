@@ -49,11 +49,11 @@
 
 static float* json_strsplit(const char* _str, const char _delim, const int columns) {
     const char delim[2] = { _delim, '\0' };
-    
+
     register int size = 0;
-	
+
     length_str(_str, size);
-    
+
     register char* tmp = (char *)malloc(size - 1);
 
     /*   slice_str   */
@@ -95,12 +95,12 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
 
 #define allocSpace(matrix) STMT_START{                                          \
     (matrix)->data = (float **)malloc(sizeof(float *) * (matrix)->rows);        \
-                                                                		\
-    register int i = 0;                                         		\
-    while (i < (matrix)->rows) {                                		\
+                                                                		        \
+    register int i = 0;                                         		        \
+    while (i < (matrix)->rows) {                                		        \
         (matrix)->data[i] = (float *)malloc(sizeof(float) * (matrix)->columns); \
-        ++i;                                                    		\
-    }                                                           		\
+        ++i;                                                    		        \
+    }                                                           		        \
 }STMT_END
 
 /**
@@ -118,25 +118,26 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
-    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
+    Matrix m;
+    register Matrix *matrix_ptr = &m;
     
-    m->rows = rows;
-    m->columns = columns;
+    matrix_ptr->rows = rows;
+    matrix_ptr->columns = columns;
 
-    allocSpace(m);
+    allocSpace(matrix_ptr);
 
-    register float *ptr = &m->data[0][0];
+    register float *ptr = &matrix_ptr->data[0][0];
     
-    register int end = m->rows * m->columns;
+    register int end = rows * columns;
     PTR_START(end)
         *ptr = 0;
 
         ++ptr;
     PTR_END
 
-    m->len = i;
+    matrix_ptr->len = i;
 
-    return m;
+    return matrix_ptr;
 }
 
 /**
@@ -152,19 +153,20 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new(void) {
-    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
+    Matrix m;
+    register Matrix *matrix_ptr = &m;
 
-    m->rows = 1;
-    m->columns = 1;
+    matrix_ptr->rows = 1;
+    matrix_ptr->columns = 1;
 
-    m->data = (float **)malloc(m->rows);
-    m->data[0] = (float *)malloc(m->columns);
+    matrix_ptr->data = (float **)malloc(1);
+    matrix_ptr->data[0] = (float *)malloc(1);
 
-    m->data[0][0] = 0;
+    matrix_ptr->data[0][0] = 0;
 
-    m->len = 1;
+    matrix_ptr->len = 1;
 
-    return m;
+    return matrix_ptr;
 }
 
 /**
@@ -183,14 +185,15 @@ Matrix* matrix_new(void) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_matrix(const Matrix *m) {
-    register Matrix *t = (Matrix *)malloc(sizeof(Matrix));
+    Matrix t;
+    register Matrix *matrix_ptr = &t;
     
-    t->rows = m->rows;
-    t->columns = m->columns;
+    matrix_ptr->rows = m->rows;
+    matrix_ptr->columns = m->columns;
     
-    allocSpace(t);
+    allocSpace(matrix_ptr);
 
-    register float *ptr     = &t->data[0][0];
+    register float *ptr     = &matrix_ptr->data[0][0];
     register float *ref_ptr = &m->data[0][0];
     
     PTR_START(m->len)
@@ -200,9 +203,9 @@ Matrix* matrix_new_with_matrix(const Matrix *m) {
         ++ref_ptr;
     PTR_END
 
-    t->len = i;
+    matrix_ptr->len = i;
 
-    return t;
+    return matrix_ptr;
 }
 
 /* Deconstructor */
@@ -406,9 +409,7 @@ const float* matrix_toArray(const Matrix *m) {
 void matrix_randomize(register Matrix *m) {
     register float *ptr = &m->data[0][0];
 
-    register struct timeval64 ts;
-
-    unsigned int seed = (unsigned int)(ts.tv_sec);
+    unsigned int seed = (unsigned int)time(NULL);
 
     PTR_START(m->len)
         *ptr = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
