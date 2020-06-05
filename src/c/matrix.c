@@ -39,19 +39,19 @@
  */
 #define PTR_END ++i; }
 
-#define length_str(string, size) STMT_START{   \
-    const register char* buf_str = (string);   \
-    while (*(buf_str) != '\0') {               \
-        ++(size);                              \
-        ++buf_str;                             \
-    }                                          \
+#define length_str(string, size) STMT_START{   	\
+    const register char* buf_str = (string);   	\
+    while (*buf_str != '\0') {                  \
+        ++(size);                              	\
+        ++buf_str;                             	\
+    }                                          	\
 }STMT_END
 
 static float* json_strsplit(const char* _str, const char _delim, const int columns) {
-    const register char delim[2] = { _delim, '\0' };
+    const char delim[2] = { _delim, '\0' };
     
     register int size = 0;
-
+	
     length_str(_str, size);
     
     register char* tmp = (char *)malloc(size - 1);
@@ -93,14 +93,14 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
     return t;
 }
 
-#define allocSpace(matrix) STMT_START{                          \
-    (matrix)->data = (float **)malloc((matrix)->rows);          \
-                                                                \
-    register int i = 0;                                         \
-    while (i < (matrix)->rows) {                                \
-        (matrix)->data[i] = (float *)malloc((matrix)->columns); \
-        ++i;                                                    \
-    }                                                           \
+#define allocSpace(matrix) STMT_START{                                          \
+    (matrix)->data = (float **)malloc(sizeof(float *) * (matrix)->rows);        \
+                                                                		\
+    register int i = 0;                                         		\
+    while (i < (matrix)->rows) {                                		\
+        (matrix)->data[i] = (float *)malloc(sizeof(float) * (matrix)->columns); \
+        ++i;                                                    		\
+    }                                                           		\
 }STMT_END
 
 /**
