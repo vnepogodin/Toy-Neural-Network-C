@@ -30,25 +30,24 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
  *
  * Returns: the new #NeuralNetwork
  */
-NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *a) {
-    NeuralNetwork nn;
-    register NeuralNetwork *nn_ptr = &nn;
+NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *__restrict a) {
+    register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork) * 1);
 
-    nn_ptr->input_nodes = a->input_nodes;
-    nn_ptr->hidden_nodes = a->hidden_nodes;
-    nn_ptr->output_nodes = a->output_nodes;
+    nn->input_nodes = a->input_nodes;
+    nn->hidden_nodes = a->hidden_nodes;
+    nn->output_nodes = a->output_nodes;
 
-    nn_ptr->weights_ih = a->weights_ih;
-    nn_ptr->weights_ho = a->weights_ho;
+    nn->weights_ih = a->weights_ih;
+    nn->weights_ho = a->weights_ho;
     
-    nn_ptr->bias_h = a->bias_h;
-    nn_ptr->bias_o = a->bias_o;
+    nn->bias_h = a->bias_h;
+    nn->bias_o = a->bias_o;
 
     /* TODO: copy these as well */
-    neural_network_setLearningRate(nn_ptr, 0.1);
-    neural_network_setActivationFunction(nn_ptr, sigmoid);
+    neural_network_setLearningRate(nn, a->learning_rate);
+    neural_network_setActivationFunction(nn, a->activation_function);
 
-    return nn_ptr;
+    return nn;
 }
 
 /**
@@ -62,28 +61,27 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *a) {
  * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hidden_nodes, const int output_nodes) {
-    NeuralNetwork nn;
-    register NeuralNetwork *nn_ptr = &nn;
+    register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork) * 1);
     
-    nn_ptr->input_nodes = input_nodes;
-    nn_ptr->hidden_nodes = hidden_nodes;
-    nn_ptr->output_nodes = output_nodes;
+    nn->input_nodes = input_nodes;
+    nn->hidden_nodes = hidden_nodes;
+    nn->output_nodes = output_nodes;
 
-    nn_ptr->weights_ih = matrix_new_with_args(nn_ptr->hidden_nodes, nn_ptr->input_nodes);
-    nn_ptr->weights_ho = matrix_new_with_args(nn_ptr->output_nodes, nn_ptr->hidden_nodes);
-    matrix_randomize(nn_ptr->weights_ih);
-    matrix_randomize(nn_ptr->weights_ho);
+    nn->weights_ih = matrix_new_with_args(hidden_nodes, input_nodes);
+    nn->weights_ho = matrix_new_with_args(output_nodes, hidden_nodes);
+    matrix_randomize(nn->weights_ih);
+    matrix_randomize(nn->weights_ho);
 
-    nn_ptr->bias_h = matrix_new_with_args(nn_ptr->hidden_nodes, 1);
-    nn_ptr->bias_o = matrix_new_with_args(nn_ptr->output_nodes, 1);
-    matrix_randomize(nn_ptr->bias_h);
-    matrix_randomize(nn_ptr->bias_o);
+    nn->bias_h = matrix_new_with_args(hidden_nodes, 1);
+    nn->bias_o = matrix_new_with_args(output_nodes, 1);
+    matrix_randomize(nn->bias_h);
+    matrix_randomize(nn->bias_o);
 
     /* TODO: copy these as well */
-    neural_network_setLearningRate(nn_ptr, 0.1);
-    neural_network_setActivationFunction(nn_ptr, sigmoid);
+    neural_network_setLearningRate(nn, 0.1);
+    neural_network_setActivationFunction(nn, sigmoid);
     
-    return nn_ptr;
+    return nn;
 }
 
 /**
@@ -247,18 +245,17 @@ const json_object* neural_network_serialize(const NeuralNetwork *__restrict nn) 
  * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_copy(const NeuralNetwork *__restrict nn) {
-    NeuralNetwork t;
-    register NeuralNetwork *t_ptr = &t;
+    register NeuralNetwork *t = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
-    t_ptr->weights_ih = nn->weights_ih;
-	t_ptr->weights_ho = nn->weights_ho;
-	t_ptr->bias_h = nn->bias_h;
-	t_ptr->bias_o = nn->bias_o;
+    t->weights_ih = nn->weights_ih;
+    t->weights_ho = nn->weights_ho;
+    t->bias_h = nn->bias_h;
+    t->bias_o = nn->bias_o;
 
-    neural_network_setLearningRate(t_ptr, nn->learning_rate);
-    neural_network_setActivationFunction(t_ptr, nn->activation_function);
+    neural_network_setLearningRate(t, nn->learning_rate);
+    neural_network_setActivationFunction(t, nn->activation_function);
 
-    return t_ptr;
+    return t;
 }
 
 /**

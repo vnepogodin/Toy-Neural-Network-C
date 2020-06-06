@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -ffast-math -I/usr/local/include -I/usr/local/include/json-c
 LDFLAGS = -lm -L/usr/local/lib -ljson-c
-objects = tests/init tests/nn_predict
+objects = tests/init tests/nn_predict tests/nn_train
 all: matrix.o nn.o $(objects)
 
 $(objects): %: %.c
@@ -12,3 +12,4 @@ clean:
 run:
 	./tests/init
 	./tests/nn_predict
+	./tests/nn_train

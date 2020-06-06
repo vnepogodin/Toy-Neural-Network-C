@@ -118,15 +118,14 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
-    Matrix m;
-    register Matrix *matrix_ptr = &m;
+    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
     
-    matrix_ptr->rows = rows;
-    matrix_ptr->columns = columns;
+    m->rows = rows;
+    m->columns = columns;
 
-    allocSpace(matrix_ptr);
+    allocSpace(m);
 
-    register float *ptr = &matrix_ptr->data[0][0];
+    register float *ptr = &m->data[0][0];
     
     register int end = rows * columns;
     PTR_START(end)
@@ -135,9 +134,9 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
         ++ptr;
     PTR_END
 
-    matrix_ptr->len = i;
+    m->len = i;
 
-    return matrix_ptr;
+    return m;
 }
 
 /**
@@ -153,20 +152,19 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new(void) {
-    Matrix m;
-    register Matrix *matrix_ptr = &m;
+    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
 
-    matrix_ptr->rows = 1;
-    matrix_ptr->columns = 1;
+    m->rows = 1;
+    m->columns = 1;
 
-    matrix_ptr->data = (float **)malloc(1);
-    matrix_ptr->data[0] = (float *)malloc(1);
+    m->data = (float **)malloc(1);
+    m->data[0] = (float *)malloc(1);
 
-    matrix_ptr->data[0][0] = 0;
+    m->data[0][0] = 0;
 
-    matrix_ptr->len = 1;
+    m->len = 1;
 
-    return matrix_ptr;
+    return m;
 }
 
 /**
@@ -185,15 +183,14 @@ Matrix* matrix_new(void) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_matrix(const Matrix *m) {
-    Matrix t;
-    register Matrix *matrix_ptr = &t;
+    register Matrix *t = (Matrix *)malloc(sizeof(Matrix));
     
-    matrix_ptr->rows = m->rows;
-    matrix_ptr->columns = m->columns;
+    t->rows = m->rows;
+    t->columns = m->columns;
     
-    allocSpace(matrix_ptr);
+    allocSpace(t);
 
-    register float *ptr     = &matrix_ptr->data[0][0];
+    register float *ptr     = &t->data[0][0];
     register float *ref_ptr = &m->data[0][0];
     
     PTR_START(m->len)
@@ -203,9 +200,9 @@ Matrix* matrix_new_with_matrix(const Matrix *m) {
         ++ref_ptr;
     PTR_END
 
-    matrix_ptr->len = i;
+    t->len = i;
 
-    return matrix_ptr;
+    return t;
 }
 
 /* Deconstructor */

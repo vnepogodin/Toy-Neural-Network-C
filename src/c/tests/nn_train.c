@@ -7,8 +7,7 @@ int main() {
 
     const register float input[] = { 1.f, 0.f };
 
-    const float* output = neural_network_predict(nn, input);
-    printf("%f\n", output[0]);
+    neural_network_train(nn, input, neural_network_predict(nn, input));
 
     neural_network_free(nn);
     return 0;

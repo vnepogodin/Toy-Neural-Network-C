@@ -18,7 +18,7 @@ struct _NeuralNetwork {
 };
 
 /* Constructors */
-NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *);
+NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *__restrict);
 NeuralNetwork* neural_network_new_with_args(const int, const int, const int);
 
 /* Deconstructor */
