@@ -24,7 +24,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.9', 'ninja-build']
+        packages: ['g++-4.9', 'cmake']
 
   
   # OSX / Clang
@@ -55,7 +55,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.8']
+        packages: ['g++-4.8', 'cmake']
 
   - os: linux
     compiler: gcc
@@ -63,7 +63,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.9']
+        packages: ['g++-4.9', 'cmake']
 
   - os: linux
     compiler: gcc
@@ -71,7 +71,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-5']
+        packages: ['g++-5', 'cmake']
 
   - os: linux
     compiler: gcc
@@ -79,7 +79,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-6']
+        packages: ['g++-6', 'cmake']
 
   - os: linux
     compiler: gcc
@@ -87,7 +87,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-7']
+        packages: ['g++-7', 'cmake']
 
   - os: linux
     compiler: gcc
@@ -95,7 +95,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-8']
+        packages: ['g++-8', 'cmake']
 
   - os: linux
     compiler: gcc
@@ -103,7 +103,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-9']
+        packages: ['g++-9', 'cmake']
 
   - os: linux
     compiler: gcc
@@ -113,7 +113,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-9']
+        packages: ['g++-9', 'cmake']
 
 
 ################
@@ -136,7 +136,7 @@ script:
   
   # compile and execute unit tests
   - mkdir -p build && cd build
-  - make .. CC=${COMPILER}
+  - make ../src/c CC=${COMPILER}
   - cd ..
 
   # check if homebrew works (only checks develop branch)   
