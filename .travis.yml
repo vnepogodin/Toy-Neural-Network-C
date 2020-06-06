@@ -136,7 +136,7 @@ script:
   
   # compile and execute unit tests
   - mkdir -p build && cd build
-  - make ../src/c CC=${COMPILER}
+  - make ../src/c CC=${COMPILER} && make run ../src/c CC=${COMPILER}
   - cd ..
 
   # check if homebrew works (only checks develop branch)   
