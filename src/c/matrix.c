@@ -93,14 +93,14 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
     return t;
 }
 
-#define allocSpace(matrix) STMT_START{                                  \
-    (matrix)->data = malloc(sizeof(float *) * (matrix)->rows);          \
-                                                                		\
-    register int i = 0;                                         		\
-    while (i < (matrix)->rows) {                                	    \
-        (matrix)->data[i] = malloc(sizeof(float) * (matrix)->columns);  \
-        ++i;                                                    		\
-    }                                                           		\
+#define allocSpace(matrix) STMT_START{                          \
+    (matrix)->data = (float **)malloc((matrix)->rows);          \
+                                                                \
+    register int i = 0;                                         \
+    while (i < (matrix)->rows) {                                \
+        (matrix)->data[i] = (float *)malloc((matrix)->columns); \
+        ++i;                                                   	\
+    }                                                          	\
 }STMT_END
 
 /**
@@ -406,7 +406,7 @@ const float* matrix_toArray(const Matrix *m) {
 void matrix_randomize(register Matrix *m) {
     register float *ptr = &m->data[0][0];
 
-    unsigned int seed = (unsigned int)time(NULL);
+    unsigned int seed = (unsigned int)time64(NULL);
 
     PTR_START(m->len)
         *ptr = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
