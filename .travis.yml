@@ -21,7 +21,6 @@ matrix:
     compiler: gcc
     env:
       - COMPILER=g++-4.9
-      - CMAKE_OPTIONS=-DJSON_NoExceptions=ON
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -56,7 +55,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.8', 'ninja-build']
+        packages: ['g++-4.8']
 
   - os: linux
     compiler: gcc
@@ -64,7 +63,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.9', 'ninja-build']
+        packages: ['g++-4.9']
 
   - os: linux
     compiler: gcc
@@ -72,7 +71,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-5', 'ninja-build']
+        packages: ['g++-5']
 
   - os: linux
     compiler: gcc
@@ -80,7 +79,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-6', 'ninja-build']
+        packages: ['g++-6']
 
   - os: linux
     compiler: gcc
@@ -88,7 +87,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-7', 'ninja-build']
+        packages: ['g++-7']
 
   - os: linux
     compiler: gcc
@@ -96,7 +95,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-8', 'ninja-build']
+        packages: ['g++-8']
 
   - os: linux
     compiler: gcc
@@ -104,7 +103,7 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-9', 'ninja-build']
+        packages: ['g++-9']
 
   - os: linux
     compiler: gcc
@@ -114,13 +113,13 @@ matrix:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-9', 'ninja-build']
+        packages: ['g++-9']
 
 
 ################
 #   install    #
 ################
-install: ./install-dependencies.sh
+install: sh install-dependencies.sh
 
 
 ################
