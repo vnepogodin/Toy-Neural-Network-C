@@ -127,11 +127,11 @@ install: sh install-dependencies.sh
 ################
 
 script:
-  # get Git and Make (only for systems with brew - macOS)
+  # get Make (only for systems with brew - macOS)
   - |
      if [[ (-x $(which brew)) ]]; then
        brew update
-       brew install git make
+       brew install make
      fi
   
   # compile and execute unit tests
