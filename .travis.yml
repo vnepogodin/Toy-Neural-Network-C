@@ -1,6 +1,149 @@
-# C++, C project
-language: cpp, c
+#########################
+# project configuration #
+#########################
+
+# C++ project
+language: cpp
 
 dist: trusty
 sudo: required
 group: edge
+
+
+################
+# build matrix #
+################
+
+matrix:
+  include:
+
+  - os: linux
+    compiler: gcc
+    env:
+      - COMPILER=g++-4.9
+      - CMAKE_OPTIONS=-DJSON_NoExceptions=ON
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['g++-4.9', 'ninja-build']
+
+  
+  # OSX / Clang
+
+  - os: osx
+    osx_image: xcode9.3
+
+  - os: osx
+    osx_image: xcode9.4
+
+  - os: osx
+    osx_image: xcode10
+
+  - os: osx
+    osx_image: xcode10.1
+
+  - os: osx
+    osx_image: xcode10.2
+
+  - os: osx
+    osx_image: xcode11.2
+
+  # Linux / GCC
+
+  - os: linux
+    compiler: gcc
+    env: COMPILER=g++-4.8
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['g++-4.8', 'ninja-build']
+
+  - os: linux
+    compiler: gcc
+    env: COMPILER=g++-4.9
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['g++-4.9', 'ninja-build']
+
+  - os: linux
+    compiler: gcc
+    env: COMPILER=g++-5
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['g++-5', 'ninja-build']
+
+  - os: linux
+    compiler: gcc
+    env: COMPILER=g++-6
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['g++-6', 'ninja-build']
+
+  - os: linux
+    compiler: gcc
+    env: COMPILER=g++-7
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['g++-7', 'ninja-build']
+
+  - os: linux
+    compiler: gcc
+    env: COMPILER=g++-8
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['g++-8', 'ninja-build']
+
+  - os: linux
+    compiler: gcc
+    env: COMPILER=g++-9
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['g++-9', 'ninja-build']
+
+  - os: linux
+    compiler: gcc
+    env:
+      - COMPILER=g++-9
+      - CXXFLAGS=-std=c++2a
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['g++-9', 'ninja-build']
+
+
+################
+#   install    #
+################
+install: ./install-dependencies.sh
+
+
+################
+# build script #
+################
+
+script:
+  # get Git and Make (only for systems with brew - macOS)
+  - |
+     if [[ (-x $(which brew)) ]]; then
+       brew update
+       brew install git make
+     fi
+  
+  # compile and execute unit tests
+  - mkdir -p build && cd build
+  - make .. CC=${COMPILER}
+  - cd ..
+
+  # check if homebrew works (only checks develop branch)   
+  - if [ `which brew` ]; then   
+    brew update ;
+    brew tap nlohmann/json ;
+    brew install nlohmann_json --HEAD ;
+    brew test nlohmann_json ;
+    fi
