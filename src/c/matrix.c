@@ -93,14 +93,14 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
     return t;
 }
 
-#define allocSpace(matrix) STMT_START{                                          \
-    (matrix)->data = (float **)malloc(sizeof(float *) * (matrix)->rows);        \
-                                                                		        \
-    register int i = 0;                                         		        \
-    while (i < (matrix)->rows) {                                		        \
-        (matrix)->data[i] = (float *)malloc(sizeof(float) * (matrix)->columns); \
-        ++i;                                                    		        \
-    }                                                           		        \
+#define allocSpace(matrix) STMT_START{                                  \
+    (matrix)->data = malloc(sizeof(float *) * (matrix)->rows);          \
+                                                                		\
+    register int i = 0;                                         		\
+    while (i < (matrix)->rows) {                                	    \
+        (matrix)->data[i] = malloc(sizeof(float) * (matrix)->columns);  \
+        ++i;                                                    		\
+    }                                                           		\
 }STMT_END
 
 /**
