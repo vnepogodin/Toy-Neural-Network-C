@@ -3,6 +3,9 @@
 #include "matrix.h"
 
 #include <stdio.h> /* printf */
+#ifdef __linux__
+    #include <linux/gfp.h>
+#endif
 #include <stdlib.h> /* malloc */
 #include <string.h> /* strtof, strtok */
 #include <time.h> /* rand_r, timeval64 */
@@ -118,8 +121,12 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
-    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
-    
+#ifdef __linux__
+    register Matrix *m = (Matrix *)kzalloc(sizeof(Matrix), GFP_USER);
+#else
+    register Matrix *m = (Matrix *)calloc(1, sizeof(Matrix));
+#endif
+
     m->rows = rows;
     m->columns = columns;
 
@@ -152,7 +159,11 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new(void) {
-    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
+#ifdef __linux__
+    register Matrix *m = (Matrix *)kzalloc(sizeof(Matrix), GFP_USER);
+#else
+    register Matrix *m = (Matrix *)calloc(1, sizeof(Matrix));
+#endif
 
     m->rows = 1;
     m->columns = 1;
@@ -183,7 +194,11 @@ Matrix* matrix_new(void) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_matrix(const Matrix *m) {
-    register Matrix *t = (Matrix *)malloc(sizeof(Matrix));
+#ifdef __linux__
+    register Matrix *t = (Matrix *)kzalloc(sizeof(Matrix), GFP_USER);
+#else
+    register Matrix *t = (Matrix *)calloc(1, sizeof(Matrix));
+#endif
     
     t->rows = m->rows;
     t->columns = m->columns;
@@ -209,6 +224,7 @@ Matrix* matrix_new_with_matrix(const Matrix *m) {
 void matrix_free(register Matrix *__restrict m)  {
     free(m->data);
     m->data = NULL;
+    free(m);
 }
 
 /**

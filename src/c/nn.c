@@ -97,6 +97,7 @@ void neural_network_free(register NeuralNetwork *__restrict nn) {
     matrix_free(nn->weights_ho);
     matrix_free(nn->bias_h);
     matrix_free(nn->bias_o);
+    free(nn);
 }
 
 /**
