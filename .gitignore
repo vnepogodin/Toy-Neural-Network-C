@@ -1,3 +1,8 @@
+*.DS_Store
+*init
+*nn_predict
+*nn_train
+
 # Prerequisites
 *.d
 

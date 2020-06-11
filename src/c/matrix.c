@@ -3,12 +3,19 @@
 #include "matrix.h"
 
 #include <stdio.h> /* printf */
-#ifdef __linux__
-    #include <linux/gfp.h>
-#endif
 #include <stdlib.h> /* malloc */
 #include <string.h> /* strtof, strtok */
 #include <time.h> /* rand_r, timeval64 */
+
+struct _Matrix {
+    /* Variables */
+    int len;
+
+    int rows, columns;
+
+    float **data;
+};
+
 
 /**
  * STMT_START:
@@ -42,12 +49,24 @@
  */
 #define PTR_END ++i; }
 
+
+/* Non member functions */
 #define length_str(string, size) STMT_START{   	\
     const register char* buf_str = (string);   	\
     while (*buf_str != '\0') {                  \
         ++(size);                              	\
         ++buf_str;                             	\
     }                                          	\
+}STMT_END
+
+#define allocSpace(matrix) STMT_START{                          \
+    (matrix)->data = (float **)malloc((matrix)->rows);          \
+                                                                \
+    register int i = 0;                                \
+    while (i < (matrix)->rows) {                                \
+        (matrix)->data[i] = (float *)malloc((matrix)->columns); \
+        ++i;                                                   	\
+    }                                                          	\
 }STMT_END
 
 static float* json_strsplit(const char* _str, const char _delim, const int columns) {
@@ -57,7 +76,7 @@ static float* json_strsplit(const char* _str, const char _delim, const int colum
 
     length_str(_str, size);
 
-    register char* tmp = (char *)malloc(size - 1);
+    register char* tmp = (char *)__alloca(size - 1);
 
     /*   slice_str   */
     register int i = 2;
@@ -80,7 +99,7 @@ static float* json_strsplit(const char* _str, const char _delim, const int colum
     while (i < columns) {
         result[i] = strtof(token, NULL);
 
-        token = strtok(NULL, delim);
+        token = strtok(tmp, delim);
        
         ++i;
     }
@@ -88,7 +107,7 @@ static float* json_strsplit(const char* _str, const char _delim, const int colum
     return result;
 }
 
-static json_object* json_find(const json_object *__restrict j, const char* __restrict key) {
+static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
     json_object *t;
 
     json_object_object_get_ex(j, key, &t);
@@ -96,15 +115,6 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
     return t;
 }
 
-#define allocSpace(matrix) STMT_START{                          \
-    (matrix)->data = (float **)malloc((matrix)->rows);          \
-                                                                \
-    register int i = 0;                                         \
-    while (i < (matrix)->rows) {                                \
-        (matrix)->data[i] = (float *)malloc((matrix)->columns); \
-        ++i;                                                   	\
-    }                                                          	\
-}STMT_END
 
 /**
  * matrix_new_with_args:
@@ -121,11 +131,9 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
-#ifdef __linux__
-    register Matrix *m = (Matrix *)kzalloc(sizeof(Matrix), GFP_USER);
-#else
-    register Matrix *m = (Matrix *)calloc(1, sizeof(Matrix));
-#endif
+    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
+
+    memset(m, 0, sizeof(Matrix));
 
     m->rows = rows;
     m->columns = columns;
@@ -159,11 +167,9 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new(void) {
-#ifdef __linux__
-    register Matrix *m = (Matrix *)kzalloc(sizeof(Matrix), GFP_USER);
-#else
-    register Matrix *m = (Matrix *)calloc(1, sizeof(Matrix));
-#endif
+    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
+
+    memset(m, 0, sizeof(Matrix));
 
     m->rows = 1;
     m->columns = 1;
@@ -193,12 +199,10 @@ Matrix* matrix_new(void) {
  *
  * Returns: the new #Matrix
  */
-Matrix* matrix_new_with_matrix(const Matrix *m) {
-#ifdef __linux__
-    register Matrix *t = (Matrix *)kzalloc(sizeof(Matrix), GFP_USER);
-#else
-    register Matrix *t = (Matrix *)calloc(1, sizeof(Matrix));
-#endif
+Matrix* matrix_new_with_matrix(const Matrix *const m) {
+    register Matrix *t = (Matrix *)malloc(sizeof(Matrix));
+
+    memset(t, 0, sizeof(Matrix));
     
     t->rows = m->rows;
     t->columns = m->columns;
@@ -221,10 +225,13 @@ Matrix* matrix_new_with_matrix(const Matrix *m) {
 }
 
 /* Deconstructor */
-void matrix_free(register Matrix *__restrict m)  {
+inline
+void matrix_free(register Matrix *__restrict m) {
     free(m->data);
     m->data = NULL;
+
     free(m);
+    m = NULL;
 }
 
 /**
@@ -242,7 +249,7 @@ void matrix_free(register Matrix *__restrict m)  {
  * and with a reference data
  *
  */
-void matrix_equal(register Matrix *a, const Matrix *b) {
+void matrix_equal(register Matrix *a, const Matrix *const b) {
     matrix_free(a);
 
     a->rows = b->rows;
@@ -250,8 +257,8 @@ void matrix_equal(register Matrix *a, const Matrix *b) {
 
     allocSpace(a);
 
-    register float *ptr	    = &a->data[0][0];
-    register float *b_ptr   = &b->data[0][0];
+    register float *ptr    = &a->data[0][0];
+    register float *b_ptr  = &b->data[0][0];
 
     PTR_START(b->len)
         *ptr = *b_ptr;
@@ -278,7 +285,7 @@ void matrix_equal(register Matrix *a, const Matrix *b) {
  * Subtract data of a #Matrix
  *
  */
-void matrix_subtract(register Matrix *a, const Matrix *b) {
+void matrix_subtract(register Matrix *a, const Matrix *const b) {
     register float *ptr     = &a->data[0][0];
     register float *b_ptr   = &b->data[0][0];
 	
@@ -316,7 +323,7 @@ void matrix_subtract(register Matrix *a, const Matrix *b) {
  * or multiply data of a #Matrix
  *
  */
-void matrix_multiply(register Matrix *a, const Matrix *b) {
+void matrix_multiply(register Matrix *a, const Matrix *const b) {
     if (a->columns <= b->rows) {
         a->rows = b->rows;
         a->columns = b->columns;

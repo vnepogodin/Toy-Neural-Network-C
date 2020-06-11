@@ -1,8 +1,21 @@
 /* Other techniques for learning */
 
+#include "matrix.h"
 #include "nn.h"
 #include <stdlib.h> /* malloc */
 #include <math.h> /* exp */
+
+struct _NeuralNetwork {
+    /* Variables */
+    int input_nodes, hidden_nodes, output_nodes;
+
+    float learning_rate;
+
+    float (*activation_function)(float);
+
+    Matrix *weights_ih, *weights_ho, *bias_h, *bias_o;    
+};
+
 
 /* Non member functions */
 static inline float sigmoid(float x) {
@@ -14,13 +27,14 @@ static inline float dsigmoid(float y) {
     return y * (1.f - y);
 }
 
-static json_object* json_find(const json_object *__restrict j, const char* __restrict key) {
+static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
     json_object *t;
 
     json_object_object_get_ex(j, key, &t);
 
     return t;
 }
+
 
 /**
  * neural_network_new_with_nn:
@@ -30,8 +44,10 @@ static json_object* json_find(const json_object *__restrict j, const char* __res
  *
  * Returns: the new #NeuralNetwork
  */
-NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *__restrict a) {
+NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *__restrict const a) {
     register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
+
+    memset(nn, 0, sizeof(NeuralNetwork));
 
     nn->input_nodes = a->input_nodes;
     nn->hidden_nodes = a->hidden_nodes;
@@ -62,6 +78,8 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *__restrict a) {
  */
 NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hidden_nodes, const int output_nodes) {
     register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
+
+    memset(nn, 0, sizeof(NeuralNetwork));
     
     nn->input_nodes = input_nodes;
     nn->hidden_nodes = hidden_nodes;
@@ -90,14 +108,17 @@ NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hid
  *
  * Frees #NeuralNetwork.
  */
+inline
 void neural_network_free(register NeuralNetwork *__restrict nn) {
-    nn->activation_function = NULL;
+    neural_network_setActivationFunction(nn, NULL);
 
     matrix_free(nn->weights_ih);
     matrix_free(nn->weights_ho);
     matrix_free(nn->bias_h);
     matrix_free(nn->bias_o);
+
     free(nn);
+    nn = NULL;
 }
 
 /**
@@ -109,19 +130,19 @@ void neural_network_free(register NeuralNetwork *__restrict nn) {
  *
  * Returns: float array
  */
-const float* neural_network_predict(const NeuralNetwork *nn, const float* __restrict input_array) {
+const float* neural_network_predict(const NeuralNetwork *const nn, const float* __restrict input_array) {
     /* Generating the Hidden Outputs */
-    register Matrix *inputs = matrix_fromArray(input_array);
-    register Matrix *hidden = matrix_multiply_static(nn->weights_ih, inputs);
+    Matrix *hidden = matrix_multiply_static(nn->weights_ih, matrix_fromArray(input_array));
     matrix_add_matrix(hidden, nn->bias_h);
 
     /* Activation function! */
-    matrix_map(hidden, nn->activation_function);
+    matrix_map(hidden, neural_network_getActivationFunction(nn));
 
     /* Generating the output'Ms output! */
     register Matrix *output = matrix_multiply_static(nn->weights_ho, hidden);
+    matrix_free(hidden);
     matrix_add_matrix(output, nn->bias_o);
-    matrix_map(output, nn->activation_function);
+    matrix_map(output, neural_network_getActivationFunction(nn));
 
     /* Sending back to the caller! */
     return matrix_toArray(output);
@@ -141,12 +162,25 @@ void neural_network_setLearningRate(register NeuralNetwork *__restrict nn, const
 /**
  * neural_network_setActivationFunction:
  * @nn: a #NeuralNetwork.
- * @func: a aome function.
+ * @func: a some function.
  *
  * Setting function.
  */
-void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn, float (*func)(float)) {
+void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn, float (*const func)(float)) {
     nn->activation_function = *func;
+}
+
+/**
+ * neural_network_getActivationFunction:
+ * @nn: a #NeuralNetwork.
+ *
+ * Getting function.
+ *
+ * Returns: address of func
+ */
+inline
+void* neural_network_getActivationFunction(const NeuralNetwork *__restrict const nn) {
+    return nn->activation_function;
 }
 
 /**
@@ -219,7 +253,7 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict in
  *
  * Returns: the new #json_object
  */
-const json_object* neural_network_serialize(const NeuralNetwork *__restrict nn) {
+const json_object* neural_network_serialize(const NeuralNetwork *__restrict const nn) {
     register json_object *t = json_object_new_object();
 
     json_object_object_add(t, "input_nodes", json_object_new_int(nn->input_nodes));
@@ -245,7 +279,7 @@ const json_object* neural_network_serialize(const NeuralNetwork *__restrict nn) 
  *
  * Returns: the new #NeuralNetwork
  */
-NeuralNetwork* neural_network_copy(const NeuralNetwork *__restrict nn) {
+NeuralNetwork* neural_network_copy(const NeuralNetwork *__restrict const nn) {
     register NeuralNetwork *t = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
     t->weights_ih = nn->weights_ih;
@@ -254,7 +288,7 @@ NeuralNetwork* neural_network_copy(const NeuralNetwork *__restrict nn) {
     t->bias_o = nn->bias_o;
 
     neural_network_setLearningRate(t, nn->learning_rate);
-    neural_network_setActivationFunction(t, nn->activation_function);
+    neural_network_setActivationFunction(t, neural_network_getActivationFunction(nn));
 
     return t;
 }
@@ -267,7 +301,7 @@ NeuralNetwork* neural_network_copy(const NeuralNetwork *__restrict nn) {
  *
  * Returns: the new #NeuralNetwork
  */
-NeuralNetwork* neural_network_deserialize(const json_object *__restrict t) {
+NeuralNetwork* neural_network_deserialize(const json_object *__restrict const t) {
     register NeuralNetwork *nn = neural_network_new_with_args(json_object_get_int(json_object_object_get(t, "input_nodes")), json_object_get_int(json_object_object_get(t, "hidden_nodes")), json_object_get_int(json_object_object_get(t, "output_nodes")));
 
     nn->weights_ih = matrix_deserialize(json_find(t, "weights_ih"));
