@@ -59,15 +59,28 @@ struct _Matrix {
     }                                          	\
 }STMT_END
 
-#define allocSpace(matrix) STMT_START{                          \
-    (matrix)->data = (float **)malloc((matrix)->rows);          \
+#ifdef __linux__
+# define allocSpace(matrix) STMT_START{                                         \
+     (matrix)->data = (float **)malloc(sizeof(float *) * (matrix)->rows);       \
+                                                                                \
+     register int i = 0;                                                        \
+     while (i < (matrix)->rows) {                                               \
+        (matrix)->data[i] = (float *)malloc(sizeof(float) * (matrix)->columns); \
+        ++i;                                                   	                \
+     }                                                          	            \
+ }STMT_END
+#else
+
+# define allocSpace(matrix) STMT_START{                         \
+     (matrix)->data = (float **)malloc((matrix)->rows);         \
                                                                 \
-    register int i = 0;                                \
-    while (i < (matrix)->rows) {                                \
+     register int i = 0;                                        \
+     while (i < (matrix)->rows) {                               \
         (matrix)->data[i] = (float *)malloc((matrix)->columns); \
         ++i;                                                   	\
-    }                                                          	\
-}STMT_END
+     }                                                          \
+ }STMT_END
+#endif
 
 static float* json_strsplit(const char* _str, const char _delim, const int columns) {
     const char delim[2] = { _delim, '\0' };
@@ -76,7 +89,7 @@ static float* json_strsplit(const char* _str, const char _delim, const int colum
 
     length_str(_str, size);
 
-    register char* tmp = (char *)__alloca(size - 1);
+    register char* tmp = (char *)__builtin_alloca(size - 1);
 
     /*   slice_str   */
     register int i = 2;
@@ -133,7 +146,7 @@ static json_object* json_find(const json_object *__restrict const j, const char*
 Matrix* matrix_new_with_args(const int rows, const int columns) {
     register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
 
-    memset(m, 0, sizeof(Matrix));
+    __builtin_memset(m, 0, sizeof(Matrix));
 
     m->rows = rows;
     m->columns = columns;
@@ -169,7 +182,7 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
 Matrix* matrix_new(void) {
     register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
 
-    memset(m, 0, sizeof(Matrix));
+    __builtin_memset(m, 0, sizeof(Matrix));
 
     m->rows = 1;
     m->columns = 1;
@@ -202,7 +215,7 @@ Matrix* matrix_new(void) {
 Matrix* matrix_new_with_matrix(const Matrix *const m) {
     register Matrix *t = (Matrix *)malloc(sizeof(Matrix));
 
-    memset(t, 0, sizeof(Matrix));
+    __builtin_memset(t, 0, sizeof(Matrix));
     
     t->rows = m->rows;
     t->columns = m->columns;
@@ -224,8 +237,7 @@ Matrix* matrix_new_with_matrix(const Matrix *const m) {
     return t;
 }
 
-/* Deconstructor */
-inline
+/* Destructor */
 void matrix_free(register Matrix *__restrict m) {
     free(m->data);
     m->data = NULL;
@@ -251,6 +263,8 @@ void matrix_free(register Matrix *__restrict m) {
  */
 void matrix_equal(register Matrix *a, const Matrix *const b) {
     matrix_free(a);
+
+    __builtin_memset(a, 0, sizeof(Matrix));
 
     a->rows = b->rows;
     a->columns = b->columns;

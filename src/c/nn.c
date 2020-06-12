@@ -47,7 +47,7 @@ static json_object* json_find(const json_object *__restrict const j, const char*
 NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *__restrict const a) {
     register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
-    memset(nn, 0, sizeof(NeuralNetwork));
+    __builtin_memset(nn, 0, sizeof(NeuralNetwork));
 
     nn->input_nodes = a->input_nodes;
     nn->hidden_nodes = a->hidden_nodes;
@@ -79,7 +79,7 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *__restrict const 
 NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hidden_nodes, const int output_nodes) {
     register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
-    memset(nn, 0, sizeof(NeuralNetwork));
+    __builtin_memset(nn, 0, sizeof(NeuralNetwork));
     
     nn->input_nodes = input_nodes;
     nn->hidden_nodes = hidden_nodes;
@@ -132,7 +132,9 @@ void neural_network_free(register NeuralNetwork *__restrict nn) {
  */
 const float* neural_network_predict(const NeuralNetwork *const nn, const float* __restrict input_array) {
     /* Generating the Hidden Outputs */
-    Matrix *hidden = matrix_multiply_static(nn->weights_ih, matrix_fromArray(input_array));
+    register Matrix *input = matrix_fromArray(input_array);
+    register Matrix *hidden = matrix_multiply_static(nn->weights_ih, input);
+    matrix_free(input);
     matrix_add_matrix(hidden, nn->bias_h);
 
     /* Activation function! */
