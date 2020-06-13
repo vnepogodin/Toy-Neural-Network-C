@@ -126,23 +126,8 @@ install: sh install-dependencies.sh
 # build script #
 ################
 
-script:
-  # get Make (only for systems with brew - macOS)
-  - |
-     if [[ (-x $(which brew)) ]]; then
-       brew update
-       brew install make
-     fi
-  
+script: 
   # compile and execute unit tests
   - mkdir -p build && cd build
-  - make ../src/c CC=${COMPILER} && make run ../src/c CC=${COMPILER}
+  - make CC=${COMPILER} && make run CC=${COMPILER}
   - cd ..
-
-  # check if homebrew works (only checks develop branch)   
-  - if [ `which brew` ]; then   
-    brew update ;
-    brew tap nlohmann/json ;
-    brew install nlohmann_json --HEAD ;
-    brew test nlohmann_json ;
-    fi
