@@ -1,7 +1,7 @@
 CC := gcc
 CXX := g++
 SUBDIRS := */c */c++
-all : c
+all : c cpp
 .PHONY : all
 
 c:
@@ -12,7 +12,7 @@ cpp:
 
 clean:
 	$(MAKE) -C */c clean
-	#$(MAKE) -C */c++ clean
+	$(MAKE) -C */c++ clean
 run:
 	$(MAKE) -C */c run
-	#$(MAKE) -C */c++ run
+	$(MAKE) -C */c++ run

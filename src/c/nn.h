@@ -14,12 +14,12 @@ NeuralNetwork* neural_network_new_with_args(const int, const int, const int);
 void neural_network_free(register NeuralNetwork *__restrict);
 
 /* Functions */
-const float* neural_network_predict(const NeuralNetwork *const, const float* __restrict);
+const float* neural_network_predict(const NeuralNetwork *const, const float* __restrict const);
 
-void neural_network_train(register NeuralNetwork *, const float* __restrict, const float* __restrict);
+void neural_network_train(register NeuralNetwork *, const float* __restrict const, const float* __restrict const);
 
 void neural_network_setLearningRate(register NeuralNetwork *__restrict, const float);
-void neural_network_setActivationFunction(register NeuralNetwork *__restrict, float (*)(float));
+void neural_network_setActivationFunction(register NeuralNetwork *__restrict, float (*const)(float));
 
 void* neural_network_getActivationFunction(const NeuralNetwork *__restrict const);
 

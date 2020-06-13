@@ -1,9 +1,8 @@
 // Matrix lib
-#pragma once
+#ifndef __MATRIX_HPP__
+#define __MATRIX_HPP__
 
 #include "json.hpp" // json
-#include <cstdlib> // malloc
-#include <ctime> // rand_r, timeval64
 
 /**
  * PTR_START(end):
@@ -24,260 +23,36 @@
 class Matrix {
 public:
     // Constructors
-    Matrix(const int rows, const int columns) : rows(rows), columns(columns) {
-        this->allocSpace();
+    Matrix(const int rows, const int columns);
+    Matrix(void);
+    Matrix(const Matrix &);
 
-        float *ptr = &this->data[0][0];
-
-        int end = this->rows * this->columns;
-        PTR_START(end)
-            *ptr = 0;
-
-            ++ptr;
-        PTR_END
-
-        this->len = i;
-    }
-    Matrix(void) : rows(1), columns(1) {
-        this->data = new float *[this->rows];
-        this->data[0] = new float [this->columns];
-
-        this->data[0][0] = 0;
-
-        this->len = 1;
-    }
-    Matrix(const Matrix& m) : rows(m.rows), columns(m.columns) {
-        this->allocSpace();
-
-        float *ptr     = &this->data[0][0];
-        float *ref_ptr = &m.data[0][0];
-
-        PTR_START(m.len)
-            *ptr = *ref_ptr;
-
-            ++ptr;
-            ++ref_ptr;
-        PTR_END
-
-        this->len = i;
-    }
-
-    // Deconstructors
-    virtual ~Matrix(void) {
-    }
-    
-    void free(void) {
-        int i = 0;
-        while (i < this->rows) {
-            delete[] this->data[i];
-            ++i;
-        }
-        delete[] this->data;
-    }
+    // Destructors
+    virtual ~Matrix(void);
+    void free(void);
 
     // Operators
-    void matrix_equal(const Matrix& m) {
-        this->free();
-        
-        this->rows = m.rows;
-        this->columns = m.columns;
-        
-        this->allocSpace();
-        
-        float *ptr     = &this->data[0][0];
-        float *m_ptr   = &m.data[0][0];
-        
-         PTR_START(m.len)
-            *ptr = *m_ptr;
-            
-            ++ptr;
-            ++m_ptr;
-        PTR_END
-        
-        this->len = i;
-    }
-    Matrix& operator-=(const Matrix& m) {
-        float *ptr   = &this->data[0][0];
-        float *m_ptr = &m.data[0][0];
-
-        PTR_START(this->len)
-            *ptr -= *m_ptr;
-
-            ++ptr;
-            ++m_ptr;
-        PTR_END
-
-        return *this;
-    }
-    Matrix& operator*=(const Matrix& m) {
-        if (this->columns <= m.rows) {
-            this->rows = m.rows;
-            this->columns = m.columns;
-
-            this->allocSpace();
-
-            int i = 0;
-            while (i < this->rows) {
-                int j = 0;
-                while (j < m.columns) {
-                    int k = 0;
-                    while (k < m.columns) {
-                        this->data[i][j] += this->data[i][k] * m.data[k][j];
-                        ++k;
-                    }
-                    ++j;
-                }
-                ++i;
-            }
-        } else {
-            float *ptr    = &this->data[0][0];
-            float *m_ptr  = &m.data[0][0];
-
-            PTR_START(this->len)
-                *ptr *= *m_ptr;
-
-                ++ptr;
-                ++m_ptr;
-            PTR_END
-        }
-
-        return *this;
-    }
+    void matrix_equal(const Matrix &);
+    Matrix& operator-=(const Matrix &);
+    Matrix& operator*=(const Matrix &);
 
     // Functions
-    static Matrix fromArray(const float* arr) {
-        Matrix t(2, 1);
-
-        float *ptr = &t.data[0][0];
-
-        PTR_START(t.len)
-            *ptr = arr[i];
-
-            ++ptr;
-        PTR_END
-
-        return t;
-    }
-    const float* toArray(void) {
-        // Array[2]
-        float* arr = new float [2];
-
-        // pointer to Matrix.data
-        float *ptr = &this->data[0][0];
-
-        PTR_START(this->len)
-            arr[i] = *ptr;
-
-            ++ptr;
-        PTR_END
-
-        return arr;
-    }
-    void randomize(void) {
-        float *ptr = &this->data[0][0];
-
-        struct timeval64 ts;
-
-        unsigned int seed = (unsigned int)(ts.tv_sec);
-
-        PTR_START(this->len)
-            *ptr = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
-
-            ++ptr;
-        PTR_END
-    }
-    void add(const Matrix& a) {
-        float *ptr	    = &this->data[0][0];
-        float *ref_ptr  = &a.data[0][0];
-
-        int i = 0;
-
-        if(a.rows > this->rows) {
-            while (i < this->len) {
-                *ptr += *ref_ptr;
-
-                ++ptr;
-                ++ref_ptr;
-                ++i;
-            }
-        } else {
-            while (i < a.len) {
-                *ptr += *ref_ptr;
-
-                ++ptr;
-                ++ref_ptr;
-                ++i;
-            }
-        }
-    }
-    void add(const float n) {
-        float *ptr = &this->data[0][0];
-
-        PTR_START(this->len)
-            *ptr += n;
-
-            ++ptr;
-        PTR_END
-    }
-    void multiply(const float n) {
-        // Scalar product
-        float *ptr = &this->data[0][0];
-
-        PTR_START(this->len)
-            *ptr *= n;
-
-            ++ptr;
-        PTR_END
-    }
-    void map(float (*func)(float)) {
-        // Apply a function to every element of matrix
-        float *ptr = &this->data[0][0];
-
-        PTR_START(this->len)
-            *ptr = (*func)(*ptr);
-
-            ++ptr;
-        PTR_END
-    }
-    void print(void) {
-        float *ptr = &this->data[0][0];
-
-        int cout = 0;
-        PTR_START(this->len)
-            printf("%f ", *ptr);
-            ++ptr;
-            cout++;
-
-            if(cout == this->columns) {
-                cout = 0;
-                printf("\n");
-            }
-        PTR_END
-    }
-    const nlohmann::json serialize(const Matrix& m) const {
-        nlohmann::json t;
-        t["rows"] = m.rows;
-        t["columns"] = m.columns;
-
-        int i = 0;
-        while (i < m.rows) {
-            int j = 0;
-            while (j < m.columns) {
-                t["data"] += m.data[i][j];
-                j++;
-            }
-            ++i;
-        }
-
-        return t.dump();
-    }
+    static Matrix fromArray(const float* const arr);
+    const float* toArray(void);
+    void randomize(void);
+    void add(const Matrix &);
+    void add(const float);
+    void multiply(const float);
+    void map(float (*const)(float));
+    void print(void);
+    const nlohmann::json serialize(const Matrix &) const;
 
     // Static functions
-    static Matrix transpose(const Matrix& m) {
+    static Matrix transpose(const Matrix &m) {
         Matrix t(m.rows, m.columns);
 
         float *ptr	 = &t.data[0][0];
-        float *m_ptr = &m.data[0][0];
+        const float *m_ptr = &m.data[0][0];
 
         PTR_START(t.len)
             *ptr = *m_ptr;
@@ -288,7 +63,8 @@ public:
 
         return t;
     }
-    static Matrix multiply(const Matrix& a, const Matrix& b) {
+
+    static Matrix multiply(const Matrix &a, const Matrix &b) {
         Matrix t;
 
         // Matrix product
@@ -330,7 +106,8 @@ public:
 
         return t;
     }
-    static Matrix subtract(const Matrix& a, const Matrix& b) {
+
+    static Matrix subtract(const Matrix &a, const Matrix &b) {
         Matrix t;
         if (a.columns >= b.rows)
             t = *new Matrix(b.rows, b.columns);
@@ -338,8 +115,8 @@ public:
             t = *new Matrix(a.rows, b.columns);
 
         float *ptr	 = &t.data[0][0];
-        float *a_ptr = &a.data[0][0];
-        float *b_ptr = &b.data[0][0];
+        const float *a_ptr = &a.data[0][0];
+        const float *b_ptr = &b.data[0][0];
 
         PTR_START(t.len)
             *ptr = *a_ptr - *b_ptr;
@@ -351,11 +128,12 @@ public:
 
         return t;
     }
-    static Matrix map(const Matrix& m, float (*func)(float)) {
+
+    static Matrix map(const Matrix &m, float (*const func)(float)) {
         Matrix t(m.rows, m.columns);
 
         float *ptr   = &t.data[0][0];
-        float *m_ptr = &m.data[0][0];
+        const float *m_ptr = &m.data[0][0];
 
         PTR_START(t.len)
             *ptr = (*func)(*m_ptr);
@@ -366,7 +144,8 @@ public:
 
         return t;
     }
-    static Matrix deserialize(const nlohmann::json& t) {
+
+    static Matrix deserialize(const nlohmann::json &t) {
         Matrix m = *new Matrix(t["rows"].get<int>(), t["columns"].get<int>());
 
         int i = 0;
@@ -390,20 +169,7 @@ private:
     float **data;
 
     // Function
-    void allocSpace() {
-        this->data = (float **)new float* [this->rows];
-        
-        int i = 0;
-        while (i < this->rows) {
-            this->data[i] = (float *)new float [this->columns];
-            ++i;
-        }
-    }
+    void allocSpace(void);
 };
 
-// Non Member Operator
-Matrix operator*(const Matrix& a, const Matrix& b) {
-    Matrix t(a);
-
-    return t *= b;
-}
+#endif // __MATRIX_HPP__
