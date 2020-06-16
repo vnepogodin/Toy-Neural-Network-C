@@ -1,6 +1,5 @@
 CC := gcc
 CXX := g++
-SUBDIRS := */c */c++
 all : c cpp
 .PHONY : all
 

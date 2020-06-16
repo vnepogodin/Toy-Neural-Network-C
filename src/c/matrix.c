@@ -5,7 +5,7 @@
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc */
 #include <string.h> /* strtof, strtok */
-#include <time.h> /* rand_r, timeval64 */
+#include <time.h> /* rand_r */
 
 struct _Matrix {
     /* Variables */
@@ -102,7 +102,6 @@ static float* json_strsplit(const char* _str, const char _delim, const int colum
         ++j;
         ++i;
     }
-    tmp[j] = '\0';
 
     register float* result = (float *)malloc(columns);
 
@@ -144,16 +143,16 @@ static json_object* json_find(const json_object *__restrict const j, const char*
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
-    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
+    register Matrix *__matrix_m = (Matrix *)malloc(sizeof(Matrix));
 
-    __builtin_memset(m, 0, sizeof(Matrix));
+    __builtin_memset(__matrix_m, 0, sizeof(Matrix));
 
-    m->rows = rows;
-    m->columns = columns;
+    __matrix_m->rows = rows;
+    __matrix_m->columns = columns;
 
-    allocSpace(m);
+    allocSpace(__matrix_m);
 
-    register float *ptr = &m->data[0][0];
+    register float *ptr = &__matrix_m->data[0][0];
     
     register int end = rows * columns;
     PTR_START(end)
@@ -162,9 +161,9 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
         ++ptr;
     PTR_END
 
-    m->len = i;
+    __matrix_m->len = i;
 
-    return m;
+    return __matrix_m;
 }
 
 /**
@@ -180,21 +179,21 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new(void) {
-    register Matrix *m = (Matrix *)malloc(sizeof(Matrix));
+    register Matrix *__matrix_m = (Matrix *)malloc(sizeof(Matrix));
 
-    __builtin_memset(m, 0, sizeof(Matrix));
+    __builtin_memset(__matrix_m, 0, sizeof(Matrix));
 
-    m->rows = 1;
-    m->columns = 1;
+    __matrix_m->rows = 1;
+    __matrix_m->columns = 1;
 
-    m->data = (float **)malloc(1);
-    m->data[0] = (float *)malloc(1);
+    __matrix_m->data = (float **)malloc(1);
+    __matrix_m->data[0] = (float *)malloc(1);
 
-    m->data[0][0] = 0;
+    __matrix_m->data[0][0] = 0;
 
-    m->len = 1;
+    __matrix_m->len = 1;
 
-    return m;
+    return __matrix_m;
 }
 
 /**
@@ -213,16 +212,16 @@ Matrix* matrix_new(void) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_matrix(const Matrix *const m) {
-    register Matrix *t = (Matrix *)malloc(sizeof(Matrix));
+    register Matrix *__matrix_temp = (Matrix *)malloc(sizeof(Matrix));
 
-    __builtin_memset(t, 0, sizeof(Matrix));
-    
-    t->rows = m->rows;
-    t->columns = m->columns;
-    
-    allocSpace(t);
+    __builtin_memset(__matrix_temp, 0, sizeof(Matrix));
 
-    register float *ptr     = &t->data[0][0];
+    __matrix_temp->rows = m->rows;
+    __matrix_temp->columns = m->columns;
+    
+    allocSpace(__matrix_temp);
+
+    register float *ptr     = &__matrix_temp->data[0][0];
     const register float *ref_ptr = &m->data[0][0];
     
     PTR_START(m->len)
@@ -232,9 +231,9 @@ Matrix* matrix_new_with_matrix(const Matrix *const m) {
         ++ref_ptr;
     PTR_END
 
-    t->len = i;
+    __matrix_temp->len = i;
 
-    return t;
+    return __matrix_temp;
 }
 
 /* Destructor */
@@ -243,45 +242,6 @@ void matrix_free(register Matrix *__restrict m) {
     m->data = NULL;
 
     free(m);
-    m = NULL;
-}
-
-/**
- * matrix_equal:
- * @a: a #Matrix.
- * @b: a reference #Matrix.
- * @example:
- *		
- *		2 rows, 2 columns      ->	2 rows, 1 columns
- *
- *			  [64][2]		   ->		 [232]
- *			  [21][546]		   ->		 [21]
- *
- * #Matrix with reference rows and columns,
- * and with a reference data
- *
- */
-void matrix_equal(register Matrix *a, const Matrix *const b) {
-    matrix_free(a);
-
-    __builtin_memset(a, 0, sizeof(Matrix));
-
-    a->rows = b->rows;
-    a->columns = b->columns;
-
-    allocSpace(a);
-
-    register float *ptr    = &a->data[0][0];
-    const register float *b_ptr  = &b->data[0][0];
-
-    PTR_START(b->len)
-        *ptr = *b_ptr;
-
-        ++ptr;
-        ++b_ptr;
-    PTR_END
-
-    a->len = i;
 }
 
 /**

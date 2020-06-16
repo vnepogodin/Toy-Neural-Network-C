@@ -35,6 +35,15 @@ static json_object* json_find(const json_object *__restrict const j, const char*
     return t;
 }
 
+static inline const int convert_ActivationFunction(float (*const func)(float)) {
+    int result = FUNC_SIGMOID;
+
+    if (*func == dsigmoid)
+        result = FUNC_DSIGMOID;
+
+    return result;
+}
+
 
 /**
  * neural_network_new_with_nn:
@@ -61,7 +70,7 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *__restrict const 
 
     /* TODO: copy these as well */
     neural_network_setLearningRate(nn, a->learning_rate);
-    neural_network_setActivationFunction(nn, a->activation_function);
+    neural_network_setActivationFunction(nn, convert_ActivationFunction(a->activation_function));
 
     return nn;
 }
@@ -97,7 +106,7 @@ NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hid
 
     /* TODO: copy these as well */
     neural_network_setLearningRate(nn, 0.1);
-    neural_network_setActivationFunction(nn, sigmoid);
+    neural_network_setActivationFunction(nn, FUNC_SIGMOID);
     
     return nn;
 }
@@ -109,7 +118,7 @@ NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hid
  * Frees #NeuralNetwork.
  */
 void neural_network_free(register NeuralNetwork *__restrict nn) {
-    neural_network_setActivationFunction(nn, NULL);
+    neural_network_setActivationFunction(nn, 0);
 
     matrix_free(nn->weights_ih);
     matrix_free(nn->weights_ho);
@@ -117,7 +126,6 @@ void neural_network_free(register NeuralNetwork *__restrict nn) {
     matrix_free(nn->bias_o);
 
     free(nn);
-    nn = NULL;
 }
 
 /**
@@ -163,12 +171,24 @@ void neural_network_setLearningRate(register NeuralNetwork *__restrict nn, const
 /**
  * neural_network_setActivationFunction:
  * @nn: a #NeuralNetwork.
- * @func: a some function.
+ * @flag: a some function.
  *
  * Setting function.
  */
-void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn, float (*const func)(float)) {
-    nn->activation_function = *func;
+void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn, const int flag) {
+    switch (flag) {
+        case FUNC_SIGMOID:
+            nn->activation_function = sigmoid;
+            break;
+
+        case FUNC_DSIGMOID:
+            nn->activation_function = dsigmoid;
+            break;
+
+        default:
+            nn->activation_function = NULL;
+            break;
+    }
 }
 
 /**
@@ -280,17 +300,17 @@ const json_object* neural_network_serialize(const NeuralNetwork *__restrict cons
  * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_copy(const NeuralNetwork *__restrict const nn) {
-    register NeuralNetwork *t = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
+    register NeuralNetwork *__nn_temp = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
-    t->weights_ih = nn->weights_ih;
-    t->weights_ho = nn->weights_ho;
-    t->bias_h = nn->bias_h;
-    t->bias_o = nn->bias_o;
+    __nn_temp->weights_ih = nn->weights_ih;
+    __nn_temp->weights_ho = nn->weights_ho;
+    __nn_temp->bias_h = nn->bias_h;
+    __nn_temp->bias_o = nn->bias_o;
 
-    neural_network_setLearningRate(t, nn->learning_rate);
-    neural_network_setActivationFunction(t, nn->activation_function);
+    neural_network_setLearningRate(__nn_temp, nn->learning_rate);
+    neural_network_setActivationFunction(__nn_temp, convert_ActivationFunction(nn->activation_function));
 
-    return t;
+    return __nn_temp;
 }
 
 /**
