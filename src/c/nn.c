@@ -19,12 +19,12 @@ struct _NeuralNetwork {
 
 /* Non member functions */
 static inline float sigmoid(float x) {
-    return 1.f / (1.f + exp(-x));
+    return 1.F / (1.F + exp(-x));
 }
 
 static inline float dsigmoid(float y) {
     /* return sigmoid(x) * (1 - sigmoid(x)); */
-    return y * (1.f - y);
+    return y * (1.F - y);
 }
 
 static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
@@ -53,26 +53,23 @@ static inline const int convert_ActivationFunction(float (*const func)(float)) {
  *
  * Returns: the new #NeuralNetwork
  */
-NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *__restrict const a) {
-    register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
+NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param) {
+    register NeuralNetwork *__nn_temp = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
-    __builtin_memset(nn, 0, sizeof(NeuralNetwork));
+    __nn_temp->input_nodes = __nn_param->input_nodes;
+    __nn_temp->hidden_nodes = __nn_param->hidden_nodes;
+    __nn_temp->output_nodes = __nn_param->output_nodes;
 
-    nn->input_nodes = a->input_nodes;
-    nn->hidden_nodes = a->hidden_nodes;
-    nn->output_nodes = a->output_nodes;
-
-    nn->weights_ih = a->weights_ih;
-    nn->weights_ho = a->weights_ho;
-    
-    nn->bias_h = a->bias_h;
-    nn->bias_o = a->bias_o;
+    __nn_temp->weights_ih = matrix_new_with_matrix(__nn_param->weights_ih);
+    __nn_temp->weights_ho = matrix_new_with_matrix(__nn_param->weights_ho);
+    __nn_temp->bias_h = matrix_new_with_matrix(__nn_param->bias_h);
+    __nn_temp->bias_o = matrix_new_with_matrix(__nn_param->bias_o);
 
     /* TODO: copy these as well */
-    neural_network_setLearningRate(nn, a->learning_rate);
-    neural_network_setActivationFunction(nn, convert_ActivationFunction(a->activation_function));
+    neural_network_setLearningRate(__nn_temp, __nn_param->learning_rate);
+    neural_network_setActivationFunction(__nn_temp, convert_ActivationFunction(__nn_param->activation_function));
 
-    return nn;
+    return __nn_temp;
 }
 
 /**
@@ -176,31 +173,12 @@ void neural_network_setLearningRate(register NeuralNetwork *__restrict nn, const
  * Setting function.
  */
 void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn, const int flag) {
-    switch (flag) {
-        case FUNC_SIGMOID:
-            nn->activation_function = sigmoid;
-            break;
-
-        case FUNC_DSIGMOID:
-            nn->activation_function = dsigmoid;
-            break;
-
-        default:
-            nn->activation_function = NULL;
-            break;
-    }
-}
-
-/**
- * neural_network_getActivationFunction:
- * @nn: a #NeuralNetwork.
- *
- * Getting function.
- *
- * Returns: address of func
- */
-void* neural_network_getActivationFunction(const NeuralNetwork *__restrict const nn) {
-    return (void *)nn->activation_function;
+    nn->activation_function = NULL;
+    
+    if (flag == FUNC_SIGMOID)
+        nn->activation_function = sigmoid;
+    else if (flag == FUNC_DSIGMOID)
+        nn->activation_function = dsigmoid;
 }
 
 /**
@@ -289,28 +267,6 @@ const json_object* neural_network_serialize(const NeuralNetwork *__restrict cons
     json_object_object_add(t, "learning_rate", json_object_new_double(nn->learning_rate));
 
     return t;
-}
-
-/**
- * neural_network_copy:
- * @nn: a reference #NeuralNetwork.
- *
- * Copy @nn.
- *
- * Returns: the new #NeuralNetwork
- */
-NeuralNetwork* neural_network_copy(const NeuralNetwork *__restrict const nn) {
-    register NeuralNetwork *__nn_temp = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
-
-    __nn_temp->weights_ih = nn->weights_ih;
-    __nn_temp->weights_ho = nn->weights_ho;
-    __nn_temp->bias_h = nn->bias_h;
-    __nn_temp->bias_o = nn->bias_o;
-
-    neural_network_setLearningRate(__nn_temp, nn->learning_rate);
-    neural_network_setActivationFunction(__nn_temp, convert_ActivationFunction(nn->activation_function));
-
-    return __nn_temp;
 }
 
 /**

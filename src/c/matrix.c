@@ -3,9 +3,8 @@
 #include "matrix.h"
 
 #include <stdio.h> /* printf */
-#include <stdlib.h> /* malloc */
+#include <stdlib.h> /* malloc, posix_memalign, arc4random */
 #include <string.h> /* strtof, strtok */
-#include <time.h> /* rand_r */
 
 struct _Matrix {
     /* Variables */
@@ -71,18 +70,18 @@ struct _Matrix {
  }STMT_END
 #else
 
-# define allocSpace(matrix) STMT_START{                         \
-     (matrix)->data = (float **)malloc((matrix)->rows);         \
-                                                                \
-     register int i = 0;                                        \
-     while (i < (matrix)->rows) {                               \
-        (matrix)->data[i] = (float *)malloc((matrix)->columns); \
-        ++i;                                                   	\
-     }                                                          \
+# define allocSpace(matrix) STMT_START{                                         \
+     posix_memalign((void **)&(matrix)->data, 1024UL, (matrix)->rows);          \
+                                                                                \
+     register int i = 0;                                                        \
+     while (i < (matrix)->rows) {                                               \
+        posix_memalign((void **)&(matrix)->data[i], 1024UL, (matrix)->columns); \
+        ++i;                                                   	                \
+     }                                                                          \
  }STMT_END
 #endif
 
-static float* json_strsplit(const char* _str, const char _delim, const int columns) {
+static void json_strsplit(register float* result, const char* _str, const char _delim, const int columns) {
     const char delim[2] = { _delim, '\0' };
 
     register int size = 0;
@@ -103,8 +102,6 @@ static float* json_strsplit(const char* _str, const char _delim, const int colum
         ++i;
     }
 
-    register float* result = (float *)malloc(columns);
-
     register char* token = strtok(tmp, delim);
 
     i = 0;
@@ -115,8 +112,6 @@ static float* json_strsplit(const char* _str, const char _delim, const int colum
        
         ++i;
     }
-
-    return result;
 }
 
 static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
@@ -143,9 +138,12 @@ static json_object* json_find(const json_object *__restrict const j, const char*
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
-    register Matrix *__matrix_m = (Matrix *)malloc(sizeof(Matrix));
+    Matrix *__matrix_m;
 
-    __builtin_memset(__matrix_m, 0, sizeof(Matrix));
+    const register unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
+    register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
+
+    posix_memalign((void **)&__matrix_m, alignment, size);
 
     __matrix_m->rows = rows;
     __matrix_m->columns = columns;
@@ -179,15 +177,18 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new(void) {
-    register Matrix *__matrix_m = (Matrix *)malloc(sizeof(Matrix));
-
-    __builtin_memset(__matrix_m, 0, sizeof(Matrix));
+    Matrix *__matrix_m;
+    
+    const register unsigned long alignment = 256UL; /* assumed 0.00026MB page sizes */
+    register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
+    
+    posix_memalign((void **)&__matrix_m, alignment, size);
 
     __matrix_m->rows = 1;
     __matrix_m->columns = 1;
 
-    __matrix_m->data = (float **)malloc(1);
-    __matrix_m->data[0] = (float *)malloc(1);
+    posix_memalign((void **)&__matrix_m->data, sizeof(float **), 1);
+    posix_memalign((void **)&__matrix_m->data[0], sizeof(float *), 1);
 
     __matrix_m->data[0][0] = 0;
 
@@ -198,7 +199,7 @@ Matrix* matrix_new(void) {
 
 /**
  * matrix_new_with_matrix:
- * @m: a const #Matrix.
+ * @__matrix: a const #Matrix.
  * @example:
  *		
  *		2 rows, 1 columns  ->	2 rows, 1 columns
@@ -211,37 +212,54 @@ Matrix* matrix_new(void) {
  *
  * Returns: the new #Matrix
  */
-Matrix* matrix_new_with_matrix(const Matrix *const m) {
-    register Matrix *__matrix_temp = (Matrix *)malloc(sizeof(Matrix));
+Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
+    Matrix *__matrix_m;
 
-    __builtin_memset(__matrix_temp, 0, sizeof(Matrix));
+    const register unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
+    register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
 
-    __matrix_temp->rows = m->rows;
-    __matrix_temp->columns = m->columns;
-    
-    allocSpace(__matrix_temp);
+    posix_memalign((void **)&__matrix_m, alignment, size);
 
-    register float *ptr     = &__matrix_temp->data[0][0];
-    const register float *ref_ptr = &m->data[0][0];
-    
-    PTR_START(m->len)
+    __matrix_m->rows = __matrix_param->rows;
+    __matrix_m->columns = __matrix_param->columns;
+
+    allocSpace(__matrix_m);
+
+    register float *ptr             = &__matrix_m->data[0][0];
+    const register float *ref_ptr   = &__matrix_param->data[0][0];
+
+    PTR_START(__matrix_param->len)
         *ptr = *ref_ptr;
 
         ++ptr;
         ++ref_ptr;
     PTR_END
 
-    __matrix_temp->len = i;
+    __matrix_m->len = i;
 
-    return __matrix_temp;
+    return __matrix_m;
 }
 
-/* Destructor */
-void matrix_free(register Matrix *__restrict m) {
-    free(m->data);
-    m->data = NULL;
+/**
+ * matrix_free:
+ * @__matrix: a #Matrix.
+ *
+ * Frees #Matrix.
+ */
+void matrix_free(register Matrix *__matrix_param) {
+    register float **ptr = &__matrix_param->data[0];
 
-    free(m);
+    PTR_START(__matrix_param->rows)
+        free(*ptr);
+        *ptr = NULL;
+
+        ++ptr;
+    PTR_END
+
+    free(__matrix_param->data);
+    __matrix_param->data = NULL;
+    
+    free(__matrix_param);
 }
 
 /**
@@ -259,11 +277,11 @@ void matrix_free(register Matrix *__restrict m) {
  * Subtract data of a #Matrix
  *
  */
-void matrix_subtract(register Matrix *a, const Matrix *const b) {
-    register float *ptr     = &a->data[0][0];
-    const register float *b_ptr   = &b->data[0][0];
+void matrix_subtract(register Matrix *a_param, const Matrix *const b_param) {
+    register float *ptr          = &a_param->data[0][0];
+    const register float *b_ptr  = &b_param->data[0][0];
 	
-	PTR_START(a->len)
+	PTR_START(a_param->len)
         *ptr -= *b_ptr;
 
         ++ptr;
@@ -297,20 +315,20 @@ void matrix_subtract(register Matrix *a, const Matrix *const b) {
  * or multiply data of a #Matrix
  *
  */
-void matrix_multiply(register Matrix *a, const Matrix *const b) {
-    if (a->columns <= b->rows) {
-        a->rows = b->rows;
-        a->columns = b->columns;
+void matrix_multiply(register Matrix *a_param, const Matrix *const b_param) {
+    if (a_param->columns <= b_param->rows) {
+        a_param->rows       = b_param->rows;
+        a_param->columns    = b_param->columns;
 
-        allocSpace(a);
+        allocSpace(a_param);
 
         register int i = 0;
-        while (i < a->rows) {
+        while (i < a_param->rows) {
             register int j = 0;
-            while (j < b->columns) {
+            while (j < b_param->columns) {
                 register int k = 0;
-                while (k < b->columns) {
-                    a->data[i][j] += a->data[i][k] * b->data[k][j];
+                while (k < b_param->columns) {
+                    a_param->data[i][j] += a_param->data[i][k] * b_param->data[k][j];
                     ++k;
                 }
                 ++j;
@@ -318,10 +336,10 @@ void matrix_multiply(register Matrix *a, const Matrix *const b) {
             ++i;
         }
     } else {
-        register float *ptr    = &a->data[0][0];
-        const register float *b_ptr  = &b->data[0][0];
+        register float *ptr         = &a_param->data[0][0];
+        const register float *b_ptr = &b_param->data[0][0];
 
-        PTR_START(a->len)
+        PTR_START(a_param->len)
             *ptr *= *b_ptr;
 
             ++ptr;
@@ -343,13 +361,13 @@ void matrix_multiply(register Matrix *a, const Matrix *const b) {
  *
  * Returns: the new #Matrix
  */
-Matrix* matrix_fromArray(const float* __restrict const arr) {
+Matrix* matrix_fromArray(const float* __restrict const arr_param) {
     register Matrix *t = matrix_new_with_args(2, 1);
 
     register float *ptr = &t->data[0][0];
 
     PTR_START(t->len)
-        *ptr = arr[i];
+        *ptr = arr_param[i];
 
         ++ptr;
     PTR_END
@@ -371,14 +389,14 @@ Matrix* matrix_fromArray(const float* __restrict const arr) {
  *
  * Returns: the new const float array
  */
-const float* matrix_toArray(const Matrix *const m) {
+const float* matrix_toArray(const Matrix *const m_param) {
     /* Array[2] */
     register float* arr = (float *)malloc(2);
 
     /* pointer to Matrix.data in CPU register */
-    const register float *ptr = &m->data[0][0];
+    const register float *ptr = &m_param->data[0][0];
 
-    PTR_START(m->len)
+    PTR_START(m_param->len)
         arr[i] = *ptr;
 
         ++ptr;
@@ -400,13 +418,11 @@ const float* matrix_toArray(const Matrix *const m) {
  * Randomize @m data from 0 to 1
  *
  */
-void matrix_randomize(register Matrix *m) {
-    register float *ptr = &m->data[0][0];
+void matrix_randomize(register Matrix *m_param) {
+    register float *ptr = &m_param->data[0][0];
 
-    unsigned int seed = (unsigned int)time(NULL);
-
-    PTR_START(m->len)
-        *ptr = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
+    PTR_START(m_param->len)
+        *ptr = 0.F + (arc4random() * (1.F - 0.F) / INT32_MAX);
 
         ++ptr;
     PTR_END
@@ -428,14 +444,14 @@ void matrix_randomize(register Matrix *m) {
  * add @b data to @a data, by @a len
  *
  */
-void matrix_add_matrix(register Matrix *a, const Matrix *const b) {
-    register float *ptr     = &a->data[0][0];
-    const register float *ref_ptr = &b->data[0][0];
+void matrix_add_matrix(register Matrix *a_param, const Matrix *const b_param) {
+    register float *ptr           = &a_param->data[0][0];
+    const register float *ref_ptr = &b_param->data[0][0];
 
     register int i = 0;
 
-    if(b->rows >= a->rows) {
-        while (i < a->len) {
+    if(b_param->rows >= a_param->rows) {
+        while (i < a_param->len) {
             *ptr += *ref_ptr;
 
             ++ptr;
@@ -443,7 +459,7 @@ void matrix_add_matrix(register Matrix *a, const Matrix *const b) {
             ++i;
         }
     } else {
-        while (i < b->len) {
+        while (i < b_param->len) {
             *ptr += *ref_ptr;
 
             ++ptr;
@@ -467,11 +483,11 @@ void matrix_add_matrix(register Matrix *a, const Matrix *const b) {
  * Add @n to @a data
  *
  */
-void matrix_add_float(register Matrix *a, const float n) {
-    register float *ptr = &a->data[0][0];
+void matrix_add_float(register Matrix *a_param, const float num_param) {
+    register float *ptr = &a_param->data[0][0];
 
-    PTR_START(a->len)
-        *ptr += n;
+    PTR_START(a_param->len)
+        *ptr += num_param;
 
         ++ptr;
     PTR_END
@@ -480,7 +496,7 @@ void matrix_add_float(register Matrix *a, const float n) {
 /**
  * matrix_multiply_scalar:
  * @m: a #Matrix.
- * @n: a reference const float num.
+ * @num: a reference floating-point number.
  * @example:
  *	
  *	2 rows, 1 columns
@@ -491,12 +507,12 @@ void matrix_add_float(register Matrix *a, const float n) {
  * Add @n to @a data
  *
  */
-void matrix_multiply_scalar(register Matrix *m, const float n) {
+void matrix_multiply_scalar(register Matrix *m_param, const float num_param) {
     /* Scalar product */
-    register float *ptr = &m->data[0][0];
+    register float *ptr = &m_param->data[0][0];
 
-    PTR_START(m->len)
-	    *ptr *= n;
+    PTR_START(m_param->len)
+	    *ptr *= num_param;
 
         ++ptr;
 	PTR_END
@@ -515,11 +531,11 @@ void matrix_multiply_scalar(register Matrix *m, const float n) {
  * @m data equal, return value of @func
  *
  */
-void matrix_map(register Matrix *m, float (*const func)(float)) {
-    register float *ptr = &m->data[0][0];
+void matrix_map(register Matrix *m_param, float (*const func_param)(float)) {
+    register float *ptr = &m_param->data[0][0];
 
-    PTR_START(m->len)
-		*ptr = (*func)(*ptr);
+    PTR_START(m_param->len)
+		*ptr = (*func_param)(*ptr);
 
         ++ptr;
 	PTR_END
@@ -532,41 +548,49 @@ void matrix_map(register Matrix *m, float (*const func)(float)) {
  * Print elements of @m data
  *
  */
-void matrix_print(const Matrix *const m) {
-    const register float *ptr = &m->data[0][0];
+void matrix_print(const Matrix *const m_param) {
+    const register float *ptr = &m_param->data[0][0];
     
     register int cout = 0;
-    PTR_START(m->len)
+    PTR_START(m_param->len)
         printf("%f ", *ptr);
         ++ptr;
         cout++;
 
-        if(cout == m->columns) {
+        if(cout == m_param->columns) {
             cout = 0;
             printf("\n");
         }
     PTR_END
 }
 
-json_object* matrix_serialize(const Matrix *const m) {
+/**
+ * matrix_serialize:
+ * @m: a const #Matrix.
+ *
+ * Serialize @m to JSON
+ *
+ * Returns: the new #json_object
+ */
+json_object* matrix_serialize(const Matrix *const m_param) {
     register json_object *t = json_object_new_object();
 
-    json_object_object_add(t, "rows", json_object_new_int(m->rows));
-    json_object_object_add(t, "columns", json_object_new_int(m->columns));
+    json_object_object_add(t, "rows", json_object_new_int(m_param->rows));
+    json_object_object_add(t, "columns", json_object_new_int(m_param->columns));
     json_object_object_add(t, "data", json_object_new_array());
     
     register json_object *temp_arr = json_object_new_array();
     
-    const register float *ptr = &m->data[0][0];
+    const register float *ptr = &m_param->data[0][0];
     
     register int cout = 0;
     register int i = 0;
-    while (i < m->rows) {
+    while (i < m_param->rows) {
         json_object_array_add(temp_arr, json_object_new_double(*ptr));
         ++ptr;
         cout++;
 		
-        if(cout == m->columns) {
+        if(cout == m_param->columns) {
             json_object_array_add(json_find(t, "data"), temp_arr);
             temp_arr = json_object_new_array();
             cout = 0;
@@ -585,11 +609,11 @@ json_object* matrix_serialize(const Matrix *const m) {
  *
  * Returns: the new #Matrix
  */
-Matrix* matrix_transpose_static(const Matrix *const m) {
-    register Matrix *t = matrix_new_with_args(m->rows, m->columns);   
+Matrix* matrix_transpose_static(const Matrix *const m_param) {
+    register Matrix *t = matrix_new_with_args(m_param->rows, m_param->columns);
 
     register float *ptr	  = &t->data[0][0];
-    const register float *m_ptr = &m->data[0][0];
+    const register float *m_ptr = &m_param->data[0][0];
 
     PTR_START(t->len)
         *ptr = *m_ptr;
@@ -610,11 +634,11 @@ Matrix* matrix_transpose_static(const Matrix *const m) {
  *
  * Returns: the new #Matrix
  */
-Matrix* matrix_multiply_static(const Matrix *__restrict const a, const Matrix *__restrict const b) {
+Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Matrix *__restrict const b_param) {
     register Matrix *t;
     /* Matrix product */
-    if (a->columns != b->rows) {
-        t = matrix_new_with_args(b->rows, b->columns);
+    if (a_param->columns != b_param->rows) {
+        t = matrix_new_with_args(b_param->rows, b_param->columns);
 
         register int i = 0;
         while (i < t->rows) {
@@ -622,7 +646,7 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a, const Matrix *_
             while (j < t->columns) {
                 register int k = 0;
                 while (k < t->columns) {
-                    t->data[i][j] += a->data[j][k] * b->data[i][j];
+                    t->data[i][j] += a_param->data[j][k] * b_param->data[i][j];
                     ++k;
                 }
                 ++j;
@@ -631,15 +655,15 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a, const Matrix *_
         }
     } else {
         /* Dot product of values in columns */
-        t = matrix_new_with_args(a->rows, b->columns);
+        t = matrix_new_with_args(a_param->rows, b_param->columns);
 
         register int i = 0;
         while (i < t->rows) {
             register int j = 0;
             while (j < t->columns) {
                 register int k = 0;
-                while (k < a->columns) {
-                    t->data[i][j] += a->data[i][k] * b->data[k][j];
+                while (k < a_param->columns) {
+                    t->data[i][j] += a_param->data[i][k] * b_param->data[k][j];
                     ++k;
                 }
                 ++j;
@@ -672,16 +696,16 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a, const Matrix *_
  *
  * Returns: the new #Matrix
  */
-Matrix* matrix_subtract_static(const Matrix *const a, const Matrix *const b) {
+Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const b_param) {
     register Matrix *t;
-    if (a->columns >= b->rows) 
-        t = matrix_new_with_args(b->rows, b->columns);
+    if (a_param->columns >= b_param->rows) 
+        t = matrix_new_with_args(b_param->rows, b_param->columns);
     else
-        t = matrix_new_with_args(a->rows, b->columns);
+        t = matrix_new_with_args(a_param->rows, b_param->columns);
 
-    register float *ptr	  = &t->data[0][0];
-    const register float *a_ptr = &a->data[0][0];
-    const register float *b_ptr = &b->data[0][0];
+    register float *ptr	        = &t->data[0][0];
+    const register float *a_ptr = &a_param->data[0][0];
+    const register float *b_ptr = &b_param->data[0][0];
 
     PTR_START(t->len)
         *ptr = *a_ptr - *b_ptr;
@@ -705,14 +729,14 @@ Matrix* matrix_subtract_static(const Matrix *const a, const Matrix *const b) {
  *
  * Returns: the new #Matrix
  */
-Matrix* matrix_map_static(const Matrix *const m, float (*const func)(float)) {
-    register Matrix *t = matrix_new_with_args(m->rows, m->columns);
+Matrix* matrix_map_static(const Matrix *const m_param, float (*const func_param)(float)) {
+    register Matrix *t = matrix_new_with_args(m_param->rows, m_param->columns);
 
-    register float *ptr   = &t->data[0][0];
-    const register float *m_ptr = &m->data[0][0];
+    register float *ptr         = &t->data[0][0];
+    const register float *m_ptr = &m_param->data[0][0];
 
     PTR_START(t->len)
-        *ptr = (*func)(*m_ptr);
+        *ptr = (*func_param)(*m_ptr);
 
         ++ptr;
         ++m_ptr;
@@ -734,13 +758,14 @@ Matrix* matrix_map_static(const Matrix *const m, float (*const func)(float)) {
  *
  * Returns: the new #Matrix
  */
-Matrix* matrix_deserialize(const json_object *__restrict const t) {
-    register Matrix *m = matrix_new_with_args(json_object_get_int(json_find(t, "rows")),
-											  json_object_get_int(json_find(t, "columns")));
+Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
+    register Matrix *m = matrix_new_with_args(json_object_get_int(json_find(t_param, "rows")),
+											  json_object_get_int(json_find(t_param, "columns")));
     
     register float *ptr = &m->data[0][0];
     
-    register float* buf = json_strsplit(json_object_get_string(json_object_array_get_idx(json_find(t, "data"), 0)), ',', m->columns);
+    register float* buf = (float *)__builtin_alloca(m->columns);
+    json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), ',', m->columns);
         
     register int i = 0;
     register int cout = 0;
@@ -754,7 +779,7 @@ Matrix* matrix_deserialize(const json_object *__restrict const t) {
             ++i;
             
             if (i != m->rows)
-                buf = json_strsplit(json_object_get_string(json_object_array_get_idx(json_find(t, "data"), i)), ',', m->columns);
+                json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), i)), ',', m->columns);
         }
     }
 
