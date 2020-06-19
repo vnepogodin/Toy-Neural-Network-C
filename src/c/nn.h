@@ -12,7 +12,7 @@ typedef struct _NeuralNetwork NeuralNetwork;
  *
  * Flag to sigmoid float function.
  */
-#define FUNC_SIGMOID (1 << 0)
+#define FUNC_SIGMOID 1
 
 /**
  * FUNC_DSIGMOID:
@@ -20,7 +20,7 @@ typedef struct _NeuralNetwork NeuralNetwork;
  *
  * Flag to dsigmoid float function.
  */
-#define FUNC_DSIGMOID (1 << 1)
+#define FUNC_DSIGMOID 2
 
 /* Constructors */
 NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const);

@@ -1,6 +1,6 @@
 CXX := g++
 CFLAGS := --std=gnu++2a -ffast-math
-objects := */init
+objects := tests/init
 all: Matrix.o nn.o $(objects)
 .PHONY := all
 

@@ -2,7 +2,7 @@
 
 #include "matrix.h"
 
-#include <stdio.h> /* printf */
+#include <stdio.h> /* printf, FILE */
 #include <stdlib.h> /* malloc, posix_memalign, arc4random */
 #include <string.h> /* strtof, strtok */
 
@@ -58,28 +58,15 @@ struct _Matrix {
     }                                          	\
 }STMT_END
 
-#ifdef __linux__
-# define allocSpace(matrix) STMT_START{                                         \
-     (matrix)->data = (float **)malloc(sizeof(float *) * (matrix)->rows);       \
+#define allocSpace(matrix) STMT_START{                                          \
+    posix_memalign((void **)&(matrix)->data, 1024UL, (matrix)->rows);           \
                                                                                 \
-     register int i = 0;                                                        \
-     while (i < (matrix)->rows) {                                               \
-        (matrix)->data[i] = (float *)malloc(sizeof(float) * (matrix)->columns); \
-        ++i;                                                   	                \
-     }                                                          	            \
- }STMT_END
-#else
-
-# define allocSpace(matrix) STMT_START{                                         \
-     posix_memalign((void **)&(matrix)->data, 1024UL, (matrix)->rows);          \
-                                                                                \
-     register int i = 0;                                                        \
-     while (i < (matrix)->rows) {                                               \
+    register int i = 0;                                                         \
+    while (i < (matrix)->rows) {                                                \
         posix_memalign((void **)&(matrix)->data[i], 1024UL, (matrix)->columns); \
         ++i;                                                   	                \
-     }                                                                          \
- }STMT_END
-#endif
+    }                                                                           \
+}STMT_END
 
 static void json_strsplit(register float* result, const char* _str, const char _delim, const int columns) {
     const char delim[2] = { _delim, '\0' };
@@ -247,6 +234,7 @@ Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
  * Frees #Matrix.
  */
 void matrix_free(register Matrix *__matrix_param) {
+#ifdef __APPLE__
     register float **ptr = &__matrix_param->data[0];
 
     PTR_START(__matrix_param->rows)
@@ -255,6 +243,7 @@ void matrix_free(register Matrix *__matrix_param) {
 
         ++ptr;
     PTR_END
+#endif
 
     free(__matrix_param->data);
     __matrix_param->data = NULL;
@@ -421,8 +410,21 @@ const float* matrix_toArray(const Matrix *const m_param) {
 void matrix_randomize(register Matrix *m_param) {
     register float *ptr = &m_param->data[0][0];
 
+#ifdef __linux__
+    register FILE *f = fopen("/dev/urandom", "r");
+    unsigned char buf[4];
+
+    fread(buf, 1, 4, f);
+    fclose(f);
+
+    register unsigned int __random = buf[0] | buf[1] << 8U | buf[2] << 16U | buf[3] << 24U;
+
+    PTR_START(m_param->len)
+        *ptr = 0.F + (__random * (1.F - 0.F) / UINT32_MAX);
+#elif __APPLE__
     PTR_START(m_param->len)
         *ptr = 0.F + (arc4random() * (1.F - 0.F) / INT32_MAX);
+#endif
 
         ++ptr;
     PTR_END
