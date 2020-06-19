@@ -46,7 +46,7 @@ struct _Matrix {
  * Used within multi-statement macros so that they can be used in places
  * where only one statement is expected by the compiler.
  */
-#define PTR_END ++i; }
+#define PTR_END ++ptr; ++i; }
 
 
 /* Non member functions */
@@ -142,8 +142,6 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
     register int end = rows * columns;
     PTR_START(end)
         *ptr = 0;
-
-        ++ptr;
     PTR_END
 
     __matrix_m->len = i;
@@ -218,7 +216,6 @@ Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
     PTR_START(__matrix_param->len)
         *ptr = *ref_ptr;
 
-        ++ptr;
         ++ref_ptr;
     PTR_END
 
@@ -240,8 +237,6 @@ void matrix_free(register Matrix *__matrix_param) {
     PTR_START(__matrix_param->rows)
         free(*ptr);
         *ptr = NULL;
-
-        ++ptr;
     PTR_END
 #endif
 
@@ -273,7 +268,6 @@ void matrix_subtract(register Matrix *a_param, const Matrix *const b_param) {
 	PTR_START(a_param->len)
         *ptr -= *b_ptr;
 
-        ++ptr;
         ++b_ptr;
 	PTR_END
 }
@@ -283,7 +277,7 @@ void matrix_subtract(register Matrix *a_param, const Matrix *const b_param) {
  * @a: a #Matrix.
  * @b: a reference #Matrix.
  * @example:
- *		
+ *
  *		3 rows, 1 columns   	2 rows, 1 columns
  *
  *			  [64]
@@ -331,7 +325,6 @@ void matrix_multiply(register Matrix *a_param, const Matrix *const b_param) {
         PTR_START(a_param->len)
             *ptr *= *b_ptr;
 
-            ++ptr;
             ++b_ptr;
         PTR_END
     }
@@ -357,8 +350,6 @@ Matrix* matrix_fromArray(const float* __restrict const arr_param) {
 
     PTR_START(t->len)
         *ptr = arr_param[i];
-
-        ++ptr;
     PTR_END
 
     return t;
@@ -387,8 +378,6 @@ const float* matrix_toArray(const Matrix *const m_param) {
 
     PTR_START(m_param->len)
         arr[i] = *ptr;
-
-        ++ptr;
     PTR_END
 
     return arr;
@@ -426,7 +415,6 @@ void matrix_randomize(register Matrix *m_param) {
         *ptr = 0.F + (arc4random() * (1.F - 0.F) / INT32_MAX);
 #endif
 
-        ++ptr;
     PTR_END
 }
 
@@ -490,8 +478,6 @@ void matrix_add_float(register Matrix *a_param, const float num_param) {
 
     PTR_START(a_param->len)
         *ptr += num_param;
-
-        ++ptr;
     PTR_END
 }
 
@@ -515,8 +501,6 @@ void matrix_multiply_scalar(register Matrix *m_param, const float num_param) {
 
     PTR_START(m_param->len)
 	    *ptr *= num_param;
-
-        ++ptr;
 	PTR_END
 }
 
@@ -538,8 +522,6 @@ void matrix_map(register Matrix *m_param, float (*const func_param)(float)) {
 
     PTR_START(m_param->len)
 		*ptr = (*func_param)(*ptr);
-
-        ++ptr;
 	PTR_END
 }
 
@@ -554,7 +536,8 @@ void matrix_print(const Matrix *const m_param) {
     const register float *ptr = &m_param->data[0][0];
     
     register int cout = 0;
-    PTR_START(m_param->len)
+    register int i = 0;
+    while (i < m_param->len) {
         printf("%f ", *ptr);
         ++ptr;
         cout++;
@@ -563,7 +546,8 @@ void matrix_print(const Matrix *const m_param) {
             cout = 0;
             printf("\n");
         }
-    PTR_END
+        ++i;
+    }
 }
 
 /**
@@ -614,14 +598,13 @@ json_object* matrix_serialize(const Matrix *const m_param) {
 Matrix* matrix_transpose_static(const Matrix *const m_param) {
     register Matrix *t = matrix_new_with_args(m_param->rows, m_param->columns);
 
-    register float *ptr	  = &t->data[0][0];
+    register float *ptr	        = &t->data[0][0];
     const register float *m_ptr = &m_param->data[0][0];
 
     PTR_START(t->len)
         *ptr = *m_ptr;
 
-        ++ptr;
-        ++m_ptr;
+         ++m_ptr;
     PTR_END
 
     return t;
@@ -712,7 +695,6 @@ Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const 
     PTR_START(t->len)
         *ptr = *a_ptr - *b_ptr;
 
-        ++ptr;
         ++a_ptr;
         ++b_ptr;
     PTR_END
@@ -740,7 +722,6 @@ Matrix* matrix_map_static(const Matrix *const m_param, float (*const func_param)
     PTR_START(t->len)
         *ptr = (*func_param)(*m_ptr);
 
-        ++ptr;
         ++m_ptr;
     PTR_END
 

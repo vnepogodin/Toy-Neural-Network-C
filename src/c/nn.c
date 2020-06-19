@@ -36,10 +36,10 @@ static json_object* json_find(const json_object *__restrict const j, const char*
 }
 
 static inline const int convert_ActivationFunction(float (*const func)(float)) {
-    int result = FUNC_SIGMOID;
+    int result = 1;
 
     if (*func == dsigmoid)
-        result = FUNC_DSIGMOID;
+        result = 2;
 
     return result;
 }
