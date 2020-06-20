@@ -5,6 +5,7 @@
 
 #include <stdlib.h> /* malloc */
 #include <math.h> /* exp */
+#include <string.h> /* memset_s */
 
 struct _NeuralNetwork {
     /* Variables */
@@ -37,7 +38,7 @@ static json_object* json_find(const json_object *__restrict const j, const char*
 }
 
 #define convert_ActivationFunction(func) \
-    *(func) == dsigmoid ? 2 : 1
+    (*(func) == dsigmoid) ? 2 : 1
 
 
 /**
@@ -82,7 +83,7 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param)
 NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hidden_nodes, const int output_nodes) {
     register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
 
-    __builtin_memset(nn, 0, sizeof(NeuralNetwork));
+    memset_s(nn, sizeof(nn), 0, sizeof(NeuralNetwork));
     
     nn->input_nodes = input_nodes;
     nn->hidden_nodes = hidden_nodes;
