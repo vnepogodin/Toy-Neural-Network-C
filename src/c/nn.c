@@ -2,6 +2,7 @@
 
 #include "matrix.h"
 #include "nn.h"
+
 #include <stdlib.h> /* malloc */
 #include <math.h> /* exp */
 
@@ -61,7 +62,9 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param)
 
     /* TODO: copy these as well */
     neural_network_setLearningRate(__nn_temp, __nn_param->learning_rate);
-    neural_network_setActivationFunction(__nn_temp, convert_ActivationFunction(__nn_param->activation_function));
+
+    register int flag = convert_ActivationFunction(__nn_param->activation_function);
+    neural_network_setActivationFunction(__nn_temp, flag);
 
     return __nn_temp;
 }

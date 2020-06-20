@@ -2,6 +2,7 @@
 *init
 *nn_predict
 *nn_train
+*nn_copy
 
 # Prerequisites
 *.d
