@@ -2,12 +2,15 @@
 
 #include "matrix.h"
 
-#include <stdio.h> /* printf, FILE */
+#include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc, posix_memalign, arc4random */
 #include <string.h> /* strtof, strtok */
 #ifdef __linux__
 # include <fcntl.h> /* open, O_RDONLY */
 # include <unistd.h> /* pread, close */
+# include <pthread.h> /* pthread_mutex_t, pthread_mutex_lock, pthread_mutex_unlock */
+
+static pthread_mutex_t mutex;
 #endif
 
 struct _Matrix {
@@ -404,12 +407,21 @@ void matrix_randomize(register Matrix *m_param) {
     register float *ptr = &m_param->data[0][0];
 
 #ifdef __linux__
-    register int fd = open("/dev/urandom", O_RDONLY, 0);
+    pthread_mutex_init(&mutex, NULL);
 
-    unsigned char buf[4];
-   
-    pread(fd, buf, 4, 0);
-    close(fd);
+    unsigned char buf[4] = { 0U };
+    if (pthread_mutex_trylock(&mutex) == 0) {
+        register int fd = open("/dev/urandom", O_RDONLY, 0);
+
+        if (fd != -1) {
+            pread(fd, buf, 4, 0);
+            close(fd);
+        }
+
+        pthread_mutex_unlock(&mutex);
+    }
+    
+    pthread_mutex_destroy(&mutex);
 
     register unsigned int __random = buf[0] | buf[1] << 8U | buf[2] << 16U | buf[3] << 24U;
 
