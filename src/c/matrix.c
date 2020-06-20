@@ -412,7 +412,7 @@ void matrix_randomize(register Matrix *m_param) {
         close(fd);
     }
 
-    register unsigned int __random = buf[0] | buf[1] << 8U | buf[2] << 16U | buf[3] << 24U;
+    register unsigned int __random = buf[0] | (buf[1] << 8U) | (buf[2] << 16U) | (buf[3] << 24U);
 
     PTR_START(m_param->len)
         *ptr = 0.F + (__random * (1.F - 0.F) / UINT32_MAX);
