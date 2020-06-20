@@ -5,6 +5,10 @@
 #include <stdio.h> /* printf, FILE */
 #include <stdlib.h> /* malloc, posix_memalign, arc4random */
 #include <string.h> /* strtof, strtok */
+#ifdef __linux__
+# include <fcntl.h> /* open, O_RDONLY */
+# include <unistd.h> /* pread, close */
+#endif
 
 struct _Matrix {
     /* Variables */
@@ -400,11 +404,12 @@ void matrix_randomize(register Matrix *m_param) {
     register float *ptr = &m_param->data[0][0];
 
 #ifdef __linux__
-    register FILE *f = fopen("/dev/urandom", "r");
-    unsigned char buf[4];
+    register int fd = open("/dev/urandom", O_RDONLY, 0);
 
-    fread(buf, 1, 4, f);
-    fclose(f);
+    unsigned char buf[4];
+   
+    pread(fd, buf, 4, 0);
+    close(fd);
 
     register unsigned int __random = buf[0] | buf[1] << 8U | buf[2] << 16U | buf[3] << 24U;
 
