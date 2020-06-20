@@ -1,8 +1,33 @@
 // Matrix lib
 
-#include "Matrix.hpp"
-#include <cstdlib> // malloc
-#include <ctime> // rand_r, timeval64
+#include "Matrix.hpp" // class Matrix
+#include <random>
+
+/**
+ * PTR_START(end):
+ *
+ * Used within multi-statement macros so that they can be used in places
+ * where only one statement is expected by the compiler.
+ */
+#define PTR_START(end) int i = 0; while (i < (end)) {
+
+/**
+ * PTR_END:
+ *
+ * Used within multi-statement macros so that they can be used in places
+ * where only one statement is expected by the compiler.
+ */
+#define PTR_END ++ptr; ++i; }
+
+class random_in_range {
+    std::mt19937 rng;
+public:
+    random_in_range() : rng(std::random_device()()) {}
+    float operator()(int low, int high) {
+        std::uniform_real_distribution<float> uni(low, high);
+        return uni(rng);
+    }
+};
 
 // Constructors
 Matrix::Matrix(const int rows, const int columns) : rows(rows), columns(columns) {
@@ -13,8 +38,6 @@ Matrix::Matrix(const int rows, const int columns) : rows(rows), columns(columns)
     int end = this->rows * this->columns;
     PTR_START(end)
         *ptr = 0;
-
-        ++ptr;
     PTR_END
 
     this->len = i;
@@ -38,7 +61,6 @@ Matrix::Matrix(const Matrix &m) : rows(m.rows), columns(m.columns) {
     PTR_START(m.len)
         *ptr = *ref_ptr;
 
-        ++ptr;
         ++ref_ptr;
     PTR_END
 
@@ -47,20 +69,18 @@ Matrix::Matrix(const Matrix &m) : rows(m.rows), columns(m.columns) {
 
 // Destructors
 Matrix::~Matrix(void) {
+    this->data = nullptr;
+
+    delete[] this->data;
 }
 
-void Matrix::free(void) {
-    int i = 0;
-    while (i < this->rows) {
-        delete[] this->data[i];
-        ++i;
-    }
+void Matrix::matrix_free(void) {
     delete[] this->data;
 }
 
 // Operators
 void Matrix::matrix_equal(const Matrix &m) {
-    this->free();
+    delete this;
 
     this->rows = m.rows;
     this->columns = m.columns;
@@ -87,7 +107,6 @@ Matrix& Matrix::operator-=(const Matrix &m) {
     PTR_START(this->len)
         *ptr -= *m_ptr;
 
-        ++ptr;
         ++m_ptr;
     PTR_END
 
@@ -121,7 +140,6 @@ Matrix& Matrix::operator*=(const Matrix &m) {
         PTR_START(this->len)
             *ptr *= *m_ptr;
 
-            ++ptr;
             ++m_ptr;
         PTR_END
     }
@@ -137,8 +155,6 @@ Matrix Matrix::fromArray(const float* const arr) {
 
     PTR_START(t.len)
         *ptr = arr[i];
-
-        ++ptr;
     PTR_END
 
     return t;
@@ -153,8 +169,6 @@ const float* Matrix::toArray(void) {
 
     PTR_START(this->len)
         arr[i] = *ptr;
-
-        ++ptr;
     PTR_END
 
     return arr;
@@ -163,14 +177,10 @@ const float* Matrix::toArray(void) {
 void Matrix::randomize(void) {
     float *ptr = &this->data[0][0];
 
-    struct timeval ts;
-
-    unsigned int seed = (unsigned int)(ts.tv_sec);
+    random_in_range r;
 
     PTR_START(this->len)
-        *ptr = 0.f + (rand_r(&seed) * (1.f - 0.f) / RAND_MAX);
-
-        ++ptr;
+        *ptr = r(0, 1);
     PTR_END
 }
 
@@ -204,8 +214,6 @@ void Matrix::add(const float n) {
 
     PTR_START(this->len)
         *ptr += n;
-
-        ++ptr;
     PTR_END
 }
 
@@ -215,8 +223,6 @@ void Matrix::multiply(const float n) {
 
     PTR_START(this->len)
         *ptr *= n;
-
-        ++ptr;
     PTR_END
 }
 
@@ -226,8 +232,6 @@ void Matrix::map(float (*const func)(float)) {
 
     PTR_START(this->len)
         *ptr = (*func)(*ptr);
-
-        ++ptr;
     PTR_END
 }
 
@@ -235,7 +239,8 @@ void Matrix::print(void) {
     const float *ptr = &this->data[0][0];
 
     int cout = 0;
-    PTR_START(this->len)
+    int i = 0;
+    while (i < this->len) {
         printf("%f ", *ptr);
         ++ptr;
         cout++;
@@ -244,7 +249,8 @@ void Matrix::print(void) {
             cout = 0;
             printf("\n");
         }
-    PTR_END
+        ++i;
+    }
 }
 
 const nlohmann::json Matrix::serialize(const Matrix &m) const {
@@ -265,14 +271,30 @@ const nlohmann::json Matrix::serialize(const Matrix &m) const {
     return t.dump();
 }
 
+// Static functions
+Matrix Matrix::transpose(const Matrix &m) {
+    Matrix t(m.rows, m.columns);
+
+    float *ptr	 = &t.data[0][0];
+    const float *m_ptr = &m.data[0][0];
+
+    PTR_START(t.len)
+        *ptr = *m_ptr;
+
+        ++m_ptr;
+    PTR_END
+
+    return t;
+}
+
 
 // Private function
 void Matrix::allocSpace(void) {
-    this->data = (float **)new float* [this->rows];
+    this->data = new float*[this->rows];
         
     int i = 0;
     while (i < this->rows) {
-        this->data[i] = (float *)new float [this->columns];
+        this->data[i] = new float[this->columns];
         ++i;
     }
 }

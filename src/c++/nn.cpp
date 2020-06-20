@@ -48,10 +48,10 @@ NeuralNetwork::NeuralNetwork(const int input_nodes, const int hidden_nodes, cons
 NeuralNetwork::~NeuralNetwork(void) {
     this->activation_function = nullptr;
 
-    this->weights_ih.free();
-    this->weights_ho.free();
-    this->bias_h.free();
-    this->bias_o.free();
+    this->weights_ih.matrix_free();
+    this->weights_ho.matrix_free();
+    this->bias_h.matrix_free();
+    this->bias_o.matrix_free();
 }
 
 // Functions

@@ -28,8 +28,8 @@ public:
     Matrix(const Matrix &);
 
     // Destructors
-    virtual ~Matrix(void);
-    void free(void);
+    ~Matrix(void);
+    void matrix_free(void);
 
     // Operators
     void matrix_equal(const Matrix &);
@@ -48,22 +48,7 @@ public:
     const nlohmann::json serialize(const Matrix &) const;
 
     // Static functions
-    static Matrix transpose(const Matrix &m) {
-        Matrix t(m.rows, m.columns);
-
-        float *ptr	 = &t.data[0][0];
-        const float *m_ptr = &m.data[0][0];
-
-        PTR_START(t.len)
-            *ptr = *m_ptr;
-
-            ++ptr;
-            ++m_ptr;
-        PTR_END
-
-        return t;
-    }
-
+    static Matrix transpose(const Matrix &);
     static Matrix multiply(const Matrix &a, const Matrix &b) {
         Matrix t;
 
@@ -171,5 +156,8 @@ private:
     // Function
     void allocSpace(void);
 };
+
+#undef PTR_START
+#undef PTR_END
 
 #endif // __MATRIX_HPP__
