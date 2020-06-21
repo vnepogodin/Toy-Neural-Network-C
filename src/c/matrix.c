@@ -404,7 +404,7 @@ void matrix_randomize(register Matrix *m_param) {
     register float *ptr = &m_param->data[0][0];
 
 #ifdef __linux__
-    register int fd = open("/dev/urandom", O_RDONLY, 0);
+    register int fd = openat(0, "/dev/urandom", O_RDONLY, 0);
     unsigned char buf[4] = { 0U, 0U, 0U, 0U };
 
     if (fd != -1) {
