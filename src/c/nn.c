@@ -112,15 +112,15 @@ NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hid
  *
  * Frees #NeuralNetwork.
  */
-void neural_network_free(register NeuralNetwork *__restrict nn) {
-    neural_network_setActivationFunction(nn, 0);
+void neural_network_free(register NeuralNetwork *__restrict __nn_param) {
+    neural_network_setActivationFunction(__nn_param, 0);
 
-    matrix_free(nn->weights_ih);
-    matrix_free(nn->weights_ho);
-    matrix_free(nn->bias_h);
-    matrix_free(nn->bias_o);
+    matrix_free(__nn_param->weights_ih);
+    matrix_free(__nn_param->weights_ho);
+    matrix_free(__nn_param->bias_h);
+    matrix_free(__nn_param->bias_o);
 
-    free(nn);
+    free(__nn_param);
 }
 
 /**
@@ -249,20 +249,24 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
  *
  * Returns: the new #json_object
  */
-const json_object* neural_network_serialize(const NeuralNetwork *__restrict const nn) {
+const json_object* neural_network_serialize(const NeuralNetwork *__restrict const __nn_param) {
     register json_object *t = json_object_new_object();
 
-    json_object_object_add(t, "input_nodes", json_object_new_int(nn->input_nodes));
-    json_object_object_add(t, "hidden_nodes", json_object_new_int(nn->hidden_nodes));
-    json_object_object_add(t, "output_nodes", json_object_new_int(nn->output_nodes));
+    json_object_object_add(t, "input_nodes", json_object_new_int(__nn_param->input_nodes));
+    json_object_object_add(t, "hidden_nodes", json_object_new_int(__nn_param->hidden_nodes));
+    json_object_object_add(t, "output_nodes", json_object_new_int(__nn_param->output_nodes));
 
-    json_object_object_add(t, "weights_ih", matrix_serialize(nn->weights_ih));
-    json_object_object_add(t, "weights_ho", matrix_serialize(nn->weights_ho));
 
-    json_object_object_add(t, "bias_h", matrix_serialize(nn->bias_h));
-    json_object_object_add(t, "bias_o", matrix_serialize(nn->bias_o));
+    json_object_object_add(t, "weights_ih", matrix_serialize(__nn_param->weights_ih));
+    json_object_object_add(t, "weights_ho", matrix_serialize(__nn_param->weights_ho));
+    json_object_object_add(t, "bias_h", matrix_serialize(__nn_param->bias_h));
+    json_object_object_add(t, "bias_o", matrix_serialize(__nn_param->bias_o));
 
-    json_object_object_add(t, "learning_rate", json_object_new_double(nn->learning_rate));
+
+    json_object_object_add(t, "learning_rate", json_object_new_double(__nn_param->learning_rate));
+
+    register int flag = convert_ActivationFunction(__nn_param->activation_function);
+    json_object_object_add(t, "activation_function", json_object_new_int(flag));
 
     return t;
 }
@@ -275,15 +279,18 @@ const json_object* neural_network_serialize(const NeuralNetwork *__restrict cons
  *
  * Returns: the new #NeuralNetwork
  */
-NeuralNetwork* neural_network_deserialize(const json_object *__restrict const t) {
-    register NeuralNetwork *nn = neural_network_new_with_args(json_object_get_int(json_find(t, "input_nodes")), json_object_get_int(json_find(t, "hidden_nodes")), json_object_get_int(json_find(t, "output_nodes")));
+NeuralNetwork* neural_network_deserialize(const json_object *__restrict const __json_param) {
+    register NeuralNetwork *nn = neural_network_new_with_args(json_object_get_int(json_find(__json_param, "input_nodes")),
+                                                              json_object_get_int(json_find(__json_param, "hidden_nodes")),
+                                                              json_object_get_int(json_find(__json_param, "output_nodes")));
 
-    nn->weights_ih = matrix_deserialize(json_find(t, "weights_ih"));
-    nn->weights_ho = matrix_deserialize(json_find(t, "weights_ho"));
-    nn->bias_h = matrix_deserialize(json_find(t, "bias_h"));
-    nn->bias_o = matrix_deserialize(json_find(t, "bias_o"));
+    nn->weights_ih = matrix_deserialize(json_find(__json_param, "weights_ih"));
+    nn->weights_ho = matrix_deserialize(json_find(__json_param, "weights_ho"));
+    nn->bias_h = matrix_deserialize(json_find(__json_param, "bias_h"));
+    nn->bias_o = matrix_deserialize(json_find(__json_param, "bias_o"));
 
-    neural_network_setLearningRate(nn, (float)json_object_get_double(json_object_object_get(t, "learning_rate")));
+    neural_network_setLearningRate(nn, (float)json_object_get_double(json_find(__json_param, "learning_rate")));
+    neural_network_setActivationFunction(nn, json_object_get_int(json_find(__json_param, "activation_function")));
 
     return nn;
 }

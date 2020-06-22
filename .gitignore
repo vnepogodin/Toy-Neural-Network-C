@@ -3,6 +3,7 @@
 *nn_predict
 *nn_train
 *nn_copy
+*json_serialize
 
 # Prerequisites
 *.d
