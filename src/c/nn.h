@@ -37,7 +37,7 @@ void neural_network_train(register NeuralNetwork *, const float* __restrict cons
 void neural_network_setLearningRate(register NeuralNetwork *__restrict, const float);
 void neural_network_setActivationFunction(register NeuralNetwork *__restrict, const int);
 
-const json_object* neural_network_serialize(const NeuralNetwork *__restrict const);
+json_object* neural_network_serialize(const NeuralNetwork *__restrict const);
 NeuralNetwork* neural_network_deserialize(const json_object *__restrict const);
 
 #endif /* __NN_H__ */

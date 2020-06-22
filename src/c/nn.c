@@ -249,7 +249,7 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
  *
  * Returns: the new #json_object
  */
-const json_object* neural_network_serialize(const NeuralNetwork *__restrict const __nn_param) {
+json_object* neural_network_serialize(const NeuralNetwork *__restrict const __nn_param) {
     register json_object *t = json_object_new_object();
 
     json_object_object_add(t, "input_nodes", json_object_new_int(__nn_param->input_nodes));
