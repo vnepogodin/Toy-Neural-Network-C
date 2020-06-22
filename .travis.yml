@@ -6,7 +6,6 @@
 language: cpp
 
 dist: trusty
-sudo: required
 group: edge
 
 
@@ -14,7 +13,7 @@ group: edge
 # build matrix #
 ################
 
-matrix:
+jobs:
   include:
 
   - os: linux
