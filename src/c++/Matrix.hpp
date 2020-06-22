@@ -2,7 +2,7 @@
 #ifndef __MATRIX_HPP__
 #define __MATRIX_HPP__
 
-#include "json.hpp"  // nlohmann::json
+#include "third_party/json/json.hpp"  // nlohmann::json
 
 class Matrix {
  public:
