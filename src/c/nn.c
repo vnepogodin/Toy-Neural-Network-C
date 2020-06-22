@@ -1,13 +1,11 @@
 /* Other techniques for learning */
 
-#define __STDC_WANT_LIB_EXT1__ 1
-
 #include "matrix.h"
 #include "nn.h"
 
 #include <stdlib.h> /* malloc */
 #include <math.h> /* exp */
-#include <string.h> /* memset_s */
+#include <memory.h> /* memset_s */
 
 struct _NeuralNetwork {
     /* Variables */
