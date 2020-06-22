@@ -5,7 +5,6 @@
 
 #include <stdlib.h> /* malloc */
 #include <math.h> /* exp */
-#include <memory.h> /* memset_s */
 
 struct _NeuralNetwork {
     /* Variables */
@@ -82,9 +81,7 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param)
  */
 NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hidden_nodes, const int output_nodes) {
     register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
-
-    memset_s(nn, sizeof(nn), 0, sizeof(NeuralNetwork));
-    
+   
     nn->input_nodes = input_nodes;
     nn->hidden_nodes = hidden_nodes;
     nn->output_nodes = output_nodes;
