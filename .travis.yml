@@ -129,5 +129,6 @@ install: sh install-dependencies.sh
 script:
   # compile and execute unit tests
   - mkdir -p build && cd build
+  - pwd
   - make CC=${COMPILER} && make run CC=${COMPILER}
   - cd ..
