@@ -20,11 +20,12 @@ matrix:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-4.9
+      - C_COMPILER=gcc-4.9
+      - CXX_COMPILER=g++-4.9
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.9', 'cmake']
+        packages: ['gcc-4.9', 'g++-4.9', 'cmake']
 
 
   # OSX / Clang
@@ -51,69 +52,84 @@ matrix:
 
   - os: linux
     compiler: gcc
-    env: COMPILER=g++-4.8
+    env:
+      - C_COMPILER=gcc-4.8
+      - CXX_COMPILER=g++-4.8
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.8', 'cmake']
-
-  - os: linux
-    compiler: gcc
-    env: COMPILER=g++-4.9
-    addons:
-      apt:
-        sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.9', 'cmake']
-
-  - os: linux
-    compiler: gcc
-    env: COMPILER=g++-5
-    addons:
-      apt:
-        sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-5', 'cmake']
-
-  - os: linux
-    compiler: gcc
-    env: COMPILER=g++-6
-    addons:
-      apt:
-        sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-6', 'cmake']
-
-  - os: linux
-    compiler: gcc
-    env: COMPILER=g++-7
-    addons:
-      apt:
-        sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-7', 'cmake']
-
-  - os: linux
-    compiler: gcc
-    env: COMPILER=g++-8
-    addons:
-      apt:
-        sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-8', 'cmake']
-
-  - os: linux
-    compiler: gcc
-    env: COMPILER=g++-9
-    addons:
-      apt:
-        sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-9', 'cmake']
+        packages: ['gcc-4.8', 'g++-4.8', 'cmake']
 
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-9
+      - C_COMPILER=gcc-4.9
+      - CXX_COMPILER=g++-4.9
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['gcc-4.9', 'g++-4.9', 'cmake']
+
+  - os: linux
+    compiler: gcc
+    env:
+      - C_COMPILER=gcc-5
+      - CXX_COMPILER=g++-5
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['gcc-5', 'g++-5', 'cmake']
+
+  - os: linux
+    compiler: gcc
+    env:
+      - C_COMPILER=gcc-6
+      - CXX_COMPILER=g++-6
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['gcc-6', 'g++-6', 'cmake']
+
+  - os: linux
+    compiler: gcc
+    env:
+      - C_COMPILER=gcc-7
+      - CXX_COMPILER=g++-7
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['gcc-7', 'g++-7', 'cmake']
+
+  - os: linux
+    compiler: gcc
+    env:
+      - C_COMPILER=gcc-8
+      - CXX_COMPILER=g++-8
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['gcc-8', 'g++-8', 'cmake']
+
+  - os: linux
+    compiler: gcc
+    env:
+      - C_COMPILER=gcc-9
+      - CXX_COMPILER=g++-9
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['gcc-9', 'g++-9', 'cmake']
+
+  - os: linux
+    compiler: gcc
+    env:
+      - C_COMPILER=gcc-9
+      - CXX_COMPILER=g++-9
       - CXXFLAGS=-std=c++2a
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-9', 'cmake']
+        packages: ['gcc-9', 'g++-9', 'cmake']
 
 
 ################
@@ -128,4 +144,4 @@ install: sh install-dependencies.sh
 
 script:
   # compile and execute unit tests
-  - make CC=${COMPILER} && make run CC=${COMPILER}
+  - make CC=${C_COMPILER} CXX=${CXX_COMPILER} CXXFLAGS=${CXXFLAGS} && make run
