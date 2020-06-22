@@ -55,7 +55,7 @@ struct _Matrix {
 
 /* Non member functions */
 #define length_str(string, size) STMT_START{   	\
-    const register char* buf_str = (string);   	\
+    register const char* buf_str = (string);   	\
     while (*buf_str != '\0') {                  \
         ++(size);                              	\
         ++buf_str;                             	\
@@ -131,7 +131,7 @@ static json_object* json_find(const json_object *__restrict const j, const char*
 Matrix* matrix_new_with_args(const int rows, const int columns) {
     Matrix *__matrix_m;
 
-    const register unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
+    register const unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
     register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
 
     posix_memalign((void **)&__matrix_m, alignment, size);
@@ -168,7 +168,7 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
 Matrix* matrix_new(void) {
     Matrix *__matrix_m;
     
-    const register unsigned long alignment = 256UL; /* assumed 0.00026MB page sizes */
+    register const unsigned long alignment = 256UL; /* assumed 0.00026MB page sizes */
     register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
     
     posix_memalign((void **)&__matrix_m, alignment, size);
@@ -204,7 +204,7 @@ Matrix* matrix_new(void) {
 Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
     Matrix *__matrix_m;
 
-    const register unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
+    register const unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
     register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
 
     posix_memalign((void **)&__matrix_m, alignment, size);
@@ -215,7 +215,7 @@ Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
     allocSpace(__matrix_m);
 
     register float *ptr             = &__matrix_m->data[0][0];
-    const register float *ref_ptr   = &__matrix_param->data[0][0];
+    register const float *ref_ptr   = &__matrix_param->data[0][0];
 
     PTR_START(__matrix_param->len)
         *ptr = *ref_ptr;
@@ -267,7 +267,7 @@ void matrix_free(register Matrix *__matrix_param) {
  */
 void matrix_subtract(register Matrix *a_param, const Matrix *const b_param) {
     register float *ptr          = &a_param->data[0][0];
-    const register float *b_ptr  = &b_param->data[0][0];
+    register const float *b_ptr  = &b_param->data[0][0];
 	
 	PTR_START(a_param->len)
         *ptr -= *b_ptr;
@@ -324,7 +324,7 @@ void matrix_multiply(register Matrix *a_param, const Matrix *const b_param) {
         }
     } else {
         register float *ptr         = &a_param->data[0][0];
-        const register float *b_ptr = &b_param->data[0][0];
+        register const float *b_ptr = &b_param->data[0][0];
 
         PTR_START(a_param->len)
             *ptr *= *b_ptr;
@@ -378,7 +378,7 @@ const float* matrix_toArray(const Matrix *const m_param) {
     register float* arr = (float *)malloc(2);
 
     /* pointer to Matrix.data in CPU register */
-    const register float *ptr = &m_param->data[0][0];
+    register const float *ptr = &m_param->data[0][0];
 
     PTR_START(m_param->len)
         arr[i] = *ptr;
@@ -442,7 +442,7 @@ void matrix_randomize(register Matrix *m_param) {
  */
 void matrix_add_matrix(register Matrix *a_param, const Matrix *const b_param) {
     register float *ptr           = &a_param->data[0][0];
-    const register float *ref_ptr = &b_param->data[0][0];
+    register const float *ref_ptr = &b_param->data[0][0];
 
     register int i = 0;
 
@@ -539,7 +539,7 @@ void matrix_map(register Matrix *m_param, float (*const func_param)(float)) {
  *
  */
 void matrix_print(const Matrix *const m_param) {
-    const register float *ptr = &m_param->data[0][0];
+    register const float *ptr = &m_param->data[0][0];
     
     register int cout = 0;
     register int i = 0;
@@ -573,7 +573,7 @@ json_object* matrix_serialize(const Matrix *const m_param) {
     
     register json_object *temp_arr = json_object_new_array();
     
-    const register float *ptr = &m_param->data[0][0];
+    register const float *ptr = &m_param->data[0][0];
     
     register int cout = 0;
     register int i = 0;
@@ -605,7 +605,7 @@ Matrix* matrix_transpose_static(const Matrix *const m_param) {
     register Matrix *t = matrix_new_with_args(m_param->rows, m_param->columns);
 
     register float *ptr	        = &t->data[0][0];
-    const register float *m_ptr = &m_param->data[0][0];
+    register const float *m_ptr = &m_param->data[0][0];
 
     PTR_START(t->len)
         *ptr = *m_ptr;
@@ -695,8 +695,8 @@ Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const 
         t = matrix_new_with_args(a_param->rows, b_param->columns);
 
     register float *ptr	        = &t->data[0][0];
-    const register float *a_ptr = &a_param->data[0][0];
-    const register float *b_ptr = &b_param->data[0][0];
+    register const float *a_ptr = &a_param->data[0][0];
+    register const float *b_ptr = &b_param->data[0][0];
 
     PTR_START(t->len)
         *ptr = *a_ptr - *b_ptr;
@@ -723,7 +723,7 @@ Matrix* matrix_map_static(const Matrix *const m_param, float (*const func_param)
     register Matrix *t = matrix_new_with_args(m_param->rows, m_param->columns);
 
     register float *ptr         = &t->data[0][0];
-    const register float *m_ptr = &m_param->data[0][0];
+    register const float *m_ptr = &m_param->data[0][0];
 
     PTR_START(t->len)
         *ptr = (*func_param)(*m_ptr);
