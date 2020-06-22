@@ -1,6 +1,7 @@
 // Matrix lib
 
 #include "Matrix.hpp"  // class Matrix
+
 #include <random>  // std::mt19937, std::uniform_real_distribution, std::random_device
 
 /**
@@ -44,7 +45,8 @@ Matrix::Matrix(const int rows, const int columns)
     this->len = i;
 }
 
-Matrix::Matrix() : rows(1), columns(1) {
+Matrix::Matrix()
+    : rows(1), columns(1) {
     this->data = new float *[this->rows];
     this->data[0] = new float[this->columns];
 
@@ -53,7 +55,8 @@ Matrix::Matrix() : rows(1), columns(1) {
     this->len = 1;
 }
 
-Matrix::Matrix(const Matrix &m) : rows(m.rows), columns(m.columns) {
+Matrix::Matrix(const Matrix &m)
+    : rows(m.rows), columns(m.columns) {
     this->allocSpace();
 
     float *ptr     = &this->data[0][0];
@@ -78,9 +81,9 @@ void Matrix::clear() {
         delete[] this->data[i];
         ++i;
     }
-    
+
     delete[] this->data;
-    
+
     this->data = nullptr;
 }
 
@@ -226,13 +229,13 @@ void Matrix::print() {
     int cout = 0;
     int i = 0;
     while (i < this->len) {
-        printf("%f ", *ptr);
+        std::printf("%f ", *ptr);
         ++ptr;
         cout++;
 
         if (cout == this->columns) {
             cout = 0;
-            printf("\n");
+            std::printf("\n");
         }
         ++i;
     }
@@ -319,44 +322,45 @@ auto Matrix::multiply(const Matrix &a, const Matrix &b) -> Matrix {
 auto Matrix::subtract(const Matrix &a, const Matrix &b) -> Matrix {
     Matrix t;
     t.clear();
-    
-    if (a.columns >= b.rows)
+
+    if (a.columns >= b.rows) {
         t = Matrix(b.rows, b.columns);
-    else
+    } else {
         t = Matrix(a.rows, b.columns);
-    
+    }
+
     float *ptr          = &t.data[0][0];
     const float *a_ptr  = &a.data[0][0];
     const float *b_ptr  = &b.data[0][0];
-            
+
     PTR_START(t.len)
         *ptr = *a_ptr - *b_ptr;
-            
+
         ++a_ptr;
         ++b_ptr;
     PTR_END
-    
+
     return t;
 }
 
 auto Matrix::map(const Matrix &m, float (*const func)(float)) -> Matrix {
     Matrix t(m.rows, m.columns);
-    
+
     float *ptr          = &t.data[0][0];
     const float *m_ptr  = &m.data[0][0];
-    
+
     PTR_START(t.len)
         *ptr = (*func)(*m_ptr);
-    
+
         ++m_ptr;
     PTR_END
-    
+
     return t;
 }
 
 auto Matrix::deserialize(const nlohmann::json &t) -> Matrix {
     Matrix m = Matrix(t["rows"].get<int>(), t["columns"].get<int>());
-    
+
     int i = 0;
     while (i < m.rows) {
         int j = 0;

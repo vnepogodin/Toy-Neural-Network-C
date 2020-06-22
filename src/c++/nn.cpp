@@ -6,7 +6,7 @@
 
 // Non member functions
 static auto sigmoid(float x) -> float {
-    return 1.F / (1.F + exp(-x));
+    return 1.F / (1.F + std::exp(-x));
 }
 
 static auto dsigmoid(float y) -> float {

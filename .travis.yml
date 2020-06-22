@@ -33,21 +33,45 @@ matrix:
 
   - os: osx
     osx_image: xcode9.3
+    env:
+      - C_COMPILER=gcc
+      - CXX_COMPILER=g++
+      - CXXFLAGS=-std=c++11
 
   - os: osx
     osx_image: xcode9.4
+    env:
+      - C_COMPILER=gcc
+      - CXX_COMPILER=g++
+      - CXXFLAGS=-std=c++11
 
   - os: osx
     osx_image: xcode10
+    env:
+      - C_COMPILER=gcc
+      - CXX_COMPILER=g++
+      - CXXFLAGS=-std=c++11
 
   - os: osx
     osx_image: xcode10.1
+    env:
+      - C_COMPILER=gcc
+      - CXX_COMPILER=g++
+      - CXXFLAGS=-std=c++11
 
   - os: osx
     osx_image: xcode10.2
+    env:
+      - C_COMPILER=gcc
+      - CXX_COMPILER=g++
+      - CXXFLAGS=-std=c++11
 
   - os: osx
     osx_image: xcode11.2
+    env:
+      - C_COMPILER=gcc
+      - CXX_COMPILER=g++
+      - CXXFLAGS=-std=c++11
 
   # Linux / GCC
 
@@ -152,4 +176,4 @@ install: sh install-dependencies.sh
 
 script:
   # compile and execute unit tests
-  - make CC=${C_COMPILER} CXX=${CXX_COMPILER} CXXFLAGS=${CXXFLAGS} && make run
+  - make && make run
