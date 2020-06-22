@@ -10,8 +10,8 @@ $(objects): %: %.c
 clean:
 	rm *.o $(objects)
 run:
-	./*/init
-	./*/nn_copy
-	./*/nn_predict
-	./*/nn_train
-	./*/json_serialize
+	./tests/init
+	./tests/nn_copy
+	./tests/nn_predict
+	./tests/nn_train
+	./tests/json_serialize
