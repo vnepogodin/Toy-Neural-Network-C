@@ -16,4 +16,4 @@ $(objects): %: %.cpp
 clean:
 	rm *.o $(objects)
 run:
-	./tests/init
+	./*/init
