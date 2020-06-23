@@ -20,6 +20,14 @@
  */
 #define PTR_END ++ptr; ++i; }
 
+#ifdef _WIN32
+#  define posix_memalign(p, a, s) (((*(p)) = _aligned_malloc((s), (a))), *(p) ? 0 : errno)
+#  define posix_memalign_free _aligned_free
+#else
+#  define posix_memalign_free free
+#endif  // _WIN32
+
+
 class random_in_range {
     std::mt19937 rng{};
  public:
@@ -76,13 +84,15 @@ Matrix::~Matrix() {
 }
 
 void Matrix::clear() {
+#ifdef __APPLE__
     int i = 0;
     while (i < this->rows) {
-        delete[] this->data[i];
+        posix_memalign_free(this->data[i]);
         ++i;
     }
+#endif // __APPLE__
 
-    delete[] this->data;
+    posix_memalign_free(this->data);
 
     this->data = nullptr;
 }
@@ -241,7 +251,7 @@ void Matrix::print() {
     }
 }
 
-auto Matrix::serialize(const Matrix &m) const -> const nlohmann::json {
+auto Matrix::serialize(const Matrix &m) -> std::string {
     nlohmann::json t;
     t["rows"] = m.rows;
     t["columns"] = m.columns;

@@ -18,7 +18,7 @@ class NeuralNetwork {
     void setLearningRate(const float);
     void setActivationFunction(float (*const)(float));
     void train(const float* const, const float* const);
-    auto serialize(const NeuralNetwork &) -> const nlohmann::json;
+    static auto serialize(const NeuralNetwork &) -> std::string;
     auto copy() -> NeuralNetwork;
 
     // Static function

@@ -28,7 +28,7 @@ class Matrix {
     void multiply(const float);
     void map(float (*const)(float));
     void print();
-    auto serialize(const Matrix &) const -> const nlohmann::json;
+    static auto serialize(const Matrix &) -> std::string;
 
     // Static functions
     static auto transpose(const Matrix &) -> Matrix;

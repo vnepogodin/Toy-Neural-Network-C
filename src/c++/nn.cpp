@@ -138,16 +138,16 @@ void NeuralNetwork::train(const float* const input_array, const float* const tar
     this->bias_h.add(hidden_gradient);
 }
 
-auto NeuralNetwork::serialize(const NeuralNetwork &nn) -> const nlohmann::json {
+auto NeuralNetwork::serialize(const NeuralNetwork &nn) -> std::string {
     nlohmann::json t;
     t["input_nodes"] = nn.input_nodes;
     t["hidden_nodes"] = nn.hidden_nodes;
     t["output_nodes"] = nn.output_nodes;
 
-    t["weights_ih"] = nn.weights_ih.serialize(weights_ih);
-    t["weights_ho"] = nn.weights_ih.serialize(weights_ho);
-    t["bias_h"] = nn.weights_ih.serialize(bias_h);
-    t["bias_o"] = nn.weights_ih.serialize(bias_o);
+    t["weights_ih"] = Matrix::serialize(nn.weights_ih);
+    t["weights_ho"] = Matrix::serialize(nn.weights_ho);
+    t["bias_h"] = Matrix::serialize(nn.bias_h);
+    t["bias_o"] = Matrix::serialize(nn.bias_o);
 
     t["learning_rate"] = nn.learning_rate;
 

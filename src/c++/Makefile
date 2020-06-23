@@ -1,6 +1,6 @@
 CXX := g++
 CXXFLAGS := -std=c++11
-objects := tests/init
+objects := tests/init tests/nn_copy tests/nn_predict tests/nn_train
 all: Matrix.o nn.o $(objects)
 .PHONY := all
 
@@ -17,3 +17,6 @@ clean:
 	rm *.o $(objects)
 run:
 	./*/init
+	./*/nn_copy
+	./*/nn_predict
+	./*/nn_train
