@@ -4,7 +4,7 @@
 
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc, posix_memalign, arc4random */
-#include <string.h> /* strtof, strtok */
+#include <string.h> /* strtof, strtok_r, strtok_s */
 #ifdef __linux__
 # include <fcntl.h> /* open, O_RDONLY */
 # include <unistd.h> /* pread, close */
@@ -52,6 +52,13 @@ struct _Matrix {
  */
 #define PTR_END ++ptr; ++i; }
 
+#ifdef _WIN32
+#  define posix_memalign(p, a, s) (((*(p)) = _aligned_malloc((s), (a))), *(p) ? 0 : errno)
+#  define posix_memalign_free _aligned_free
+#else
+#  define posix_memalign_free free
+#endif /* _WIN32 */
+
 
 /* Non member functions */
 #define length_str(string, size) STMT_START{   	\
@@ -79,7 +86,7 @@ static void json_strsplit(register float* result, const char* _str, const char _
 
     length_str(_str, size);
 
-    register char* tmp = (char *)__builtin_alloca(size - 1);
+    register char* tmp = (char *)malloc((unsigned int)size - 1U);
 
     /*   slice_str   */
     register int i = 2;
@@ -93,16 +100,27 @@ static void json_strsplit(register float* result, const char* _str, const char _
         ++i;
     }
 
-    register char* token = strtok(tmp, delim);
+    char* save_token = NULL;
+#ifdef _WIN32
+    register char* token = strtok_s(tmp, delim, &save_token);
+#else
+    register char* token = strtok_r(tmp, delim, &save_token);
+#endif /* _WIN32 */
 
     i = 0;
     while (i < columns) {
         result[i] = strtof(token, NULL);
 
-        token = strtok(tmp, delim);
+#ifdef _WIN32
+        token = strtok_s(tmp, delim, &save_token);
+#else
+        token = strtok_r(tmp, delim, &save_token);
+#endif /* _WIN32 */
        
         ++i;
     }
+
+    free(tmp);
 }
 
 static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
@@ -239,15 +257,15 @@ void matrix_free(register Matrix *__matrix_param) {
     register float **ptr = &__matrix_param->data[0];
 
     PTR_START(__matrix_param->rows)
-        free(*ptr);
+        posix_memalign_free(*ptr);
         *ptr = NULL;
     PTR_END
 #endif
 
-    free(__matrix_param->data);
+    posix_memalign_free(__matrix_param->data);
     __matrix_param->data = NULL;
     
-    free(__matrix_param);
+    posix_memalign_free(__matrix_param);
 }
 
 /**
@@ -753,7 +771,7 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
     
     register float *ptr = &m->data[0][0];
     
-    register float* buf = (float *)__builtin_alloca(m->columns);
+    register float* buf = (float *)malloc(m->columns);
     json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), ',', m->columns);
         
     register int i = 0;
@@ -771,6 +789,8 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
                 json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), i)), ',', m->columns);
         }
     }
+
+    free(buf);
 
     return m;
 }
