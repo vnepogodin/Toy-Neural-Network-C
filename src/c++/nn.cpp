@@ -2,48 +2,59 @@
 #include "Matrix.hpp"
 #include "nn.hpp"
 
-#include <cmath>  // exp
+#include <cmath>  // std::exp
+
+namespace nn {
+    using function = float_t (*const)(float_t);  // Function alias
+};
 
 // Non member functions
-static auto sigmoid(float x) -> float {
+[[maybe_unused]] static inline auto sigmoid(float_t x) -> float_t {
     return 1.F / (1.F + std::exp(-x));
 }
 
-static auto dsigmoid(float y) -> float {
+[[maybe_unused]] static inline auto dsigmoid(float_t y) -> float_t {
     // return sigmoid(x) * (1 - sigmoid(x));
     return y * (1.F - y);
 }
 
-// Constructors
-NeuralNetwork::NeuralNetwork(const NeuralNetwork &a)
-    : input_nodes(a.input_nodes), hidden_nodes(a.hidden_nodes), output_nodes(a.output_nodes) {
-    this->weights_ih = Matrix(a.weights_ih);
-    this->weights_ho = Matrix(a.weights_ho);
-
-    this->bias_h = Matrix(a.bias_h);
-    this->bias_o = Matrix(a.bias_o);
-
-    // TODO: copy these as well
-    this->learning_rate = a.learning_rate;
-    this->activation_function = a.activation_function;
+static inline int32_t convert_ActivationFunction(nn::function &func) {
+    return (*(func) == dsigmoid) ? 2 : 1;
 }
 
-NeuralNetwork::NeuralNetwork(const int input_nodes, const int hidden_nodes, const int output_nodes)
-    : input_nodes(input_nodes), hidden_nodes(hidden_nodes), output_nodes(output_nodes) {
-    this->weights_ih = Matrix(this->hidden_nodes, this->input_nodes);
-    this->weights_ho = Matrix(this->output_nodes, this->hidden_nodes);
+
+// Constructor
+NeuralNetwork::NeuralNetwork(const int32_t input_nodes, const int32_t hidden_nodes, const int32_t output_nodes)
+    : input_nodes(input_nodes), hidden_nodes(hidden_nodes), output_nodes(output_nodes),
+      // Rate
+      learning_rate(0.1F),
+      // Function
+      activation_function(&sigmoid),
+      // Matrix
+      weights_ih(hidden_nodes, input_nodes),
+      weights_ho(output_nodes, hidden_nodes),
+      bias_h(hidden_nodes, 1),
+      bias_o(output_nodes, 1)
+{
     this->weights_ih.randomize();
     this->weights_ho.randomize();
 
-    this->bias_h = Matrix(this->hidden_nodes, 1);
-    this->bias_o = Matrix(this->output_nodes, 1);
     this->bias_h.randomize();
     this->bias_o.randomize();
-
-    // TODO: copy these as well
-    this->learning_rate = 0.1F;
-    this->activation_function = &sigmoid;
 }
+
+// Copy constructor
+NeuralNetwork::NeuralNetwork(const NeuralNetwork &a)
+    : input_nodes(a.input_nodes), hidden_nodes(a.hidden_nodes), output_nodes(a.output_nodes),
+      // Rate
+      learning_rate(a.learning_rate),
+      // Function
+      activation_function(*(a.activation_function)),
+      // Matrix
+      weights_ih(a.weights_ih),
+      weights_ho(a.weights_ho),
+      bias_h(a.bias_h),
+      bias_o(a.bias_o) {}
 
 // Destructor
 NeuralNetwork::~NeuralNetwork() {
@@ -56,7 +67,7 @@ NeuralNetwork::~NeuralNetwork() {
 }
 
 // Functions
-auto NeuralNetwork::predict(const float* const input_array) -> const float* {
+auto NeuralNetwork::predict(const float_t* const &input_array) const -> const float_t* const {
     // Generating the Hidden Outputs
     Matrix inputs = Matrix::fromArray(input_array);
     Matrix hidden = Matrix::multiply(this->weights_ih, inputs);
@@ -74,15 +85,28 @@ auto NeuralNetwork::predict(const float* const input_array) -> const float* {
     return output.toArray();
 }
 
-void NeuralNetwork::setLearningRate(const float lr) {
+
+// Setting learning rate
+//
+void NeuralNetwork::setLearningRate(const float_t &lr) {
     this->learning_rate = lr;
 }
 
-void NeuralNetwork::setActivationFunction(float (*const func)(float)) {
-    this->activation_function = *func;
+// Setting function
+//
+void NeuralNetwork::setActivationFunction(const int32_t &flag) {
+    this->activation_function = nullptr;
+    
+    if (flag == FUNC_SIGMOID)
+        this->activation_function = sigmoid;
+    else if (flag == FUNC_DSIGMOID)
+        this->activation_function = dsigmoid;
 }
 
-void NeuralNetwork::train(const float* const input_array, const float* const target_array) {
+
+// Training neural network
+//
+void NeuralNetwork::train(const float_t* const &input_array, const float* const &target_array) {
     // Generating the Hidden Outputs
     Matrix inputs = Matrix::fromArray(input_array);
     Matrix hidden = Matrix::multiply(this->weights_ih, inputs);
@@ -138,44 +162,41 @@ void NeuralNetwork::train(const float* const input_array, const float* const tar
     this->bias_h.add(hidden_gradient);
 }
 
-auto NeuralNetwork::serialize(const NeuralNetwork &nn) -> std::string {
+
+// Serialize to JSON
+//
+auto NeuralNetwork::serialize() const -> const nlohmann::json {
     nlohmann::json t;
-    t["input_nodes"] = nn.input_nodes;
-    t["hidden_nodes"] = nn.hidden_nodes;
-    t["output_nodes"] = nn.output_nodes;
+    t["input_nodes"] = this->input_nodes;
+    t["hidden_nodes"] = this->hidden_nodes;
+    t["output_nodes"] = this->output_nodes;
 
-    t["weights_ih"] = Matrix::serialize(nn.weights_ih);
-    t["weights_ho"] = Matrix::serialize(nn.weights_ho);
-    t["bias_h"] = Matrix::serialize(nn.bias_h);
-    t["bias_o"] = Matrix::serialize(nn.bias_o);
+    t["weights_ih"] = this->weights_ih.serialize();
+    t["weights_ho"] = this->weights_ho.serialize();
+    t["bias_h"] = this->bias_h.serialize();
+    t["bias_o"] = this->bias_o.serialize();
 
-    t["learning_rate"] = nn.learning_rate;
-
-    return t.dump();
-}
-
-auto NeuralNetwork::copy() -> NeuralNetwork {
-    NeuralNetwork t = NeuralNetwork(this->input_nodes, this->hidden_nodes, this->output_nodes);
-
-    t.weights_ih = Matrix(this->weights_ih);
-    t.weights_ho = Matrix(this->weights_ho);
-    t.bias_h = Matrix(this->bias_h);
-    t.bias_o = Matrix(this->bias_o);
-       
-    t.setLearningRate(this->learning_rate);
-
+    t["learning_rate"] = this->learning_rate;
+    t["activation_function"] = convert_ActivationFunction(this->activation_function);
+    
     return t;
 }
 
+
+// Deserialize from JSON
+//
 auto NeuralNetwork::deserialize(const nlohmann::json &t) -> NeuralNetwork {
-    NeuralNetwork nn = NeuralNetwork(t["input_nodes"].get<int>(), t["hidden_nodes"].get<int>(), t["output_nodes"].get<int>());
+    NeuralNetwork nn = NeuralNetwork(t["input_nodes"].get<int32_t>(),
+                                     t["hidden_nodes"].get<int32_t>(),
+                                     t["output_nodes"].get<int32_t>());
 
     nn.weights_ih = Matrix::deserialize(t["weights_ih"]);
     nn.weights_ho = Matrix::deserialize(t["weights_ho"]);
     nn.bias_h = Matrix::deserialize(t["bias_h"]);
     nn.bias_o = Matrix::deserialize(t["bias_o"]);
 
-    nn.setLearningRate(t["learning_rate"].get<float>());
+    nn.setLearningRate(t["learning_rate"].get<float_t>());
+    nn.setActivationFunction(t["activation_function"].get<int32_t>());
 
     return nn;
 }

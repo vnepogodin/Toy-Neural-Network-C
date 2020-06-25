@@ -7,43 +7,44 @@
 class Matrix {
  public:
     // Constructors
-    Matrix(const int rows, const int columns);
+    Matrix(const int32_t rows, const int32_t columns);
     Matrix();
     Matrix(const Matrix &);
 
     // Destructors
-    ~Matrix();
+    ~Matrix() = default;
     void clear();
 
     // Operators
+    auto operator=(const Matrix &) -> Matrix& = default;
     auto operator-=(const Matrix &) -> Matrix&;
     auto operator*=(const Matrix &) -> Matrix&;
 
     // Functions
-    static auto fromArray(const float* const arr) -> Matrix;
-    auto toArray() -> const float*;
+    auto toArray() const -> const float_t* const;
     void randomize();
     void add(const Matrix &);
-    void add(const float);
-    void multiply(const float);
-    void map(float (*const)(float));
-    void print();
-    static auto serialize(const Matrix &) -> std::string;
+    void add(const float_t &);
+    void multiply(const float_t &);
+    void map(float_t (*const)(float_t));
+    void print() const;
+    auto serialize() const -> const nlohmann::json;
 
     // Static functions
+    static auto fromArray(const float_t* const &) -> Matrix;
     static auto transpose(const Matrix &) -> Matrix;
     static auto multiply(const Matrix &, const Matrix &) -> Matrix;
     static auto subtract(const Matrix &, const Matrix &) -> Matrix;
-    static auto map(const Matrix &, float (*const)(float)) -> Matrix;
+    static auto map(const Matrix &, float_t (*const)(float_t)) -> Matrix;
     static auto deserialize(const nlohmann::json &) -> Matrix;
 
  private:
     // Variables
-    int len;
+    int32_t len;
 
-    int rows, columns;
+    int32_t rows, columns;
 
-    float **data;
+    float_t **data;
 
     // Function
     void allocSpace();
