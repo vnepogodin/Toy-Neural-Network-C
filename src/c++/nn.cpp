@@ -9,11 +9,11 @@ namespace nn {
 };
 
 // Non member functions
-[[maybe_unused]] static inline auto sigmoid(float_t x) -> float_t {
+static inline auto sigmoid(float_t x) -> float_t {
     return 1.F / (1.F + std::exp(-x));
 }
 
-[[maybe_unused]] static inline auto dsigmoid(float_t y) -> float_t {
+static inline auto dsigmoid(float_t y) -> float_t {
     // return sigmoid(x) * (1 - sigmoid(x));
     return y * (1.F - y);
 }
