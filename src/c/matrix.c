@@ -8,6 +8,9 @@
 #ifdef __linux__
 # include <fcntl.h> /* openat, O_RDONLY */
 # include <unistd.h> /* pread, close */
+#elif _WIN32
+# include <windows.h>
+# include <wincrypt.h> /* CryptAcquireContext, CryptGenRandom */
 #endif
 
 struct _Matrix {
@@ -434,7 +437,10 @@ void matrix_randomize(register Matrix *m_param) {
 
     PTR_START(m_param->len)
         *ptr = 0.F + (rand_r(&__random) * (1.F - 0.F) / RAND_MAX);
-#elif __APPLE__
+#elif _WIN32
+    PTR_START(m_param->len)
+        *ptr = 0.F + (rand_r() * (1.F - 0.F) / INT32_MAX);
+#else
     PTR_START(m_param->len)
         *ptr = 0.F + (arc4random() * (1.F - 0.F) / INT32_MAX);
 #endif
