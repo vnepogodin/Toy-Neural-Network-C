@@ -5,7 +5,7 @@
 auto main() -> int {
     NeuralNetwork nn(5, 25, 1);
 
-    std::cout << nn.serialize();
+    std::cout << nn.serialize() << "\n";
 
     return 0;
 }

@@ -5,9 +5,9 @@
 int main(void) {
     register NeuralNetwork *nn = neural_network_new_with_args(5, 25, 1);
 
-    const float input[] = { 1.F, 0.F };
+    const float input[2] = { 1.F, 0.F };
 
-    const float* output = neural_network_predict(nn, input);
+    register const float* output = neural_network_predict(nn, input);
 
     printf("%f\n", output[0]);
 

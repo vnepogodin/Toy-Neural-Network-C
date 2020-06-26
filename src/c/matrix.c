@@ -79,8 +79,8 @@ struct _Matrix {
     }                                                                           \
 }STMT_END
 
-static void json_strsplit(register float* result, const char* _str, const char _delim, const int columns) {
-    const char delim[2] = { _delim, '\0' };
+static void json_strsplit(register float* result, const char* _str, const int columns) {
+    const char delim[2] = { "," };
 
     register int size = 0;
 
@@ -772,7 +772,7 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
     register float *ptr = &m->data[0][0];
     
     register float* buf = (float *)malloc(m->columns);
-    json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), ',', m->columns);
+    json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), m->columns);
         
     register int i = 0;
     register int cout = 0;
@@ -786,7 +786,7 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
             ++i;
             
             if (i != m->rows)
-                json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), i)), ',', m->columns);
+                json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), i)), m->columns);
         }
     }
 

@@ -1,6 +1,6 @@
 CXX := g++
 CXXFLAGS := -std=c++11
-objects := tests/init tests/nn_copy tests/nn_predict tests/nn_train tests/json_serialize
+objects := tests/init tests/nn_copy tests/nn_predict tests/nn_train tests/json_serialize tests/json_deserialize
 all: Matrix.o nn.o $(objects)
 .PHONY := all
 
@@ -21,3 +21,4 @@ run:
 	./*/nn_predict
 	./*/nn_train
 	./*/json_serialize
+	./*/json_deserialize

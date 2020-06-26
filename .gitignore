@@ -4,6 +4,7 @@
 *nn_train
 *nn_copy
 *json_serialize
+*json_deserialize
 
 # Prerequisites
 *.d

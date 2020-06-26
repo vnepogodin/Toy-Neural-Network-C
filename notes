@@ -3,5 +3,6 @@
 * 2. Use static word for local functions.
 * 3. Use register word for speed up var in function block.
 	 Just temp variables.
-* 4. Awful lib - json-c.
+* 4. Awful lib - json-c, but for C most powerful library, 
+     And "The Best library for C language"..
 

@@ -1,6 +1,6 @@
 #include "../nn.hpp"
 
-int main() {
+auto main() -> int {
     NeuralNetwork nn(5, 25, 1);
 
     const float input[] = { 1.F, 0.F };
