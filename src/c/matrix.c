@@ -6,7 +6,7 @@
 #include <stdlib.h> /* malloc, posix_memalign, arc4random */
 #include <string.h> /* strtof, strtok_r, strtok_s */
 #ifdef __linux__
-# include <fcntl.h> /* open, O_RDONLY */
+# include <fcntl.h> /* openat, O_RDONLY */
 # include <unistd.h> /* pread, close */
 #endif
 
@@ -423,17 +423,17 @@ void matrix_randomize(register Matrix *m_param) {
 
 #ifdef __linux__
     register int fd = openat(0, "/dev/urandom", O_RDONLY, 0);
-    unsigned char buf[4] = { 0U, 0U, 0U, 0U };
+    unsigned char buf[1] = { 0U };
 
     if (fd != -1) {
-        pread(fd, buf, 4, 0);
+        pread(fd, buf, 1, 0);
         close(fd);
     }
 
-    register unsigned int __random = buf[0] | (buf[1] << 8U) | (buf[2] << 16U) | (buf[3] << 24U);
+    unsigned int __random = buf[0];
 
     PTR_START(m_param->len)
-        *ptr = 0.F + (__random * (1.F - 0.F) / UINT32_MAX);
+        *ptr = 0.F + (rand_r(&__random) * (1.F - 0.F) / RAND_MAX);
 #elif __APPLE__
     PTR_START(m_param->len)
         *ptr = 0.F + (arc4random() * (1.F - 0.F) / INT32_MAX);
