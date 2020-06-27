@@ -10,8 +10,6 @@ int main(void) {
 
     register NeuralNetwork *nn = neural_network_deserialize(j);
 
-    json_object_put(j);
-
     neural_network_free(nn);
     return 0;
 }
