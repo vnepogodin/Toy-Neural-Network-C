@@ -23,29 +23,29 @@ typedef struct _NeuralNetwork NeuralNetwork;
 #define FUNC_DSIGMOID 2
 
 #ifdef __cplusplus
-    #define NN_API extern "C"
-#else
-    #define NN_API extern
+extern "C" {
 #endif
 
 /* Constructors */
-NN_API NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const);
-NN_API NeuralNetwork* neural_network_new_with_args(const int, const int, const int);
+NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const);
+NeuralNetwork* neural_network_new_with_args(const int, const int, const int);
  
 /* Destructor */
-NN_API void neural_network_free(register NeuralNetwork *__restrict);
+void neural_network_free(register NeuralNetwork *__restrict);
 
 /* Functions */
-NN_API void neural_network_predict(register float* __restrict, const NeuralNetwork *const, const float* __restrict const);
+void neural_network_predict(register float* __restrict, const NeuralNetwork *const, const float* __restrict const);
 
-NN_API void neural_network_train(register NeuralNetwork *, const float* __restrict const, const float* __restrict const);
+void neural_network_train(register NeuralNetwork *, const float* __restrict const, const float* __restrict const);
 
-NN_API void neural_network_setLearningRate(register NeuralNetwork *__restrict, const float);
-NN_API void neural_network_setActivationFunction(register NeuralNetwork *__restrict, const int);
+void neural_network_setLearningRate(register NeuralNetwork *__restrict, const float);
+void neural_network_setActivationFunction(register NeuralNetwork *__restrict, const int);
 
-NN_API json_object* neural_network_serialize(const NeuralNetwork *__restrict const);
-NN_API NeuralNetwork* neural_network_deserialize(const json_object *__restrict const);
+json_object* neural_network_serialize(const NeuralNetwork *__restrict const);
+NeuralNetwork* neural_network_deserialize(const json_object *__restrict const);
 
-#undef NN_API
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __NN_H__ */
