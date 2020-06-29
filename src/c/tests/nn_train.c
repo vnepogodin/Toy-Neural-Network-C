@@ -5,7 +5,7 @@ int main(void) {
 
     const float input[5] = { 1.F, 0.F, 0.F, 0.F, 0.F };
 
-    register float output[1] = { 0 };
+    float output[1] = { 0 };
 
     neural_network_predict(output, nn, input);
 
