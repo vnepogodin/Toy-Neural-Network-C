@@ -150,7 +150,7 @@ static json_object* json_find(const json_object *__restrict const j, const char*
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
-    Matrix *__matrix_m;
+    Matrix *__matrix_m = NULL;
 
     register const unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
     register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
@@ -187,7 +187,7 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new(void) {
-    Matrix *__matrix_m;
+    Matrix *__matrix_m = NULL;
     
     register const unsigned long alignment = 256UL; /* assumed 0.00026MB page sizes */
     register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
@@ -223,7 +223,7 @@ Matrix* matrix_new(void) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
-    Matrix *__matrix_m;
+    Matrix *__matrix_m = NULL;
 
     register const unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
     register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
@@ -373,7 +373,7 @@ Matrix* matrix_fromArray(const float* __restrict const arr_param) {
 
     register float *ptr = &t->data[0][0];
 
-    PTR_START(t->len)
+    PTR_START(2)
         *ptr = arr_param[i];
     PTR_END
 
@@ -396,12 +396,12 @@ Matrix* matrix_fromArray(const float* __restrict const arr_param) {
  */
 const float* matrix_toArray(const Matrix *const m_param) {
     /* Array[2] */
-    register float* arr = (float *)malloc(2);
+    static float arr[2];
 
     /* pointer to Matrix.data in CPU register */
     register const float *ptr = &m_param->data[0][0];
 
-    PTR_START(m_param->len)
+    PTR_START(2)
         arr[i] = *ptr;
     PTR_END
 
@@ -439,7 +439,7 @@ void matrix_randomize(register Matrix *m_param) {
         *ptr = 0.F + (rand_r(&__random) * (1.F - 0.F) / RAND_MAX);
 #elif _WIN32
     PTR_START(m_param->len)
-        *ptr = 0.F + (rand_r() * (1.F - 0.F) / INT32_MAX);
+        *ptr = 0.F + (rand() * (1.F - 0.F) / RAND_MAX);
 #else
     PTR_START(m_param->len)
         *ptr = 0.F + (arc4random() * (1.F - 0.F) / INT32_MAX);
@@ -650,7 +650,7 @@ Matrix* matrix_transpose_static(const Matrix *const m_param) {
  * Returns: the new #Matrix
  */
 Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Matrix *__restrict const b_param) {
-    register Matrix *t;
+    register Matrix *t = NULL;
     /* Matrix product */
     if (a_param->columns != b_param->rows) {
         t = matrix_new_with_args(b_param->rows, b_param->columns);
@@ -712,7 +712,7 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Mat
  * Returns: the new #Matrix
  */
 Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const b_param) {
-    register Matrix *t;
+    register Matrix *t = NULL;
     if (a_param->columns >= b_param->rows) 
         t = matrix_new_with_args(b_param->rows, b_param->columns);
     else

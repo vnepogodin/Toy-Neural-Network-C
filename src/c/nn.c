@@ -49,7 +49,7 @@ static json_object* json_find(const json_object *__restrict const j, const char*
  * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param) {
-    register NeuralNetwork *__nn_temp = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
+    register NeuralNetwork *__nn_temp = (NeuralNetwork *)malloc(57);
 
     __nn_temp->input_nodes = __nn_param->input_nodes;
     __nn_temp->hidden_nodes = __nn_param->hidden_nodes;
@@ -80,7 +80,7 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param)
  * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hidden_nodes, const int output_nodes) {
-    register NeuralNetwork *nn = (NeuralNetwork *)malloc(sizeof(NeuralNetwork));
+    register NeuralNetwork *nn = (NeuralNetwork *)malloc(57);
    
     nn->input_nodes = input_nodes;
     nn->hidden_nodes = hidden_nodes;
@@ -97,7 +97,7 @@ NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hid
     matrix_randomize(nn->bias_o);
 
     /* TODO: copy these as well */
-    neural_network_setLearningRate(nn, 0.1);
+    neural_network_setLearningRate(nn, 0.1F);
     neural_network_setActivationFunction(nn, FUNC_SIGMOID);
     
     return nn;
@@ -188,6 +188,7 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
     /*           Generating the Hidden Outputs            */
     register Matrix *inputs = matrix_fromArray(input_array);
     register Matrix *hidden = matrix_multiply_static(nn->weights_ih, inputs);
+    matrix_free(inputs);
     matrix_add_matrix(hidden, nn->bias_h);
     /*          Activation function!          */
     matrix_map(hidden, nn->activation_function);
@@ -212,30 +213,32 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
 
 
     /* Calculate deltas */
-    register Matrix *hidden_T = matrix_transpose_static(hidden);
-    register Matrix *weight_ho_deltas = matrix_multiply_static(gradients, hidden_T);
+    register Matrix *weight_ho_deltas = matrix_multiply_static(gradients, hidden);
 
     /* Adjust the weights by deltas */
     matrix_add_matrix(nn->weights_ho, weight_ho_deltas);
     /* Adjust the bias by its deltas (which is just the gradients) */
     matrix_add_matrix(nn->bias_o, gradients);
 
-    /* Calculate the hidden layer errors */
-    register Matrix *who_t = matrix_transpose_static(nn->weights_ho);
-    register Matrix *hidden_errors = matrix_multiply_static(who_t, output_errors);
-
     /* Calculate hidden gradient */
     register Matrix *hidden_gradient = matrix_map_static(hidden, nn->activation_function);
+    
+    /* Calculate the hidden layer errors */
+    register Matrix *hidden_errors = matrix_multiply_static(nn->weights_ho, output_errors);
+    matrix_free(output_errors);
     matrix_add_matrix(hidden_gradient, hidden_errors);
+    matrix_free(hidden_errors);
     matrix_add_float(hidden_gradient, nn->learning_rate);
 
     /* Calcuate input->hidden deltas */
-    register Matrix *inputs_T = matrix_transpose_static(inputs);
-    register Matrix *weight_ih_deltas = matrix_multiply_static(hidden_gradient, inputs_T);
+    inputs = matrix_fromArray(input_array);
+    register Matrix *weight_ih_deltas = matrix_multiply_static(hidden_gradient, inputs);
+    matrix_free(inputs);
 
     matrix_add_matrix(nn->weights_ih, weight_ih_deltas);
     /* Adjust the bias by its deltas (which is just the gradients) */
     matrix_add_matrix(nn->bias_h, hidden_gradient);
+    matrix_free(hidden_gradient);
 }
 
 /**
