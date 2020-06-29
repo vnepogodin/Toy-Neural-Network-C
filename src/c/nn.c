@@ -205,10 +205,12 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
     /* Calculate the error
      * ERROR = TARGETS - OUTPUTS */
     register Matrix *output_errors = matrix_subtract_static(targets, outputs);
+    matrix_free(targets);
 
     /* let gradient = outputs * (1 - outputs);
      * Calculate gradient */
     register Matrix *gradients = matrix_map_static(outputs, nn->activation_function);
+    matrix_free(outputs);
     matrix_multiply(gradients, output_errors);
     matrix_multiply_scalar(gradients, nn->learning_rate);
 
@@ -226,6 +228,7 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
 
     /* Calculate hidden gradient */
     register Matrix *hidden_gradient = matrix_map_static(hidden, nn->activation_function);
+    matrix_free(hidden);
     
     /* Calculate the hidden layer errors */
     register Matrix *hidden_errors = matrix_multiply_static(nn->weights_ho, output_errors);
