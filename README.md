@@ -5,7 +5,6 @@ Port [Toy-Neural-Network-JS](https://github.com/CodingTrain/Toy-Neural-Network-J
 ## Examples
 Here are some demos running directly on your computer:
 * [ColorPredictor](https://github.com/ctrlcvnigerguard/ColorPredictor)
-* [Perceptron](https://github.com/ctrlcvnigerguard/Perceptron)
 * [GradientDescent](https://github.com/ctrlcvnigerguard/GradientDescent)
 
 ### Documentation
