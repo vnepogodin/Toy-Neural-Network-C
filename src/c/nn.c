@@ -129,7 +129,7 @@ void neural_network_free(register NeuralNetwork *__restrict __nn_param) {
  *
  * Returns: float array
  */
-void neural_network_predict(float* __restrict __arr_param, const NeuralNetwork *const nn, const float* __restrict const input_array) {
+void neural_network_predict(register float* __restrict __arr_param, const NeuralNetwork *const nn, const float* __restrict const input_array) {
     /* Generating the Hidden Outputs */
     register Matrix *input = matrix_fromArray(input_array, nn->input_nodes);
     register Matrix *hidden = matrix_multiply_static(nn->weights_ih, input);

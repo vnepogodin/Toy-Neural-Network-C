@@ -394,7 +394,7 @@ Matrix* matrix_fromArray(const float* __restrict const arr_param, const int len_
  *
  * Returns: the new const float array
  */
-void matrix_toArray(float* __restrict __arr_param, const Matrix *const m_param) {
+void matrix_toArray(register float* __restrict __arr_param, const Matrix *const m_param) {
     /* pointer to Matrix.data in CPU register */
     register const float *ptr = &m_param->data[0][0];
 
