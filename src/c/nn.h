@@ -36,7 +36,7 @@ NN_API NeuralNetwork* neural_network_new_with_args(const int, const int, const i
 NN_API void neural_network_free(register NeuralNetwork *__restrict);
 
 /* Functions */
-NN_API const float* neural_network_predict(const NeuralNetwork *const, const float* __restrict const);
+NN_API void neural_network_predict(float* __restrict, const NeuralNetwork *const, const float* __restrict const);
 
 NN_API void neural_network_train(register NeuralNetwork *, const float* __restrict const, const float* __restrict const);
 

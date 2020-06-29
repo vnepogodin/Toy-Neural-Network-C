@@ -25,8 +25,8 @@ MATRIX_API void matrix_subtract(register Matrix *, const Matrix *const);
 MATRIX_API void matrix_multiply(register Matrix *, const Matrix *const);
 
 /* Functions */
-MATRIX_API Matrix* matrix_fromArray(const float* __restrict const);
-MATRIX_API const float* matrix_toArray(const Matrix *const);
+MATRIX_API Matrix* matrix_fromArray(const float* __restrict const, const int);
+MATRIX_API void matrix_toArray(float* __restrict, const Matrix *const);
 MATRIX_API void matrix_randomize(register Matrix *);
 MATRIX_API void matrix_add_matrix(register Matrix *, const Matrix *const);
 MATRIX_API void matrix_add_float(register Matrix *, const float);

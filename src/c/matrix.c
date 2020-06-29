@@ -368,12 +368,12 @@ void matrix_multiply(register Matrix *a_param, const Matrix *const b_param) {
  *
  * Returns: the new #Matrix
  */
-Matrix* matrix_fromArray(const float* __restrict const arr_param) {
-    register Matrix *t = matrix_new_with_args(2, 1);
+Matrix* matrix_fromArray(const float* __restrict const arr_param, const int len_param) {
+    register Matrix *t = matrix_new_with_args(len_param, 1);
 
     register float *ptr = &t->data[0][0];
 
-    PTR_START(2)
+    PTR_START(len_param)
         *ptr = arr_param[i];
     PTR_END
 
@@ -394,18 +394,13 @@ Matrix* matrix_fromArray(const float* __restrict const arr_param) {
  *
  * Returns: the new const float array
  */
-const float* matrix_toArray(const Matrix *const m_param) {
-    /* Array[2] */
-    static float arr[2];
-
+void matrix_toArray(float* __restrict __arr_param, const Matrix *const m_param) {
     /* pointer to Matrix.data in CPU register */
     register const float *ptr = &m_param->data[0][0];
 
-    PTR_START(2)
-        arr[i] = *ptr;
+    PTR_START(m_param->len)
+        __arr_param[i] = *ptr;
     PTR_END
-
-    return arr;
 }
 
 /**

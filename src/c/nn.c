@@ -129,9 +129,9 @@ void neural_network_free(register NeuralNetwork *__restrict __nn_param) {
  *
  * Returns: float array
  */
-const float* neural_network_predict(const NeuralNetwork *const nn, const float* __restrict const input_array) {
+void neural_network_predict(float* __restrict __arr_param, const NeuralNetwork *const nn, const float* __restrict const input_array) {
     /* Generating the Hidden Outputs */
-    register Matrix *input = matrix_fromArray(input_array);
+    register Matrix *input = matrix_fromArray(input_array, nn->input_nodes);
     register Matrix *hidden = matrix_multiply_static(nn->weights_ih, input);
     matrix_free(input);
     matrix_add_matrix(hidden, nn->bias_h);
@@ -146,7 +146,8 @@ const float* neural_network_predict(const NeuralNetwork *const nn, const float* 
     matrix_map(output, nn->activation_function);
 
     /* Sending back to the caller! */
-    return matrix_toArray(output);
+    matrix_toArray(__arr_param, output);
+    matrix_free(output);
 }
 
 /**
@@ -186,7 +187,7 @@ void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn,
  */
 void neural_network_train(register NeuralNetwork *nn, const float* __restrict const input_array, const float* __restrict const target_array) {
     /*           Generating the Hidden Outputs            */
-    register Matrix *inputs = matrix_fromArray(input_array);
+    register Matrix *inputs = matrix_fromArray(input_array, nn->input_nodes);
     register Matrix *hidden = matrix_multiply_static(nn->weights_ih, inputs);
     matrix_free(inputs);
     matrix_add_matrix(hidden, nn->bias_h);
@@ -199,7 +200,7 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
     matrix_map(outputs, nn->activation_function);
 
     /* Convert array to matrix object */
-    register Matrix *targets = matrix_fromArray(target_array);
+    register Matrix *targets = matrix_fromArray(target_array, nn->output_nodes);
 
     /* Calculate the error
      * ERROR = TARGETS - OUTPUTS */
@@ -217,8 +218,11 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
 
     /* Adjust the weights by deltas */
     matrix_add_matrix(nn->weights_ho, weight_ho_deltas);
+    matrix_free(weight_ho_deltas);
+
     /* Adjust the bias by its deltas (which is just the gradients) */
     matrix_add_matrix(nn->bias_o, gradients);
+    matrix_free(gradients);
 
     /* Calculate hidden gradient */
     register Matrix *hidden_gradient = matrix_map_static(hidden, nn->activation_function);
@@ -231,11 +235,12 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
     matrix_add_float(hidden_gradient, nn->learning_rate);
 
     /* Calcuate input->hidden deltas */
-    inputs = matrix_fromArray(input_array);
+    inputs = matrix_fromArray(input_array, nn->input_nodes);
     register Matrix *weight_ih_deltas = matrix_multiply_static(hidden_gradient, inputs);
     matrix_free(inputs);
 
     matrix_add_matrix(nn->weights_ih, weight_ih_deltas);
+    matrix_free(weight_ih_deltas);
     /* Adjust the bias by its deltas (which is just the gradients) */
     matrix_add_matrix(nn->bias_h, hidden_gradient);
     matrix_free(hidden_gradient);
