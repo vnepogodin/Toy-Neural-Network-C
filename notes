@@ -1,5 +1,5 @@
 * 1. Don't use calloc. Cause it's slow for alloc.
-	 Just use malloc and poiters.
+	 Just use malloc and pointers.
 * 2. Use static word for local functions.
 * 3. Use register word for speed up var in function block.
 	 Just temp variables.
