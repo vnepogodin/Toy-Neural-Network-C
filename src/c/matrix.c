@@ -10,7 +10,7 @@
 # include <unistd.h> /* pread, close */
 #elif _WIN32
 # include <windows.h>
-# include <wincrypt.h> /* CryptAcquireContext, CryptGenRandom */
+# include <bcrypt.h> /* BCryptGenRandom */
 #endif
 
 struct _Matrix {
@@ -98,7 +98,7 @@ static void json_strsplit(register float* result, const char* _str, const int co
     size -= 2;
     while (i < size) {
         tmp[j] = _str[i];
-        
+
         ++j;
         ++i;
     }
@@ -119,7 +119,7 @@ static void json_strsplit(register float* result, const char* _str, const int co
 #else
         token = strtok_r(tmp, delim, &save_token);
 #endif /* _WIN32 */
-       
+
         ++i;
     }
 
@@ -163,7 +163,7 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
     allocSpace(__matrix_m);
 
     register float *ptr = &__matrix_m->data[0][0];
-    
+
     register int end = rows * columns;
     PTR_START(end)
         *ptr = 0;
@@ -188,10 +188,10 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
  */
 Matrix* matrix_new(void) {
     Matrix *__matrix_m = NULL;
-    
+
     register const unsigned long alignment = 256UL; /* assumed 0.00026MB page sizes */
     register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
-    
+
     posix_memalign((void **)&__matrix_m, alignment, size);
 
     __matrix_m->rows = 1;
@@ -211,7 +211,7 @@ Matrix* matrix_new(void) {
  * matrix_new_with_matrix:
  * @__matrix: a const #Matrix.
  * @example:
- *		
+ *
  *		2 rows, 1 columns  ->	2 rows, 1 columns
  *
  *			  [232]		   ->		 [232]
@@ -267,7 +267,7 @@ void matrix_free(register Matrix *__matrix_param) {
 
     posix_memalign_free(__matrix_param->data);
     __matrix_param->data = NULL;
-    
+
     posix_memalign_free(__matrix_param);
 }
 
@@ -276,7 +276,7 @@ void matrix_free(register Matrix *__matrix_param) {
  * @a: a #Matrix.
  * @b: a reference #Matrix.
  * @example:
- *		
+ *
  *		3 rows, 1 columns   	2 rows, 1 columns
  *
  *			  [64]
@@ -289,7 +289,7 @@ void matrix_free(register Matrix *__matrix_param) {
 void matrix_subtract(register Matrix *a_param, const Matrix *const b_param) {
     register float *ptr          = &a_param->data[0][0];
     register const float *b_ptr  = &b_param->data[0][0];
-	
+
 	PTR_START(a_param->len)
         *ptr -= *b_ptr;
 
@@ -310,7 +310,7 @@ void matrix_subtract(register Matrix *a_param, const Matrix *const b_param) {
  *			  [21]		   		     [21]
  *
  *							or
- *		
+ *
  *		3 rows, 1 columns		2 rows, 1 columns
  *
  *			  [64]
@@ -319,7 +319,7 @@ void matrix_subtract(register Matrix *a_param, const Matrix *const b_param) {
  *
  *					 [] += 64 * 232
  *
- * Hadamard product, 
+ * Hadamard product,
  * or multiply data of a #Matrix
  *
  */
@@ -363,7 +363,7 @@ void matrix_multiply(register Matrix *a_param, const Matrix *const b_param) {
  *
  *		[321]	->		 [321]
  *		[74]	->		 [74]
- * 
+ *
  * Create #Matrix by array
  *
  * Returns: the new #Matrix
@@ -384,12 +384,12 @@ Matrix* matrix_fromArray(const float* __restrict const arr_param, const int len_
  * matrix_toArray:
  * @m: a reference #Matrix.
  * @example:
- *	
+ *
  *	2 rows, 1 columns
  *
  *		[321]	->		[321]
  *		[74]	->		[74]
- * 
+ *
  * Create array by #Matrix
  *
  * Returns: the new const float array
@@ -407,12 +407,12 @@ void matrix_toArray(register float* __restrict __arr_param, const Matrix *const 
  * matrix_randomize:
  * @m: a #Matrix.
  * @example:
- *	
+ *
  *	2 rows, 1 columns	2 rows, 1 columns
  *
  *		[321]	->		[0.1]
  *		[74]	->		[0.78]
- * 
+ *
  * Randomize @m data from 0 to 1
  *
  */
@@ -433,8 +433,12 @@ void matrix_randomize(register Matrix *m_param) {
     PTR_START(m_param->len)
         *ptr = 0.F + (rand_r(&__random) * (1.F - 0.F) / RAND_MAX);
 #elif _WIN32
+    UINT __random = 0U;
+
+    BCryptGenRandom(NULL, (BYTE*)&__random, sizeof(UINT), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+
     PTR_START(m_param->len)
-        *ptr = 0.F + (rand() * (1.F - 0.F) / RAND_MAX);
+        *ptr = 0.F + (__random * (1.F - 0.F) / UINT_MAX);
 #else
     PTR_START(m_param->len)
         *ptr = 0.F + (arc4random() * (1.F - 0.F) / INT32_MAX);
@@ -448,7 +452,7 @@ void matrix_randomize(register Matrix *m_param) {
  * @a: a #Matrix.
  * @b: a reference #Matrix.
  * @example:
- *	
+ *
  *	2 rows, 1 columns	2 rows, 1 columns
  *
  *		[321]	+		[0.1]
@@ -489,7 +493,7 @@ void matrix_add_matrix(register Matrix *a_param, const Matrix *const b_param) {
  * @a: a #Matrix.
  * @n: a reference const float num.
  * @example:
- *	
+ *
  *	2 rows, 1 columns
  *
  *		[321]	+		3.3
@@ -511,7 +515,7 @@ void matrix_add_float(register Matrix *a_param, const float num_param) {
  * @m: a #Matrix.
  * @num: a reference floating-point number.
  * @example:
- *	
+ *
  *	2 rows, 1 columns
  *
  *		[321]	*		3.3
@@ -534,10 +538,10 @@ void matrix_multiply_scalar(register Matrix *m_param, const float num_param) {
  * @m: a #Matrix.
  * @func: a float function.
  * @example:
- * 
+ *
  * float func(float num) {
- *	return num * 2 
- * } 
+ *	return num * 2
+ * }
  *
  * @m data equal, return value of @func
  *
@@ -559,7 +563,7 @@ void matrix_map(register Matrix *m_param, float (*const func_param)(float)) {
  */
 void matrix_print(const Matrix *const m_param) {
     register const float *ptr = &m_param->data[0][0];
-    
+
     register int cout = 0;
     register int i = 0;
     while (i < m_param->len) {
@@ -589,18 +593,18 @@ json_object* matrix_serialize(const Matrix *const m_param) {
     json_object_object_add(t, "rows", json_object_new_int(m_param->rows));
     json_object_object_add(t, "columns", json_object_new_int(m_param->columns));
     json_object_object_add(t, "data", json_object_new_array());
-    
+
     register json_object *temp_arr = json_object_new_array();
-    
+
     register const float *ptr = &m_param->data[0][0];
-    
+
     register int cout = 0;
     register int i = 0;
     while (i < m_param->rows) {
         json_object_array_add(temp_arr, json_object_new_double(*ptr));
         ++ptr;
         cout++;
-		
+
         if(cout == m_param->columns) {
             json_object_array_add(json_find(t, "data"), temp_arr);
             temp_arr = json_object_new_array();
@@ -690,7 +694,7 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Mat
  * @a: a const #Matrix.
  * @b: a const #Matrix.
  * @example:
- *	
+ *
  *	2 rows, 1 columns	2 rows, 1 columns
  *
  *		[321]		  -		 [3.3]
@@ -708,7 +712,7 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Mat
  */
 Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const b_param) {
     register Matrix *t = NULL;
-    if (a_param->columns >= b_param->rows) 
+    if (a_param->columns >= b_param->rows)
         t = matrix_new_with_args(b_param->rows, b_param->columns);
     else
         t = matrix_new_with_args(a_param->rows, b_param->columns);
@@ -724,7 +728,7 @@ Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const 
         ++b_ptr;
     PTR_END
 
-    return t;	
+    return t;
 }
 
 /**
@@ -769,12 +773,12 @@ Matrix* matrix_map_static(const Matrix *const m_param, float (*const func_param)
 Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
     register Matrix *m = matrix_new_with_args(json_object_get_int(json_find(t_param, "rows")),
 											  json_object_get_int(json_find(t_param, "columns")));
-    
+
     register float *ptr = &m->data[0][0];
-    
+
     register float* buf = (float *)malloc(m->columns);
     json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), m->columns);
-        
+
     register int i = 0;
     register int cout = 0;
     while (i < m->rows) {
@@ -785,7 +789,7 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
         if(cout == m->columns) {
             cout = 0;
             ++i;
-            
+
             if (i != m->rows)
                 json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), i)), m->columns);
         }

@@ -56,6 +56,8 @@ Matrix::Matrix(const int32_t rows, const int32_t columns)
     this->len = i.load(std::memory_order_consume);
 }
 
+// Default constructor
+//
 Matrix::Matrix()
     : len(1),
       rows(1), columns(1) {
@@ -65,6 +67,8 @@ Matrix::Matrix()
     this->data[0][0] = 0;
 }
 
+// Copy constructor
+//
 Matrix::Matrix(const Matrix &m)
     : rows(m.rows), columns(m.columns) {
     this->allocSpace();
