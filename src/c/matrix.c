@@ -91,7 +91,7 @@ static void json_strsplit(register float* result, const char* _str, const int co
 
     printf("%d, %s\n", size, _str);
 
-    register char* tmp = (char *)alloca((unsigned int)size - 1U);
+    register char* tmp = (char *)alloca((unsigned long)size - 1U);
 
     /*   slice_str   */
     register int i = 2;
@@ -775,7 +775,7 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
 
     register float *ptr = &__matrix_m->data[0][0];
 
-    register float* buf = (float *)alloca(__matrix_m->columns);
+    register float* buf = (float *)alloca((unsigned long)__matrix_m->columns);
     json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), __matrix_m->columns);
 
     register int i = 0;
