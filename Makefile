@@ -5,14 +5,14 @@ all : c cpp
 .PHONY : all
 
 c:
-	$(MAKE) -C */c CC=$(CC)
+	$(MAKE) -C src/c CC=$(CC)
 
 cpp:
-	$(MAKE) -C */c++ CXX=$(CXX) CXXFLAGS=$(CXXFLAGS)
+	$(MAKE) -C src/c++ CXX=$(CXX) CXXFLAGS=$(CXXFLAGS)
 
 clean:
-	$(MAKE) -C */c clean
-	$(MAKE) -C */c++ clean
+	$(MAKE) -C src/c clean
+	$(MAKE) -C src/c++ clean
 run:
-	$(MAKE) -C */c run
-	$(MAKE) -C */c++ run
+	$(MAKE) -C src/c run
+	$(MAKE) -C src/c++ run
