@@ -1,6 +1,6 @@
 // Matrix lib
 
-#include "Matrix.hpp"  // class Matrix
+#include "../../include/c++/Matrix.hpp"  // class Matrix
 
 #include <random>  // std::mt19937, std::uniform_real_distribution, std::random_device
 #include <atomic>  // std::atomic<int32_t>, std::memory_order_release
@@ -260,13 +260,13 @@ auto Matrix::serialize() const -> const nlohmann::json {
 // Static functions
 auto Matrix::fromArray(const float_t* const &arr) -> Matrix {
     Matrix t(2, 1);
-    
+
     float_t *ptr = &t.data[0][0];
-    
+
     PTR_START(t.len)
     *ptr = arr[i];
     PTR_END
-    
+
     return t;
 }
 
@@ -377,9 +377,9 @@ auto Matrix::deserialize(const nlohmann::json &t) -> Matrix {
         int32_t j = 0;
         while (j < m.columns) {
             m.data[i][j] = t["data"][j].get<float_t>();
-            j++;
+            ++j;
         }
-        i++;
+        ++i;
     }
     return m;
 }

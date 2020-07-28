@@ -1,6 +1,6 @@
 /* Matrix lib */
 
-#include "matrix.h"
+#include "../../include/c/matrix.h"
 
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc, posix_memalign, arc4random */
@@ -72,14 +72,14 @@ struct _Matrix {
     }                                          	\
 }STMT_END
 
-#define allocSpace(matrix) STMT_START{                                          \
-    posix_memalign((void **)&(matrix)->data, 1024UL, (matrix)->rows);           \
-                                                                                \
-    register int i = 0;                                                         \
-    while (i < (matrix)->rows) {                                                \
-        posix_memalign((void **)&(matrix)->data[i], 1024UL, (matrix)->columns); \
-        ++i;                                                   	                \
-    }                                                                           \
+#define allocSpace(matrix) STMT_START{                                                         \
+    posix_memalign((void **)&(matrix)->data, 1024UL, (unsigned long)(matrix)->rows);           \
+                                                                                               \
+    register int i = 0;                                                                        \
+    while (i < (matrix)->rows) {                                                               \
+        posix_memalign((void **)&(matrix)->data[i], 1024UL, (unsigned long)(matrix)->columns); \
+        ++i;                                                   	                               \
+    }                                                                                          \
 }STMT_END
 
 static void json_strsplit(register float* result, const char* _str, const int columns) {
@@ -89,7 +89,9 @@ static void json_strsplit(register float* result, const char* _str, const int co
 
     length_str(_str, size);
 
-    register char* tmp = (char *)malloc((unsigned int)size - 1U);
+    printf("%d, %s\n", size, _str);
+
+    register char* tmp = (char *)alloca((unsigned int)size - 1U);
 
     /*   slice_str   */
     register int i = 2;
@@ -115,15 +117,13 @@ static void json_strsplit(register float* result, const char* _str, const int co
         result[i] = strtof(token, NULL);
 
 #ifdef _WIN32
-        token = strtok_s(tmp, delim, &save_token);
+        token = strtok_s(NULL, delim, &save_token);
 #else
-        token = strtok_r(tmp, delim, &save_token);
+        token = strtok_r(NULL, delim, &save_token);
 #endif /* _WIN32 */
 
         ++i;
     }
-
-    free(tmp);
 }
 
 static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
@@ -137,7 +137,7 @@ static json_object* json_find(const json_object *__restrict const j, const char*
 
 /**
  * matrix_new_with_args:
- * @rows: a const rows of matrix.
+ * @rows:    a const rows    of matrix.
  * @columns: a const columns of matrix.
  * @example:
  *				2 rows, 3 columns
@@ -441,7 +441,7 @@ void matrix_randomize(register Matrix *m_param) {
         *ptr = 0.F + (__random * (1.F - 0.F) / UINT_MAX);
 #else
     PTR_START(m_param->len)
-        *ptr = 0.F + (arc4random() * (1.F - 0.F) / INT32_MAX);
+        *ptr = 0.F + (arc4random() * (1.F - 0.F) / (float)INT32_MAX);
 #endif
 
     PTR_END
@@ -529,7 +529,7 @@ void matrix_multiply_scalar(register Matrix *m_param, const float num_param) {
     register float *ptr = &m_param->data[0][0];
 
     PTR_START(m_param->len)
-	    *ptr *= num_param;
+        *ptr *= num_param;
 	PTR_END
 }
 
@@ -543,7 +543,7 @@ void matrix_multiply_scalar(register Matrix *m_param, const float num_param) {
  *	return num * 2
  * }
  *
- * @m data equal, return value of @func
+ * Data of @m equal, return value of @func
  *
  */
 void matrix_map(register Matrix *m_param, float (*const func_param)(float)) {
@@ -567,7 +567,7 @@ void matrix_print(const Matrix *const m_param) {
     register int cout = 0;
     register int i = 0;
     while (i < m_param->len) {
-        printf("%f ", *ptr);
+        printf("%f ", (double)*ptr);
         ++ptr;
         cout++;
 
@@ -590,9 +590,9 @@ void matrix_print(const Matrix *const m_param) {
 json_object* matrix_serialize(const Matrix *const m_param) {
     register json_object *t = json_object_new_object();
 
-    json_object_object_add(t, "rows", json_object_new_int(m_param->rows));
-    json_object_object_add(t, "columns", json_object_new_int(m_param->columns));
-    json_object_object_add(t, "data", json_object_new_array());
+    json_object_object_add_ex(t, "rows", json_object_new_int(m_param->rows), 0);
+    json_object_object_add_ex(t, "columns", json_object_new_int(m_param->columns), 0);
+    json_object_object_add_ex(t, "data", json_object_new_array(), 0);
 
     register json_object *temp_arr = json_object_new_array();
 
@@ -601,7 +601,7 @@ json_object* matrix_serialize(const Matrix *const m_param) {
     register int cout = 0;
     register int i = 0;
     while (i < m_param->rows) {
-        json_object_array_add(temp_arr, json_object_new_double(*ptr));
+        json_object_array_add(temp_arr, json_object_new_double((double)*ptr));
         ++ptr;
         cout++;
 
@@ -731,12 +731,11 @@ Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const 
     return t;
 }
 
+
 /**
  * matrix_map_static:
  * @m: a const #Matrix.
  * @func: a float func.
- *
- *
  *
  * Apply a function to every element of matrix.
  *
@@ -771,31 +770,29 @@ Matrix* matrix_map_static(const Matrix *const m_param, float (*const func_param)
  * Returns: the new #Matrix
  */
 Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
-    register Matrix *m = matrix_new_with_args(json_object_get_int(json_find(t_param, "rows")),
-											  json_object_get_int(json_find(t_param, "columns")));
+    register Matrix *__matrix_m = matrix_new_with_args(json_object_get_int(json_find(t_param, "rows")),
+                                                       json_object_get_int(json_find(t_param, "columns")));
 
-    register float *ptr = &m->data[0][0];
+    register float *ptr = &__matrix_m->data[0][0];
 
-    register float* buf = (float *)malloc(m->columns);
-    json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), m->columns);
+    register float* buf = (float *)alloca(__matrix_m->columns);
+    json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), __matrix_m->columns);
 
     register int i = 0;
-    register int cout = 0;
-    while (i < m->rows) {
-        *ptr = buf[cout];
+    register int counter = 0;
+    while (i < __matrix_m->rows) {
+        *ptr = buf[counter];
 
         ++ptr;
-        cout++;
-        if(cout == m->columns) {
-            cout = 0;
+        counter++;
+        if(counter == __matrix_m->columns) {
+            counter = 0;
             ++i;
 
-            if (i != m->rows)
-                json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), i)), m->columns);
+            if (i != __matrix_m->rows)
+                json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), (unsigned long)i)), __matrix_m->columns);
         }
     }
 
-    free(buf);
-
-    return m;
+    return __matrix_m;
 }

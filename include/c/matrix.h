@@ -2,7 +2,7 @@
 #ifndef __MATRIX_H__
 #define __MATRIX_H__
 
-#include <json-c/json_object.h> /* json_object */
+#include "third_party/json-c/json_object.h" /* json_object */
 
 typedef struct _Matrix Matrix;
 

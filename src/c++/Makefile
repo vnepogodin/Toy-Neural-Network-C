@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -std=c++11
+CXXFLAGS := -std=c++11 -ffast-math -msse4 -mavx2
 objects := tests/init tests/nn_copy tests/nn_predict tests/nn_train tests/json_serialize tests/json_deserialize
 all: Matrix.o nn.o $(objects)
 .PHONY := all
@@ -11,7 +11,7 @@ nn.o:
 	$(CXX) $(CXXFLAGS) -ffast-math -c -o nn.o nn.cpp
 
 $(objects): %: %.cpp
-	$(CXX) $(CXXFLAGS) $< Matrix.o nn.o -o $@
+	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:
 	rm *.o $(objects)

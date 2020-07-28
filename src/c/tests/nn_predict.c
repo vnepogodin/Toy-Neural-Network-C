@@ -1,4 +1,4 @@
-#include "../nn.h"
+#include "../../../include/c/nn.h"
 
 #include <stdio.h>
 
@@ -11,7 +11,7 @@ int main(void) {
 
     neural_network_predict(output, nn, input);
 
-    printf("%f\n", output[0]);
+    printf("%f\n", (double)output[0]);
 
     neural_network_free(nn);
     return 0;

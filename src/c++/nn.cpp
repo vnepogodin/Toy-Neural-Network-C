@@ -1,6 +1,6 @@
 // Other techniques for learning
-#include "Matrix.hpp"
-#include "nn.hpp"
+#include "../../include/c++/Matrix.hpp"
+#include "../../include/c++/nn.hpp"
 
 #include <cmath>  // std::exp
 
@@ -96,7 +96,7 @@ void NeuralNetwork::setLearningRate(const float_t &lr) {
 //
 void NeuralNetwork::setActivationFunction(const int32_t &flag) {
     this->activation_function = nullptr;
-    
+
     if (flag == FUNC_SIGMOID)
         this->activation_function = sigmoid;
     else if (flag == FUNC_DSIGMOID)
@@ -178,7 +178,7 @@ auto NeuralNetwork::serialize() const -> const nlohmann::json {
 
     t["learning_rate"] = this->learning_rate;
     t["activation_function"] = convert_ActivationFunction(this->activation_function);
-    
+
     return t;
 }
 
