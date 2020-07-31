@@ -89,7 +89,9 @@ static void json_strsplit(register float* result, const char* _str, const int co
 
     length_str(_str, size);
 
+#ifdef DEBUG
     printf("%d, %s\n", size, _str);
+#endif
 
     register char* tmp = (char *)malloc((unsigned long)size - 1U);
 
@@ -159,19 +161,22 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
 
     posix_memalign((void **)&__matrix_m, alignment, size);
 
-    __matrix_m->rows = rows;
-    __matrix_m->columns = columns;
+    if (__matrix_m != NULL) {
+        __matrix_m->rows = rows;
+        __matrix_m->columns = columns;
 
-    allocSpace(__matrix_m);
+        allocSpace(__matrix_m);
 
-    register float *ptr = &__matrix_m->data[0][0];
+        register float *ptr = &__matrix_m->data[0][0];
 
-    register int end = rows * columns;
-    PTR_START(end)
-        *ptr = 0;
-    PTR_END
+        register int end = rows * columns;
+        PTR_START(end)
+            *ptr = 0;
+        PTR_END
 
-    __matrix_m->len = i;
+        __matrix_m->len = i;
+    }
+
 
     return __matrix_m;
 }
@@ -196,15 +201,17 @@ Matrix* matrix_new(void) {
 
     posix_memalign((void **)&__matrix_m, alignment, size);
 
-    __matrix_m->rows = 1;
-    __matrix_m->columns = 1;
+    if (__matrix_m != NULL) {
+        __matrix_m->rows = 1;
+        __matrix_m->columns = 1;
 
-    posix_memalign((void **)&__matrix_m->data, sizeof(float **), 1);
-    posix_memalign((void **)&__matrix_m->data[0], sizeof(float *), 1);
+        posix_memalign((void **)&__matrix_m->data, sizeof(float **), 1);
+        posix_memalign((void **)&__matrix_m->data[0], sizeof(float *), 1);
 
-    __matrix_m->data[0][0] = 0;
+        __matrix_m->data[0][0] = 0;
 
-    __matrix_m->len = 1;
+        __matrix_m->len = 1;
+    }
 
     return __matrix_m;
 }
@@ -232,21 +239,23 @@ Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
 
     posix_memalign((void **)&__matrix_m, alignment, size);
 
-    __matrix_m->rows = __matrix_param->rows;
-    __matrix_m->columns = __matrix_param->columns;
+    if (__matrix_m != NULL) {
+        __matrix_m->rows = __matrix_param->rows;
+        __matrix_m->columns = __matrix_param->columns;
 
-    allocSpace(__matrix_m);
+        allocSpace(__matrix_m);
 
-    register float *ptr             = &__matrix_m->data[0][0];
-    register const float *ref_ptr   = &__matrix_param->data[0][0];
+        register float *ptr             = &__matrix_m->data[0][0];
+        register const float *ref_ptr   = &__matrix_param->data[0][0];
 
-    PTR_START(__matrix_param->len)
-        *ptr = *ref_ptr;
+        PTR_START(__matrix_param->len)
+            *ptr = *ref_ptr;
 
-        ++ref_ptr;
-    PTR_END
+            ++ref_ptr;
+        PTR_END
 
-    __matrix_m->len = i;
+        __matrix_m->len = i;
+    }
 
     return __matrix_m;
 }

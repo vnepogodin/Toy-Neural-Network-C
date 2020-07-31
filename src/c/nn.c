@@ -304,7 +304,9 @@ NeuralNetwork* neural_network_deserialize(const json_object *__restrict const __
     nn->bias_h = matrix_deserialize(json_find(__json_param, "bias_h"));
     nn->bias_o = matrix_deserialize(json_find(__json_param, "bias_o"));
 
+#ifdef DEBUG
     matrix_print(nn->weights_ih);
+#endif
 
     neural_network_setLearningRate(nn, (float)json_object_get_double(json_find(__json_param, "learning_rate")));
     neural_network_setActivationFunction(nn, json_object_get_int(json_find(__json_param, "activation_function")));
