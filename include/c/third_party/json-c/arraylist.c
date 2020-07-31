@@ -54,10 +54,10 @@ void array_list_free(array_list *arr) {
 
 void* array_list_get_idx(array_list *arr, const unsigned long i) {
     register void* result = NULL; 
-	if (i >= arr->length)
-		return NULL;
+	if (!(i >= arr->length))
+		return arr->array[i];
 
-	return arr->array[i];
+	return result;
 }
 
 static int array_list_expand_internal(array_list *arr, const unsigned long max) {
