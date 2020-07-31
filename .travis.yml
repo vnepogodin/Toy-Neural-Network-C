@@ -24,28 +24,46 @@ jobs:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.9']
+        packages: ['g++-4.9', 'gcc-4.9']
 
 
   # OSX / Clang
 
   - os: osx
     osx_image: xcode9.3
+    env:
+      - COMPILER_CC=gcc
+      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode9.4
+    env:
+      - COMPILER_CC=gcc
+      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode10
+    env:
+      - COMPILER_CC=gcc
+      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode10.1
+    env:
+      - COMPILER_CC=gcc
+      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode10.2
+    env:
+      - COMPILER_CC=gcc
+      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode11.2
+    env:
+      - COMPILER_CC=gcc
+      - COMPILER_CXX=g++
 
   # Linux / GCC
 
@@ -58,7 +76,7 @@ jobs:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.8']
+        packages: ['g++-4.8', 'gcc-4.8']
 
   - os: linux
     compiler: gcc
@@ -69,7 +87,7 @@ jobs:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-4.9']
+        packages: ['g++-4.9', 'gcc-4.9']
 
   - os: linux
     compiler: gcc
@@ -80,7 +98,7 @@ jobs:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-5']
+        packages: ['g++-5', 'gcc-5']
 
   - os: linux
     compiler: gcc
@@ -91,7 +109,7 @@ jobs:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-6']
+        packages: ['g++-6', 'gcc-6']
 
   - os: linux
     compiler: gcc
@@ -102,7 +120,7 @@ jobs:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-7']
+        packages: ['g++-7', 'gcc-7']
 
   - os: linux
     compiler: gcc
@@ -113,7 +131,7 @@ jobs:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-8']
+        packages: ['g++-8', 'gcc-8']
 
   - os: linux
     compiler: gcc
@@ -124,7 +142,7 @@ jobs:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-9']
+        packages: ['g++-9', 'gcc-9']
 
   - os: linux
     compiler: gcc
@@ -135,7 +153,7 @@ jobs:
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-9']
+        packages: ['g++-9', 'gcc-9']
 
   # Linux / Clang
 
