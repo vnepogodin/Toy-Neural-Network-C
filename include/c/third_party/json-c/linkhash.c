@@ -511,7 +511,7 @@ static unsigned long lh_char_hash(const void *k) {
 	if (random_seed == -1) {
 		RANDOM_SEED_TYPE seed;
 		/* we can't use -1 as it is the unitialized sentinel */
-		while ((seed = json_c_get_random_seed()) == -1) {}
+		while ((seed = get_random_seed()) == -1) {}
 
 #if SIZEOF_INT == 4 && defined __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
 #define USE_SYNC_COMPARE_AND_SWAP 1

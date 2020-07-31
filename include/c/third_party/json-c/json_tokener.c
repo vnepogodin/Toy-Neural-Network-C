@@ -99,7 +99,7 @@ struct _Json_Tokener {
 
 #define json_min(a, b) ((a) < (b) ? (a) : (b))
 
-#define jt_hexdigit(x) (((unsigned char)(x) <= (unsigned char)'9') ? (unsigned char)(x) - (unsigned char)'0' : ((unsigned char)(x) & 7U) + 9U)
+#define jt_hexdigit(x) (((unsigned)(x) <= (unsigned)'9') ? (unsigned)(x) - (unsigned)'0' : ((unsigned)(x) & 7U) + 9U)
 
 static const char json_nan_str[3] = "NaN";
 static const int json_nan_str_len = 2;

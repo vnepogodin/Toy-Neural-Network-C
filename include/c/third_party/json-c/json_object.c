@@ -795,13 +795,14 @@ double json_object_get_double(const json_object *jso) {
     double cdouble = 0.0;
     char *errPtr = NULL;
 	switch (jso->o_type) {
-	case json_type_double: return JC_DOUBLE_C(jso)->c_double;
+	case json_type_double:
+	    return JC_DOUBLE_C(jso)->c_double;
 	case json_type_int:
 		switch (JC_INT_C(jso)->cint_type) {
 		case json_object_int_type_int64:
-		    return JC_INT_C(jso)->cint.c_int64;
+		    return (double)JC_INT_C(jso)->cint.c_int64;
 		case json_object_int_type_uint64:
-		    return JC_INT_C(jso)->cint.c_uint64;
+		    return (double)JC_INT_C(jso)->cint.c_uint64;
 		default:
 		    json_abort("invalid cint_type");
 		}

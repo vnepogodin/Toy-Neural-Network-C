@@ -44,8 +44,8 @@ array_list* array_list_new(void(*free_fn)(void*), const int initial_size) {
 void array_list_free(array_list *arr) {
 	register unsigned long i = 0UL;
 	while (i < arr->length) {
-        if (arr->array[i])
-            arr->free_fn(arr->array[i]);
+	    if (arr->array[i] != NULL)
+		arr->free_fn(arr->array[i]);
 	    ++i;
 	}
 	free(arr->array);
