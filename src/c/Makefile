@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -ffast-math -Wall -Wextra -Wshadow -Wcast-align -Wunused -Wconversion -Wsign-conversion -Wdouble-promotion -Wformat=2
+CFLAGS := -ffast-math -Wall -Wextra -Wshadow -Wcast-align -Wunused -Wconversion -Wsign-conversion -Wformat=2
 LDFLAGS := -lm
 PATH := ../../include/c/third_party/json-c
 objects := tests/init tests/nn_copy tests/nn_predict tests/nn_train tests/json_serialize tests/json_deserialize

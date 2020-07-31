@@ -76,7 +76,7 @@ struct _LH_Table {
 #ifdef __UNCONST
 #define _LH_UNCONST(a) __UNCONST(a)
 #else
-#define _LH_UNCONST(a) ((void *)(uintptr_t)(const void *)(a))
+#define _LH_UNCONST(a) ((void *)(unsigned long)(const void *)(a))
 #endif
 
 inline unsigned char lh_entry_getConstant(lh_entry *__entry_param) {
