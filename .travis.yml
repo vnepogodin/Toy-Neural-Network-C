@@ -19,8 +19,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER_CC=/usr/bin/gcc-4.9
-      - COMPILER_CXX=/usr/bin/g++-4.9
+      - COMPILER_CC=gcc-4.9
+      - COMPILER_CXX=g++-4.9
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -31,39 +31,21 @@ jobs:
 
   - os: osx
     osx_image: xcode9.3
-    env:
-      - COMPILER_CC=gcc
-      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode9.4
-    env:
-      - COMPILER_CC=gcc
-      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode10
-    env:
-      - COMPILER_CC=gcc
-      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode10.1
-    env:
-      - COMPILER_CC=gcc
-      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode10.2
-    env:
-      - COMPILER_CC=gcc
-      - COMPILER_CXX=g++
 
   - os: osx
     osx_image: xcode11.2
-    env:
-      - COMPILER_CC=gcc
-      - COMPILER_CXX=g++
 
   # Linux / GCC
 
@@ -264,5 +246,8 @@ jobs:
 ################
 
 script:
+  - if [[ "${COMPILER_CC}" == "" ]]; then export COMPILER_CC=gcc; fi
+  - if [[ "${COMPILER_CXX}" == "" ]]; then export COMPILER_CXX=g++; fi
+
   # compile and execute unit tests
-  - make CC=/usr/bin/${COMPILER_CC} && make run
+  - make CC=/usr/bin/${COMPILER_CC} CXX=/usr/bin/${COMPILER_CXX} && make run
