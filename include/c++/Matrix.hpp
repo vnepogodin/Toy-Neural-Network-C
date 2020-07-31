@@ -20,15 +20,23 @@ class Matrix {
     auto operator-=(const Matrix &) -> Matrix&;
     auto operator*=(const Matrix &) -> Matrix&;
 
+    // Non member operator
+    friend auto operator<<(std::ostream&, const Matrix&) -> std::ostream&;
+
     // Functions
-    auto toArray() const -> const float_t* const;
+    auto begin() const noexcept -> float_t* {
+        return &this->data[0][0];
+    }
+    auto end() const noexcept -> float_t* {
+        return this->iterator;
+    }
+    auto toArray() const noexcept -> const float_t*;
     void randomize();
     void add(const Matrix &);
     void add(const float_t &);
     void multiply(const float_t &);
     void map(float_t (*const)(float_t));
-    void print() const;
-    auto serialize() const -> const nlohmann::json;
+    auto serialize() const noexcept -> const nlohmann::json;
 
     // Static functions
     static auto fromArray(const float_t* const &) -> Matrix;
@@ -39,12 +47,13 @@ class Matrix {
     static auto deserialize(const nlohmann::json &) -> Matrix;
 
  private:
+    float_t *iterator;
     // Variables
     int32_t len;
 
     int32_t rows, columns;
 
-    float_t **data;
+    float_t** data;
 
     // Function
     void allocSpace();

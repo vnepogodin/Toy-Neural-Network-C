@@ -4,6 +4,8 @@
 
 #include <random>  // std::mt19937, std::uniform_real_distribution, std::random_device
 #include <atomic>  // std::atomic<int32_t>, std::memory_order_release
+#include <vector>  // std::vector
+#include <iostream>
 
 /**
  * PTR_START(end):
@@ -53,6 +55,8 @@ Matrix::Matrix(const int32_t rows, const int32_t columns)
         *ptr = 0;
     PTR_END
 
+    this->iterator = ptr;
+
     this->len = i.load(std::memory_order_consume);
 }
 
@@ -65,6 +69,8 @@ Matrix::Matrix()
     this->data[0] = new float_t [this->columns];
 
     this->data[0][0] = 0;
+
+    this->iterator = &this->data[0][0];
 }
 
 // Copy constructor
@@ -81,6 +87,8 @@ Matrix::Matrix(const Matrix &m)
 
         ++ref_ptr;
     PTR_END
+
+    this->iterator = ptr;
 
     this->len = i.load(std::memory_order_consume);
 }
@@ -148,8 +156,26 @@ auto Matrix::operator*=(const Matrix &m) -> Matrix& {
     return *this;
 }
 
+// Non member operator
+auto operator<<(std::ostream& stream, const Matrix& m) -> std::ostream& {
+    int32_t counter = 0;
+    for (auto i : m) {
+        stream << i << " ";
+
+        counter++;
+        if (counter == m.columns) {
+            counter = 0;
+
+            if (&i != m.end())
+                stream << "\n";
+        }
+    }
+
+    return stream;
+}
+
 // Functions
-auto Matrix::toArray() const -> const float_t* const {
+auto Matrix::toArray() const noexcept -> const float_t* {
     // Array[2]
     auto* arr = new float_t[2];
 
@@ -224,34 +250,23 @@ void Matrix::map(float_t (*const func)(float)) {
     PTR_END
 }
 
-void Matrix::print() const {
-    const float_t *ptr = &this->data[0][0];
+auto Matrix::serialize() const noexcept -> const nlohmann::json {
+    nlohmann::json t = nlohmann::json::object({ {"rows", this->rows}, {"columns", this->columns}, {"data", nlohmann::json::array()} });
 
-    int32_t cout = 0;
-    int32_t i = 0;
-    while (i < this->len) {
-        std::printf("%f ", *ptr);
-        ++ptr;
-        cout++;
+    nlohmann::json temp_arr = nlohmann::json::array();
 
-        if (cout == this->columns) {
-            cout = 0;
-            std::printf("\n");
+    int32_t counter = 0;
+    for (auto i : *this) {
+        temp_arr += i;
+        counter++;
+
+        if (counter == this->columns) {
+            t["data"] += temp_arr;
+
+            temp_arr = nlohmann::json::array();
+            counter = 0;
         }
-        ++i;
     }
-}
-
-auto Matrix::serialize() const -> const nlohmann::json {
-    nlohmann::json t;
-    t["rows"] = this->rows;
-    t["columns"] = this->columns;
-
-    const float_t *ptr = &this->data[0][0];
-
-    PTR_START(this->len)
-        t["data"] += *ptr;
-    PTR_END
 
     return t;
 }
@@ -369,29 +384,35 @@ auto Matrix::map(const Matrix &m, float_t (*const func)(float)) -> Matrix {
 }
 
 auto Matrix::deserialize(const nlohmann::json &t) -> Matrix {
-    Matrix m = Matrix(t["rows"].get<int32_t>(),
-                      t["columns"].get<int32_t>());
+    Matrix m(t["rows"].get<int32_t>(),
+             t["columns"].get<int32_t>());
+ 
+    float_t *ptr = &m.data[0][0];
 
-    int32_t i = 0;
-    while (i < m.rows) {
-        int32_t j = 0;
-        while (j < m.columns) {
-            m.data[i][j] = t["data"][j].get<float_t>();
-            ++j;
+    int32_t counter = 0;
+    PTR_START(m.rows)
+        *ptr = t["data"][static_cast<unsigned long>(i.load(std::memory_order_consume))][static_cast<unsigned long>(counter)].get<float_t>();
+        ++ptr;
+        counter++;
+
+        if (counter == m.columns) {
+            counter = 0;
+
+            i.fetch_add(1, std::memory_order_release);
         }
-        ++i;
     }
+
     return m;
 }
 
 
 // Private function
 void Matrix::allocSpace() {
-    posix_memalign(reinterpret_cast<void **>(&this->data), 1024UL, this->rows);
+    posix_memalign(reinterpret_cast<void **>(&this->data), 1024UL, static_cast<size_t>(this->rows));
 
     int32_t i = 0;
     while (i < this->rows) {
-        posix_memalign(reinterpret_cast<void **>(&this->data[i]), 1024UL, this->columns);
+        posix_memalign(reinterpret_cast<void **>(&this->data[i]), 1024UL, static_cast<size_t>(this->columns));
         ++i;
     }
 }

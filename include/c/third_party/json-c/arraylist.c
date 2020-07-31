@@ -53,6 +53,7 @@ void array_list_free(array_list *arr) {
 }
 
 void* array_list_get_idx(array_list *arr, const unsigned long i) {
+    register void* result = NULL; 
 	if (i >= arr->length)
 		return NULL;
 

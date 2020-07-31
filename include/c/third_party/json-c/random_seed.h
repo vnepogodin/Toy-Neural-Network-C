@@ -13,8 +13,8 @@
  * @file
  * @brief Do not use, json-c internal, may be changed or removed at any time.
  */
-#ifndef seed_h
-#define seed_h
+#ifndef __SEED_H__
+#define __SEED_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,4 +26,4 @@ extern int json_c_get_random_seed(void);
 }
 #endif
 
-#endif
+#endif /* __SEED_H__ */

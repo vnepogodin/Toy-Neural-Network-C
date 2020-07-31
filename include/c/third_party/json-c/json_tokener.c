@@ -26,18 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-
-
-#ifdef HAVE_LOCALE_H
 #include <locale.h>
-#endif /* HAVE_LOCALE_H */
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif /* HAVE_STRINGS_H */
 
-/**
- * @deprecated Don't use this outside of json_tokener.c, it will be made private in a future release.
- */
 enum json_tokener_state {
     json_tokener_state_eatws,
     json_tokener_state_start,
@@ -67,9 +57,6 @@ enum json_tokener_state {
     json_tokener_state_inf
 };
 
-/**
- * @deprecated Don't use this outside of json_tokener.c, it will be made private in a future release.
- */
 struct json_tokener_srec {
     enum json_tokener_state state, saved_state;
 
@@ -92,18 +79,12 @@ struct _Json_Tokener {
 
     char quote_char;
 
-    /**
-	 * @deprecated See json_tokener_get_parse_end() instead.
-	 */
     int char_offset;
 
     int flags;
 
     int max_depth, depth, is_double, st_pos;
 
-    /**
-     * @deprecated Do not access any of these fields outside of json_tokener.c
-     */
     char* str;
 
     printbuf *pb;
@@ -111,16 +92,14 @@ struct _Json_Tokener {
 };
 
 
+#ifdef _WIN32
+#  define strdup _strdup
+#  define strncasecmp _strnicmp
+#endif
+
 #define json_min(a, b) ((a) < (b) ? (a) : (b))
 
 #define jt_hexdigit(x) (((unsigned char)(x) <= (unsigned char)'9') ? (unsigned char)(x) - (unsigned char)'0' : ((unsigned char)(x) & 7U) + 9U)
-
-#if !HAVE_STRNCASECMP && defined(_MSC_VER)
-/* MSC has the version as _strnicmp */
-#  define strncasecmp _strnicmp
-#elif !HAVE_STRNCASECMP
-#  error You do not have strncasecmp on your system.
-#endif /* HAVE_STRNCASECMP */
 
 static const char json_nan_str[3] = "NaN";
 static const int json_nan_str_len = 2;
@@ -129,7 +108,7 @@ static int _json_parse_int64(const char* buf, long long *retval) {
 	errno = 0;
 
     char *end = NULL;
-	register long long val = strtoll(buf, &end, 10);
+	register const long long val = strtoll(buf, &end, 10);
 	if (end != buf)
 		*retval = val;
 
@@ -145,7 +124,7 @@ static int _json_parse_uint64(const char* buf, unsigned long long *retval) {
 		return 1; /* error: uint cannot be negative */
 
 	char *end = NULL;
-	unsigned long long val = strtoull(buf, &end, 10);
+	register const unsigned long long val = strtoull(buf, &end, 10);
 	if (end != buf)
 		*retval = val;
 
@@ -158,7 +137,7 @@ static int _json_parse_uint64(const char* buf, unsigned long long *retval) {
  * if not utf-8 format, return err.
  */
 static int json_tokener_validate_utf8(const char c, unsigned int *nBytes) {
-    const register unsigned char chr = (unsigned char)c;
+    register const unsigned char chr = (unsigned char)c;
     if (*nBytes == 0) {
         if (chr >= 0x80) {
             if ((chr & (unsigned)0xe0) == 0xc0)
@@ -184,10 +163,11 @@ static int json_tokener_parse_double(const char* buf, const int len, double *ret
     *retval = strtod(buf, &end);
 
     register const char* _expr = buf + len;
+    register int result = 1;
     if (_expr == end)
-        return 0; /* It worked */
+        result = 0; /* It worked */
 
-    return 1;
+    return result;
 }
 
 /* Stuff for decoding unicode sequences */
@@ -431,7 +411,9 @@ json_object* json_tokener_parse_ex(json_tokener *tok, const char* str, const int
 				printbuf_reset(tok->pb);
 				tok->is_double = 0;
 				goto redo_char;
-			default: tok->err = json_tokener_error_parse_unexpected; goto out;
+			default:
+                tok->err = json_tokener_error_parse_unexpected;
+                goto out;
 			}
 			break;
 
@@ -642,6 +624,7 @@ json_object* json_tokener_parse_ex(json_tokener *tok, const char* str, const int
 
 		case json_tokener_state_escape_unicode: {
             static const char json_hex_chars[22] = "0123456789abcdefABCDEF";
+
 			/* Handle a 4-byte \uNNNN sequence, or two sequences if a surrogate pair */
 			while (1) {
 				if (!c || !strchr(json_hex_chars, c)) {
@@ -686,11 +669,13 @@ json_object* json_tokener_parse_ex(json_tokener *tok, const char* str, const int
 
 			if (tok->ucs_char < 0x80) {
 				unsigned char unescaped_utf[1] = { (unsigned char)tok->ucs_char };
+
 				printbuf_memappend_fast(tok->pb, (char *)unescaped_utf, 1);
 			} else if (tok->ucs_char < 0x800) {
 			    unsigned char unescaped_utf[2];
 				unescaped_utf[0] = (unsigned char)0xc0 | ((unsigned char)tok->ucs_char >> 6U);
 				unescaped_utf[1] = (unsigned char)0x80 | ((unsigned char)tok->ucs_char & (unsigned char)0x3f);
+
 				printbuf_memappend_fast(tok->pb, (char *)unescaped_utf, 2);
 			} else if (IS_HIGH_SURROGATE(tok->ucs_char)) {
 				/*
@@ -720,6 +705,7 @@ json_object* json_tokener_parse_ex(json_tokener *tok, const char* str, const int
 				unescaped_utf[0] = (unsigned char)0xe0 | ((unsigned char)tok->ucs_char >> 12U);
 				unescaped_utf[1] = (unsigned char)0x80 | ((tok->ucs_char >> 6U) & (unsigned)0x3f);
 				unescaped_utf[2] = (unsigned char)0x80 | (tok->ucs_char & (unsigned)0x3f);
+
 				printbuf_memappend_fast(tok->pb, (char *)unescaped_utf, 3);
 			} else if (tok->ucs_char < 0x110000) {
 				unsigned char unescaped_utf[4];
@@ -727,6 +713,7 @@ json_object* json_tokener_parse_ex(json_tokener *tok, const char* str, const int
 				unescaped_utf[1] = (unsigned char)0x80 | ((tok->ucs_char >> 12U) & (unsigned)0x3f);
 				unescaped_utf[2] = (unsigned char)0x80 | ((tok->ucs_char >> 6U) & (unsigned)0x3f);
 				unescaped_utf[3] = (unsigned char)0x80 | (tok->ucs_char & (unsigned)0x3f);
+
 				printbuf_memappend_fast(tok->pb, (char *)unescaped_utf, 4);
 			} else {
 				/* Don't know what we got--insert the replacement char */

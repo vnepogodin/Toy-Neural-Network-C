@@ -81,8 +81,7 @@ static int get_dev_random_seed(void) {
 
 static int get_time_seed(void);
 
-static int get_cryptgenrandom_seed(void)
-{
+static int get_cryptgenrandom_seed(void) {
 	HCRYPTPROV hProvider = 0;
 	DWORD dwFlags = CRYPT_VERIFYCONTEXT;
 	int r;
@@ -93,17 +92,13 @@ static int get_cryptgenrandom_seed(void)
 	if (LOBYTE(LOWORD(GetVersion())) > 4)
 		dwFlags |= CRYPT_SILENT;
 
-	if (!CryptAcquireContextA(&hProvider, 0, 0, PROV_RSA_FULL, dwFlags))
-	{
+	if (!CryptAcquireContextA(&hProvider, 0, 0, PROV_RSA_FULL, dwFlags)) {
 		fprintf(stderr, "error CryptAcquireContextA 0x%08lx", GetLastError());
 		r = get_time_seed();
-	}
-	else
-	{
+	} else {
 		BOOL ret = CryptGenRandom(hProvider, sizeof(r), (BYTE*)&r);
 		CryptReleaseContext(hProvider, 0);
-		if (!ret)
-		{
+		if (!ret) {
 			fprintf(stderr, "error CryptGenRandom 0x%08lx", GetLastError());
 			r = get_time_seed();
 		}

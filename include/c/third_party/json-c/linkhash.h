@@ -16,8 +16,8 @@
  *        this is exposed by the json_object_get_object() function and within the
  *        json_object_iter type, it is not recommended for direct use.
  */
-#ifndef _linkhash_h_
-#define _linkhash_h_
+#ifndef __LINKHASH_H__
+#define __LINKHASH_H__
 
 #include "json_object.h"
 
@@ -30,6 +30,7 @@ typedef struct _LH_Entry lh_entry;
  * The hash table structure.
  */
 typedef struct _LH_Table lh_table;
+
 
 /**
  * golden prime used in hash functions
@@ -200,4 +201,4 @@ extern unsigned long lh_get_hash(const lh_table *const, const void* const);
 }
 #endif
 
-#endif
+#endif /* __LINKHASH_H__ */

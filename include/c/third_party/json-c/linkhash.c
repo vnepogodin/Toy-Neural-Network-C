@@ -29,14 +29,7 @@ struct _LH_Entry {
      */
     unsigned char k_is_constant;
 
-    /*
-     * The key.  Use lh_entry_k() instead of accessing this directly.
-     */
     const void *k;
-
-    /*
-     * The value.  Use lh_entry_v() instead of accessing this directly.
-     */
     const void *v;
 
     /*
@@ -309,7 +302,7 @@ use a bitmask.  For example, if you need only 10 bits, do
   h = (h & hashmask(10));
 In which case, the hash table should have hashsize(10) elements.
 
-If you are hashing n strings (uint8_t **)k, do it like this:
+If you are hashing n strings (unsigned char **)k, do it like this:
   for (i=0, h=0; i<n; ++i) h = hashlittle( k[i], len[i], h);
 
 By Bob Jenkins, 2006.  bob_jenkins@burtleburtle.net.  You may use this
@@ -335,13 +328,14 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
 	if (HASH_LITTLE_ENDIAN && ((u.i & 0x3) == 0)) {
 		const unsigned *k = (const unsigned *)key; /* read 32-bit chunks */
 
-		/*------ all but last block: aligned reads and affect 32 bits of (a,b,c) */
-		while (length > 12)
-		{
+		/*------ all but last block: aligned reads and affect 32 bits of (a, b, c) */
+		while (length > 12) {
 			a += k[0];
 			b += k[1];
 			c += k[2];
+
 			mix(a,b,c);
+
 			length -= 12;
 			k += 3;
 		}
@@ -369,51 +363,48 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
 #endif
 #ifndef PRECISE_MEMORY_ACCESS
 
-		switch(length)
-		{
-		case 12: c+=k[2]; b+=k[1]; a+=k[0]; break;
-		case 11: c+=k[2]&0xffffff; b+=k[1]; a+=k[0]; break;
-		case 10: c+=k[2]&0xffff; b+=k[1]; a+=k[0]; break;
-		case 9 : c+=k[2]&0xff; b+=k[1]; a+=k[0]; break;
-		case 8 : b+=k[1]; a+=k[0]; break;
-		case 7 : b+=k[1]&0xffffff; a+=k[0]; break;
-		case 6 : b+=k[1]&0xffff; a+=k[0]; break;
-		case 5 : b+=k[1]&0xff; a+=k[0]; break;
-		case 4 : a+=k[0]; break;
-		case 3 : a+=k[0]&0xffffff; break;
-		case 2 : a+=k[0]&0xffff; break;
-		case 1 : a+=k[0]&0xff; break;
+		switch(length) {
+		case 12: c += k[2]; b += k[1]; a += k[0]; break;
+		case 11: c += k[2] & 0xffffff; b += k[1]; a += k[0]; break;
+		case 10: c += k[2] & 0xffff; b += k[1]; a += k[0]; break;
+		case 9 : c += k[2] & 0xff; b += k[1]; a += k[0]; break;
+		case 8 : b += k[1]; a += k[0]; break;
+		case 7 : b += k[1] & 0xffffff; a += k[0]; break;
+		case 6 : b += k[1] & 0xffff; a += k[0]; break;
+		case 5 : b += k[1] & 0xff; a += k[0]; break;
+		case 4 : a += k[0]; break;
+		case 3 : a += k[0] & 0xffffff; break;
+		case 2 : a += k[0] & 0xffff; break;
+		case 1 : a += k[0] & 0xff; break;
 		case 0 : return c; /* zero length strings require no mixing */
             default:break;
 		}
 
 #else /* make valgrind happy */
 
-		const uint8_t  *k8 = (const uint8_t *)k;
-		switch(length)
-		{
-		case 12: c+=k[2]; b+=k[1]; a+=k[0]; break;
-		case 11: c+=((unsigned)k8[10])<<16;  /* fall through */
-		case 10: c+=((unsigned)k8[9])<<8;    /* fall through */
-		case 9 : c+=k8[8];                   /* fall through */
-		case 8 : b+=k[1]; a+=k[0]; break;
-		case 7 : b+=((unsigned)k8[6])<<16;   /* fall through */
-		case 6 : b+=((unsigned)k8[5])<<8;    /* fall through */
-		case 5 : b+=k8[4];                   /* fall through */
-		case 4 : a+=k[0]; break;
-		case 3 : a+=((unsigned)k8[2])<<16;   /* fall through */
-		case 2 : a+=((unsigned)k8[1])<<8;    /* fall through */
-		case 1 : a+=k8[0]; break;
+		const unsigned char  *k8 = (const unsigned char *)k;
+		switch(length) {
+		case 12: c += k[2]; b += k[1]; a += k[0]; break;
+		case 11: c += ((unsigned)k8[10]) << 16U;  /* fall through */
+		case 10: c += ((unsigned)k8[9]) << 8U;    /* fall through */
+		case 9 : c += k8[8];                   /* fall through */
+		case 8 : b += k[1]; a += k[0]; break;
+		case 7 : b += ((unsigned)k8[6]) << 16U;   /* fall through */
+		case 6 : b += ((unsigned)k8[5]) << 8U;    /* fall through */
+		case 5 : b += k8[4];                   /* fall through */
+		case 4 : a += k[0]; break;
+		case 3 : a += ((unsigned)k8[2]) << 16U;   /* fall through */
+		case 2 : a += ((unsigned)k8[1]) << 8U;    /* fall through */
+		case 1 : a += k8[0]; break;
 		case 0 : return c;
 		}
 
 #endif /* !valgrind */
 
 	}
-	else if (HASH_LITTLE_ENDIAN && ((u.i & 0x1) == 0))
-	{
-		const uint16_t *k = (const uint16_t *)key; /* read 16-bit chunks */
-		const uint8_t  *k8;
+	else if (HASH_LITTLE_ENDIAN && ((u.i & 0x1) == 0)) {
+		const unsigned short *k = (const unsigned short *)key; /* read 16-bit chunks */
+		const unsigned char  *k8;
 
 		/*--------------- all but last block: aligned reads and different mixing */
 		while (length > 12)
@@ -427,7 +418,7 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
 		}
 
 		/*----------------------------- handle the last (probably partial) block */
-		k8 = (const uint8_t *)k;
+		k8 = (const unsigned char *)k;
 		switch(length)
 		{
 		case 12: c+=k[4]+(((unsigned)k[5])<<16);
@@ -462,7 +453,7 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
 	else
 	{
 		/* need to read the key one byte at a time */
-		const uint8_t *k = (const uint8_t *)key;
+		const unsigned char *k = (const unsigned char *)key;
 
 		/*--------------- all but the last block: affect some 32 bits of (a,b,c) */
 		while (length > 12)
@@ -531,7 +522,7 @@ static unsigned long lh_char_hash(const void *k) {
 #elif defined _MSC_VER || defined __MINGW32__
 		InterlockedCompareExchange(&random_seed, seed, -1);
 #else
-		//#warning "racy random seed initializtion if used by multiple threads"
+		/* #warning "racy random seed initializtion if used by multiple threads" */
 		random_seed = seed; /* potentially racy */
 #endif
 	}
@@ -567,6 +558,7 @@ lh_table* lh_table_new(const int size,
         t->table[i].k = LH_EMPTY;
         ++i;
     }
+
 	return t;
 }
 
@@ -581,8 +573,8 @@ int lh_table_resize(lh_table *t, const int new_size) {
 
 	lh_entry *ent = t->head;
 	while (ent != NULL) {
-        unsigned long h = lh_get_hash(new_t, ent->k);
-        unsigned int opts = 0;
+        register unsigned long h = lh_get_hash(new_t, ent->k);
+        register unsigned int opts = 0;
         if (ent->k_is_constant)
             opts = JSON_C_OBJECT_KEY_IS_CONSTANT;
 
@@ -627,7 +619,7 @@ int lh_table_insert_w_hash(lh_table *t, const void *k, const void *v, const unsi
     register unsigned long n = h % (unsigned long)t->size;
 
 	while (1) {
-		if (t->table[n].k == LH_EMPTY || t->table[n].k == LH_FREED)
+		if ((t->table[n].k == LH_EMPTY) || (t->table[n].k == LH_FREED))
 			break;
 
         ++n;
@@ -661,7 +653,7 @@ lh_entry* lh_table_lookup_entry_w_hash(lh_table *t, const void *k, const unsigne
 		if (t->table[n].k == LH_EMPTY)
 			return NULL;
 
-		if (t->table[n].k != LH_FREED && t->equal_fn(t->table[n].k, k))
+		if ((t->table[n].k != LH_FREED) && (t->equal_fn(t->table[n].k, k)))
 			return &t->table[n];
 
         ++n;

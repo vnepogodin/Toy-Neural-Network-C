@@ -91,7 +91,7 @@ static void json_strsplit(register float* result, const char* _str, const int co
 
     printf("%d, %s\n", size, _str);
 
-    register char* tmp = (char *)alloca((unsigned long)size - 1U);
+    register char* tmp = (char *)malloc((unsigned long)size - 1U);
 
     /*   slice_str   */
     register int i = 2;
@@ -124,6 +124,8 @@ static void json_strsplit(register float* result, const char* _str, const int co
 
         ++i;
     }
+
+    free(tmp);
 }
 
 static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
@@ -592,9 +594,9 @@ json_object* matrix_serialize(const Matrix *const m_param) {
 
     json_object_object_add_ex(t, "rows", json_object_new_int(m_param->rows), 0);
     json_object_object_add_ex(t, "columns", json_object_new_int(m_param->columns), 0);
-    json_object_object_add_ex(t, "data", json_object_new_array(), 0);
+    json_object_object_add_ex(t, "data", json_object_new_array_ext(m_param->rows), 0);
 
-    register json_object *temp_arr = json_object_new_array();
+    register json_object *temp_arr = json_object_new_array_ext(m_param->columns);
 
     register const float *ptr = &m_param->data[0][0];
 
@@ -607,7 +609,7 @@ json_object* matrix_serialize(const Matrix *const m_param) {
 
         if(cout == m_param->columns) {
             json_object_array_add(json_find(t, "data"), temp_arr);
-            temp_arr = json_object_new_array();
+            temp_arr = json_object_new_array_ext(m_param->columns);
             cout = 0;
             ++i;
         }
@@ -775,7 +777,7 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
 
     register float *ptr = &__matrix_m->data[0][0];
 
-    register float* buf = (float *)alloca((unsigned long)__matrix_m->columns);
+    register float* buf = (float *)malloc((unsigned long)__matrix_m->columns);
     json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), __matrix_m->columns);
 
     register int i = 0;
@@ -793,6 +795,8 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
                 json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), (unsigned long)i)), __matrix_m->columns);
         }
     }
+
+    free(buf);
 
     return __matrix_m;
 }

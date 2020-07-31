@@ -76,7 +76,7 @@ static int printbuf_extend(printbuf *p, const int min_size) {
 
     register int new_size = 0;
 
-    if (p->size > INT_MAX / 2)
+    if (p->size > (INT_MAX / 2))
         new_size = min_size + 8;
     else {
         new_size = p->size * 2;
@@ -84,12 +84,12 @@ static int printbuf_extend(printbuf *p, const int min_size) {
             new_size = min_size + 8;
     }
 
-    char* t = NULL;
-    if (!(t = (char *)realloc(p->buf, (unsigned long)new_size)))
+    const char* t = (char *)realloc(p->buf, (unsigned long)new_size);
+    if (t == NULL)
         return -1;
 
     p->size = new_size;
-    p->buf = t;
+    p->buf = (char *)t;
     return 0;
 }
 
@@ -100,10 +100,12 @@ printbuf* printbuf_new(void) {
 
 	p->size = 32;
 	p->bpos = 0;
-	if (!(p->buf = (char *)malloc((unsigned long)p->size))) {
+    p->buf = (char *)malloc((unsigned long)p->size);
+	if (p->buf == NULL) {
 		free(p);
 		return NULL;
 	}
+
 	p->buf[0] = '\0';
 	return p;
 }
@@ -113,7 +115,7 @@ inline int printbuf_memappend(printbuf *p, const char* buf, const int size) {
 	if (size > (INT_MAX - p->bpos - 1))
 		return -1;
 
-	if (p->size <= p->bpos + size + 1) {
+	if (p->size <= (p->bpos + size + 1)) {
 		if (printbuf_extend(p, p->bpos + size + 1) < 0)
 			return -1;
 	}
@@ -132,7 +134,7 @@ int printbuf_memset(printbuf *pb, int offset, const int charvalue, const int len
 	if (len > (INT_MAX - offset))
 		return -1;
 
-    register int size_needed = offset + len;
+    register const int size_needed = offset + len;
 	if (pb->size < size_needed) {
 		if (printbuf_extend(pb, size_needed) < 0)
 			return -1;
@@ -158,15 +160,26 @@ int sprintbuf(printbuf *p, const char* msg, ...) {
 	 * if output is truncated whereas some return the number of bytes that
 	 * would have been written - this code handles both cases.
 	 */
-	if (size == -1 || size > 127) {
+	if ((size == -1) || (size > 127)) {
+#ifdef _WIN32
+        register const unsigned long length = strlen(msg) + 1;
+        char* t = (char *)malloc(length);
+#else
         char* t = NULL;
+#endif
+
 		va_start(ap, msg);
+#ifdef _WIN32
+        size = vsprintf_s(&t, length, msg, ap);
+#else
         size = vasprintf(&t, msg, ap);
+#endif
 		if (size < 0) {
 			va_end(ap);
 			return -1;
 		}
 		va_end(ap);
+
 		printbuf_memappend(p, t, size);
 		free(t);
 	} else

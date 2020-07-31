@@ -15,9 +15,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <ctype.h>
-#ifdef HAVE_LIMITS_H
 #include <limits.h>
-#endif
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -79,28 +77,25 @@ struct json_object_string {
     json_object base;
 };
 
+#ifdef _WIN32
+#  define strdup _strdup
+#endif
+
 /* generic object construction and destruction parts */
 static void json_object_generic_delete(json_object *jso) {
     printbuf_free(jso->_pb);
     free(jso);
 }
 
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-/* VS2013 doesn't know about "inline" */
-#define inline __inline
-#elif defined(AIX_CC)
-#define inline
-#endif
-
 static int _json_parse_int64(const char* buf, long long *retval) {
     errno = 0;
 
     char *end = NULL;
-	register long long val = strtoll(buf, &end, 10);
+	register const long long val = strtoll(buf, &end, 10);
 	if (end != buf)
 		*retval = val;
 
-	return ((val == 0 && errno != 0) || (end == buf)) ? 1 : 0;
+	return (((val == 0) && (errno != 0)) || (end == buf)) ? 1 : 0;
 }
 
 /*
@@ -225,14 +220,16 @@ static inline const char* get_string_component(const json_object *jso) {
 }
 
 /* string escaping */
-static int json_escape_str(printbuf *pb, const char *str, unsigned long len, int flags) {
+static int json_escape_str(printbuf *pb, const char *str, unsigned long len, const int flags) {
     static const char json_hex_chars[22] = "0123456789abcdefABCDEF";
+
 	register int pos = 0;
     register int start_offset = 0;
 
 	register unsigned char c = 0U;
 	while (len--) {
 		c = (unsigned char)str[pos];
+
 		switch (c) {
 		case '\b':
 		case '\n':
@@ -242,12 +239,12 @@ static int json_escape_str(printbuf *pb, const char *str, unsigned long len, int
 		case '"':
 		case '\\':
 		case '/':
-			if (((unsigned)flags & JSON_C_TO_STRING_NOSLASHESCAPE) && c == '/') {
-				pos++;
+			if (((unsigned)flags & JSON_C_TO_STRING_NOSLASHESCAPE) && (c == '/')) {
+				++pos;
 				break;
 			}
 
-			if (pos - start_offset > 0)
+			if ((pos - start_offset) > 0)
 				printbuf_memappend(pb, str + start_offset, pos - start_offset);
 
 			if (c == '\b')
@@ -267,23 +264,25 @@ static int json_escape_str(printbuf *pb, const char *str, unsigned long len, int
 			else if (c == '/')
 				printbuf_memappend(pb, "\\/", 2);
 
-			start_offset = ++pos;
+            ++pos;
+			start_offset = pos;
 			break;
 		default:
 			if (c < ' ') {
-				char sbuf[7];
 				if (pos - start_offset > 0)
-					printbuf_memappend(pb, str + start_offset,
-					                   pos - start_offset);
+					printbuf_memappend(pb, str + start_offset, pos - start_offset);
+
+				char sbuf[7] = { 0 };
 				snprintf(sbuf, 7, "\\u00%c%c", json_hex_chars[c >> 4U], json_hex_chars[c & (unsigned)0xf]);
 				printbuf_memappend_fast(pb, sbuf, 6);
-				start_offset = ++pos;
+                ++pos;
+				start_offset = pos;
 			}
 			else
 				pos++;
 		}
 	}
-	if (pos - start_offset > 0)
+	if ((pos - start_offset) > 0)
 		printbuf_memappend(pb, str + start_offset, pos - start_offset);
 
 	return 0;
@@ -295,9 +294,13 @@ json_object* json_object_get(json_object *jso) {
 		return jso;
 
 	/* Don't overflow the refcounter. */
-	assert(jso->_ref_count < UINT32_MAX);
+	assert(jso->_ref_count < UINT_MAX);
 
+#ifdef _WIN32
+	++jso->_ref_count;
+#else
 	__sync_add_and_fetch(&jso->_ref_count, 1);
+#endif
 
 	return jso;
 }
@@ -317,10 +320,15 @@ int json_object_put(json_object *jso) {
 	 * as that can result in the thread that loses the race to 0
 	 * operating on an already-freed object.
 	 */
+#ifdef _WIN32
+	if (--jso->_ref_count > 0)
+		return 0;
+#else
 	if (__sync_sub_and_fetch(&jso->_ref_count, 1) > 0)
 		return 0;
+#endif
 
-	if (jso->_user_delete)
+	if (jso->_user_delete != NULL)
 		jso->_user_delete(jso, jso->_userdata);
 
 	switch (jso->o_type) {
@@ -353,7 +361,7 @@ void json_object_set_userdata(json_object *jso, void* userdata, void(*user_delet
 	assert(jso != NULL);
 
 	/* First, clean up any previously existing user info */
-	if (jso->_user_delete)
+	if (jso->_user_delete != NULL)
 		jso->_user_delete(jso, jso->_userdata);
 
 	jso->_userdata = userdata;
@@ -518,7 +526,7 @@ int json_object_object_add_ex(json_object *jso, const char* const key, json_obje
 	/* We lookup the entry and replace the value, rather than just deleting
 	 * and re-adding it, so the existing key remains valid.
 	 */
-	const register unsigned long hash = lh_get_hash(JC_OBJECT(jso)->c_object, (const void *)key);
+	register const unsigned long hash = lh_get_hash(JC_OBJECT(jso)->c_object, (const void *)key);
 	lh_entry *existing_entry = (opts & JSON_C_OBJECT_ADD_KEY_IS_NEW)
         ? NULL
         : lh_table_lookup_entry_w_hash(JC_OBJECT(jso)->c_object, (const void *)key, hash);
@@ -840,10 +848,15 @@ double json_object_get_double(const json_object *jso) {
 
 /* json_object_string */
 static int json_object_string_to_json_string(json_object *jso, printbuf *pb, int level, int flags) {
-    register ssize_t len = JC_STRING(jso)->len;
+    register long len = JC_STRING(jso)->len;
 
 	printbuf_strappend(pb, "\"");
-	json_escape_str(pb, get_string_component(jso), (len < 0) ? (unsigned long)-len : (unsigned long)len, flags);
+
+    if (len < 0)
+        json_escape_str(pb, get_string_component(jso), (unsigned long)-len, flags);
+    else
+        json_escape_str(pb, get_string_component(jso), (unsigned long)len, flags);
+
 	printbuf_strappend(pb, "\"");
 
 	return 0;
@@ -947,7 +960,7 @@ static void json_object_array_entry_free(void* data) {
 }
 
 json_object* json_object_new_array(void) {
-	return json_object_new_array_ext(ARRAY_LIST_DEFAULT_SIZE);
+	return json_object_new_array_ext(32);
 }
 
 json_object* json_object_new_array_ext(const int initial_size) {

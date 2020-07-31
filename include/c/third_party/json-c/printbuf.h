@@ -23,6 +23,9 @@
 #ifndef __PRINTBUF_H__
 #define __PRINTBUF_H__
 
+typedef struct _Printbuf printbuf;
+
+
 #ifndef JSON_EXPORT
 #if defined(_MSC_VER)
 #define JSON_EXPORT __declspec(dllexport)
@@ -34,8 +37,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct _Printbuf printbuf;
 
 JSON_EXPORT void printbuf_memcpy(printbuf *, const void*, const unsigned long);
 

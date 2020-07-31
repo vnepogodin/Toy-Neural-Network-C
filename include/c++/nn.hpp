@@ -30,7 +30,7 @@ class NeuralNetwork {
     virtual ~NeuralNetwork();
 
     // Functions
-    auto predict(const float_t* const &) const -> const float_t* const;
+    auto predict(const float_t* const &) const noexcept -> const float_t*;
     void setLearningRate(const float_t &);
     void setActivationFunction(const int32_t &);
     void train(const float_t* const &, const float_t* const &);

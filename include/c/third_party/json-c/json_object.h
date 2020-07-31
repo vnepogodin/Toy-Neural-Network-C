@@ -17,21 +17,11 @@
 #ifndef __JSON_OBJECT_H__
 #define __JSON_OBJECT_H__
 
-#ifdef __GNUC__
-#define JSON_C_CONST_FUNCTION(func) func __attribute__((const))
-#else
-#define JSON_C_CONST_FUNCTION(func) func
-#endif
-
 #include "arraylist.h"
 #include "printbuf.h"
 #include "linkhash.h"
 
 #include <stddef.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
 * @brief The core type for all type of JSON objects handled by json-c
@@ -42,7 +32,6 @@ typedef struct json_object_iter json_object_iter;
 
 /* supported object types */
 enum json_type {
-	/* If you change this, be sure to update json_type_to_name() too */
 	json_type_null,
 	json_type_double,
 	json_type_int,
@@ -62,12 +51,14 @@ struct json_object_iter {
 };
 
 /**
- * Type of custom user delete functions.  See json_object_set_serializer.
+ * Type of custom user delete functions.
+ * @see json_object_set_serializer.
  */
 typedef void(json_object_delete_fn)(json_object *jso, void *userdata);
 
 /**
- * Type of a custom serialization function.  See json_object_set_serializer.
+ * Type of a custom serialization function.
+ * @see json_object_set_serializer.
  */
 typedef int(json_object_to_json_string_fn)(json_object *jso, printbuf *pb, int level, int flags);
 
@@ -136,6 +127,10 @@ typedef int(json_object_to_json_string_fn)(json_object *jso, printbuf *pb, int l
  */
 #define JSON_C_OBJECT_KEY_IS_CONSTANT (1U << 2U)
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* reference counting functions */
 /**
@@ -455,7 +450,7 @@ JSON_EXPORT void json_object_object_del(json_object *obj, const char* key);
 #define json_object_object_foreach(obj, key, val)                                \
 	char* key = NULL;                                                        \
 	json_object *val __attribute__((__unused__)) = NULL;              \
-	for (struct lh_entry *entry##key = json_object_get_object(obj)->head,    \
+	for (lh_entry *entry##key = json_object_get_object(obj)->head,    \
 	                     *entry_next##key = NULL;                            \
 	     ({                                                                  \
 		     if (entry##key)                                             \

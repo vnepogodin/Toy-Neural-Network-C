@@ -20,6 +20,9 @@
 
 #include <stddef.h>
 
+typedef struct _Json_Tokener json_tokener;
+
+
 #define JSON_TOKENER_DEFAULT_DEPTH 32
 
 /**
@@ -62,11 +65,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
-* @deprecated Unused in json-c code
-*/
-typedef struct _Json_Tokener json_tokener;
 
 enum json_tokener_error {
 	json_tokener_success,

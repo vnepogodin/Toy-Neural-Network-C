@@ -67,7 +67,7 @@ NeuralNetwork::~NeuralNetwork() {
 }
 
 // Functions
-auto NeuralNetwork::predict(const float_t* const &input_array) const -> const float_t* const {
+auto NeuralNetwork::predict(const float_t* const &input_array) const noexcept -> const float_t* {
     // Generating the Hidden Outputs
     Matrix inputs = Matrix::fromArray(input_array);
     Matrix hidden = Matrix::multiply(this->weights_ih, inputs);

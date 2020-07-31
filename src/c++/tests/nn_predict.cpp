@@ -1,4 +1,4 @@
-#include "../../../single_include/c++/nn.hpp"
+#include "../../../include/c++/nn.hpp"
 
 #include <iostream>
 

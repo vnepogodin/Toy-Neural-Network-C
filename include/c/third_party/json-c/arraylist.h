@@ -15,19 +15,16 @@
  *        Although this is exposed by the json_object_get_array() method,
  *        it is not recommended for direct use.
  */
-#ifndef _arraylist_h_
-#define _arraylist_h_
+#ifndef __ARRAYLIST_H__
+#define __ARRAYLIST_H__
 
 #include <stddef.h>
 
-#define ARRAY_LIST_DEFAULT_SIZE 32
+typedef struct _Array_List array_list;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct _Array_List array_list;
-
 
 /**
  * Allocate an array_list of the desired size.
@@ -62,4 +59,4 @@ extern int array_list_shrink(array_list *, const unsigned long);
 }
 #endif
 
-#endif
+#endif /* __ARRAYLIST_H__ */
