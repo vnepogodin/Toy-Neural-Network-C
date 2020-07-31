@@ -19,7 +19,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-4.9
+      - COMPILER_CC=gcc-4.9
+      - COMPILER_CXX=g++-4.9
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -51,7 +52,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-4.8
+      - COMPILER_CC=gcc-4.8
+      - COMPILER_CXX=g++-4.8
       - CXXFLAGS=-std=c++11
     addons:
       apt:
@@ -61,7 +63,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-4.9
+      - COMPILER_CC=gcc-4.9
+      - COMPILER_CXX=g++-4.9
       - CXXFLAGS=-std=c++11
     addons:
       apt:
@@ -71,7 +74,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-5
+      - COMPILER_CC=gcc-5
+      - COMPILER_CXX=g++-5
       - CXXFLAGS=-std=c++11
     addons:
       apt:
@@ -81,7 +85,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-6
+      - COMPILER_CC=gcc-6
+      - COMPILER_CXX=g++-6
       - CXXFLAGS=-std=c++11
     addons:
       apt:
@@ -91,7 +96,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-7
+      - COMPILER_CC=gcc-7
+      - COMPILER_CXX=g++-7
       - CXXFLAGS=-std=c++11
     addons:
       apt:
@@ -101,7 +107,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-8
+      - COMPILER_CC=gcc-8
+      - COMPILER_CXX=g++-8
       - CXXFLAGS=-std=c++11
     addons:
       apt:
@@ -111,7 +118,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-9
+      - COMPILER_CC=gcc-9
+      - COMPILER_CXX=g++-9
       - CXXFLAGS=-std=c++11
     addons:
       apt:
@@ -121,7 +129,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER=g++-9
+      - COMPILER_CC=gcc-9
+      - COMPILER_CXX=g++-9
       - CXXFLAGS=-std=c++2a
     addons:
       apt:
@@ -132,7 +141,9 @@ jobs:
 
   - os: linux
     compiler: clang
-    env: COMPILER=clang++-3.5
+    env:
+      - COMPILER_CC=clang-3.5
+      - COMPILER_CXX=clang++-3.5
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5']
@@ -140,7 +151,9 @@ jobs:
 
   - os: linux
     compiler: clang
-    env: COMPILER=clang++-3.6
+    env:
+      - COMPILER_CC=clang-3.6
+      - COMPILER_CXX=clang++-3.6
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6']
@@ -148,7 +161,9 @@ jobs:
 
   - os: linux
     compiler: clang
-    env: COMPILER=clang++-3.7
+    env:
+      - COMPILER_CC=clang-3.7
+      - COMPILER_CXX=clang++-3.7
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
@@ -156,7 +171,9 @@ jobs:
 
   - os: linux
     compiler: clang
-    env: COMPILER=clang++-3.8
+    env:
+      - COMPILER_CC=clang-3.8
+      - COMPILER_CXX=clang++-3.8
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -164,7 +181,9 @@ jobs:
 
   - os: linux
     compiler: clang
-    env: COMPILER=clang++-3.9
+    env:
+      - COMPILER_CC=clang-3.9
+      - COMPILER_CXX=clang++-3.9
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -172,7 +191,9 @@ jobs:
 
   - os: linux
     compiler: clang
-    env: COMPILER=clang++-4.0
+    env:
+      - COMPILER_CC=clang-4.0
+      - COMPILER_CXX=clang++-4.0
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-4.0']
@@ -180,7 +201,9 @@ jobs:
 
   - os: linux
     compiler: clang
-    env: COMPILER=clang++-5.0
+    env:
+      - COMPILER_CC=clang-5.0
+      - COMPILER_CXX=clang++-5.0
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-5.0']
@@ -188,7 +211,9 @@ jobs:
 
   - os: linux
     compiler: clang
-    env: COMPILER=clang++-6.0
+    env:
+      - COMPILER_CC=clang-6.0
+      - COMPILER_CXX=clang++-6.0
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-6.0']
@@ -196,7 +221,9 @@ jobs:
 
   - os: linux
     compiler: clang
-    env: COMPILER=clang++-7
+    env:
+      - COMPILER_CC=clang-7
+      - COMPILER_CXX=clang++-7
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-7']
@@ -205,7 +232,8 @@ jobs:
   - os: linux
     compiler: clang
     env:
-      - COMPILER=clang++-7
+      - COMPILER_CC=clang-7
+      - COMPILER_CXX=clang++-7
       - CXXFLAGS=-std=c++1z
     addons:
       apt:
@@ -219,4 +247,4 @@ jobs:
 
 script:
   # compile and execute unit tests
-  - make && make run
+  - make CC=${COMPILER_CC} && make run
