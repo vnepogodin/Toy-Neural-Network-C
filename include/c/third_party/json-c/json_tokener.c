@@ -672,8 +672,8 @@ json_object* json_tokener_parse_ex(json_tokener *tok, const char* str, const int
 				printbuf_memappend_fast(tok->pb, (char *)unescaped_utf, 1);
 			} else if (tok->ucs_char < 0x800) {
 			    unsigned char unescaped_utf[2];
-				unescaped_utf[0] = 0xc0U | (unsigned char)(tok->ucs_char >> 6U);
-				unescaped_utf[1] = 0x80U | (tok->ucs_char & 0x3fU);
+				unescaped_utf[0] = (unsigned char)(0xc0U | (tok->ucs_char >> 6U));
+				unescaped_utf[1] = (unsigned char)(0x80U | (tok->ucs_char & 0x3fU));
 
 				printbuf_memappend_fast(tok->pb, (char *)unescaped_utf, 2);
 			} else if (IS_HIGH_SURROGATE(tok->ucs_char)) {
@@ -701,17 +701,17 @@ json_object* json_tokener_parse_ex(json_tokener *tok, const char* str, const int
 				printbuf_memappend_fast(tok->pb, (char *)utf8_replacement_char, 3);
 			} else if (tok->ucs_char < 0x10000) {
 			    unsigned char unescaped_utf[3];
-				unescaped_utf[0] = 0xe0U | ((unsigned char)tok->ucs_char >> 12U);
-				unescaped_utf[1] = 0x80U | ((tok->ucs_char >> 6U) & 0x3fU);
-				unescaped_utf[2] = 0x80U | (tok->ucs_char & 0x3fU);
+				unescaped_utf[0] = (unsigned char)(0xe0U | (tok->ucs_char >> 12U));
+				unescaped_utf[1] = (unsigned char)(0x80U | ((tok->ucs_char >> 6U) & 0x3fU));
+				unescaped_utf[2] = (unsigned char)(0x80U | (tok->ucs_char & 0x3fU));
 
 				printbuf_memappend_fast(tok->pb, (char *)unescaped_utf, 3);
 			} else if (tok->ucs_char < 0x110000) {
 				unsigned char unescaped_utf[4];
-				unescaped_utf[0] = 0xf0U | ((tok->ucs_char >> 18U) & 0x07U);
-				unescaped_utf[1] = 0x80U | ((tok->ucs_char >> 12U) & 0x3fU);
-				unescaped_utf[2] = 0x80U | ((tok->ucs_char >> 6U) & 0x3fU);
-				unescaped_utf[3] = 0x80U | (tok->ucs_char & 0x3fU);
+				unescaped_utf[0] = (unsigned char)(0xf0U | ((tok->ucs_char >> 18U) & 0x07U));
+				unescaped_utf[1] = (unsigned char)(0x80U | ((tok->ucs_char >> 12U) & 0x3fU));
+				unescaped_utf[2] = (unsigned char)(0x80U | ((tok->ucs_char >> 6U) & 0x3fU));
+				unescaped_utf[3] = (unsigned char)(0x80U | (tok->ucs_char & 0x3fU));
 
 				printbuf_memappend_fast(tok->pb, (char *)unescaped_utf, 4);
 			} else {
