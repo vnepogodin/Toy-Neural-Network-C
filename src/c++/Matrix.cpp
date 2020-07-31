@@ -4,8 +4,6 @@
 
 #include <random>  // std::mt19937, std::uniform_real_distribution, std::random_device
 #include <atomic>  // std::atomic<int32_t>, std::memory_order_release
-#include <vector>  // std::vector
-#include <iostream>
 
 /**
  * PTR_START(end):
