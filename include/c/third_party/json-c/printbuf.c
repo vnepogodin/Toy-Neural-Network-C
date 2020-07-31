@@ -120,7 +120,7 @@ inline int printbuf_memappend(printbuf *p, const char* buf, const int size) {
 			return -1;
 	}
 
-	memcpy(p->buf + p->bpos, buf, size);
+	memcpy(p->buf + p->bpos, buf, (unsigned long)size);
 	p->bpos += size;
 	p->buf[p->bpos] = '\0';
 	return size;
@@ -140,7 +140,7 @@ int printbuf_memset(printbuf *pb, int offset, const int charvalue, const int len
 			return -1;
 	}
 
-	memset(pb->buf + offset, charvalue, len);
+	memset(pb->buf + offset, charvalue, (unsigned long)len);
 	if (pb->bpos < size_needed)
 		pb->bpos = size_needed;
 
@@ -161,18 +161,14 @@ int sprintbuf(printbuf *p, const char* msg, ...) {
 	 * would have been written - this code handles both cases.
 	 */
 	if ((size == -1) || (size > 127)) {
-#ifdef _WIN32
         register const unsigned long length = strlen(msg) + 1;
         char* t = (char *)malloc(length);
-#else
-        char* t = NULL;
-#endif
 
 		va_start(ap, msg);
 #ifdef _WIN32
         size = vsprintf_s(&t, length, msg, ap);
 #else
-        size = vasprintf(&t, msg, ap);
+        size = vsnprintf(t, length, msg, ap);
 #endif
 		if (size < 0) {
 			va_end(ap);
