@@ -19,8 +19,8 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER_CC=gcc-4.9
-      - COMPILER_CXX=g++-4.9
+      - COMPILER_CC=/usr/bin/gcc-4.9
+      - COMPILER_CXX=/usr/bin/g++-4.9
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
