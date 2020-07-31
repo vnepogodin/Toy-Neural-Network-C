@@ -265,4 +265,4 @@ jobs:
 
 script:
   # compile and execute unit tests
-  - make CC=${COMPILER_CC} && make run
+  - make CC=/usr/bin/${COMPILER_CC} && make run
