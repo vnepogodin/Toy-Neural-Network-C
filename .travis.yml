@@ -250,4 +250,5 @@ script:
   - if [[ "${COMPILER_CXX}" == "" ]]; then export COMPILER_CXX=g++; fi
 
   # compile and execute unit tests
-  - sh configure.sh && make CC=/usr/bin/${COMPILER_CC} CXX=/usr/bin/${COMPILER_CXX} && make run
+  - sh configure.sh
+  - make CC=/usr/bin/${COMPILER_CC} CXX=/usr/bin/${COMPILER_CXX} && make run
