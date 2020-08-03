@@ -39,7 +39,7 @@ if (BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
                 OUTPUT_NAME ${PROJECT_NAME})
     endif()
 
-    target_link_libraries(${STATIC_LIB} PRIVATE m)
+    target_link_libraries(${STATIC_LIB} m)
 
     list(APPEND CMAKE_TARGETS ${STATIC_LIB})
 endif ()
