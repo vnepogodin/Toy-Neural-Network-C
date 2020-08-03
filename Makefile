@@ -5,7 +5,7 @@ all : c cpp
 .PHONY : all
 
 c:
-	@cmake -Wdev -S src/c -B src/c/cmake-build-debug
+	cmake -Wdev -S src/c -B src/c/cmake-build-debug
 	@make -C src/c/cmake-build-debug CC=$(CC)
 
 cpp:
