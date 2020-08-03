@@ -22,9 +22,11 @@ set(NN_SOURCES
 add_library(${PROJECT_NAME}
         ${NN_SOURCES}
         ${NN_HEADERS})
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION 0.0.5
         SOVERSION 0)
+
 list(APPEND CMAKE_TARGETS ${PROJECT_NAME})
 
 if (BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
@@ -39,7 +41,7 @@ if (BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
                 OUTPUT_NAME ${PROJECT_NAME})
     endif()
 
-    target_link_libraries(${STATIC_LIB} PUBLIC math)
+    target_link_libraries(${PROJECT_NAME} PUBLIC m)
 
     list(APPEND CMAKE_TARGETS ${STATIC_LIB})
 endif ()
