@@ -2,4 +2,4 @@
 
 mkdir src/c/cmake-build-debug
 cd src/c
-cmake -Wdev .
+cmake -Wdev . -B cmake-build-debug
