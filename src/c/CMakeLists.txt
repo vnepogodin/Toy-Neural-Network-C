@@ -27,24 +27,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION 0.0.5
         SOVERSION 0)
 
+target_link_libraries(${PROJECT_NAME} PUBLIC m)
+
 list(APPEND CMAKE_TARGETS ${PROJECT_NAME})
-
-if (BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
-    set(STATIC_LIB ${PROJECT_NAME}-static)
-    add_library(${STATIC_LIB} STATIC
-            ${NN_SOURCES}
-            ${NN_HEADERS})
-
-    # rename the static library
-    if (NOT MSVC)
-        set_target_properties(${STATIC_LIB} PROPERTIES
-                OUTPUT_NAME ${PROJECT_NAME})
-    endif()
-
-    target_link_libraries(${PROJECT_NAME} PUBLIC m)
-
-    list(APPEND CMAKE_TARGETS ${STATIC_LIB})
-endif ()
 
 if (NOT MSVC)
 add_custom_target(run
