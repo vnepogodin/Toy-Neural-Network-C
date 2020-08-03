@@ -20,7 +20,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <string.h>
-#include <limits.h> /* ULONG_MAX, INT_MAX.. */
+#include <limits.h> /* LLONG_MAX, INT_MAX.. */
 
 enum json_tokener_state {
     json_tokener_state_eatws,
@@ -474,7 +474,7 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
                     unsigned long long numuint64 = 0ULL;
                     double numd = 0.0;
                     if ((!tok->is_double) && (printbuf_getBuf(tok->pb)[0] != '-') && (json_parse_uint64(printbuf_getBuf(tok->pb), &numuint64) == 0)) {
-                        if (numuint64 <= ULONG_MAX) {
+                        if (numuint64 <= LLONG_MAX) {
                             num64 = (long long)numuint64;
                             tok->stack[tok->depth].current = json_object_new_int64(num64);
                             if (tok->stack[tok->depth].current == NULL)

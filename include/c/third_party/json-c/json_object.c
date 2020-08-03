@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <limits.h>
+#include <limits.h> /* LLONG_MAX */
 #include <math.h>
 #include <ctype.h>
 
@@ -661,7 +661,7 @@ int json_object_get_int(const json_object *jso) {
                 cint64 = json_int->cint.c_int64;
             } else {
                 if (json_int->cint.c_uint64 >= ULLONG_MAX)
-                    cint64 = INT64_MAX;
+                    cint64 = LLONG_MAX;
                 else
                     cint64 = (long long)json_int->cint.c_uint64;
             }
