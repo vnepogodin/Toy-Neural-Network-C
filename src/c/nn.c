@@ -20,7 +20,7 @@ struct _NeuralNetwork {
 
 /* Non member functions */
 static inline float sigmoid(float x) {
-    return 1.F / (1.F + expf(-x));
+    return 1.F / (1.F + (float)exp((double)-x));
 }
 
 static inline float dsigmoid(float y) {
