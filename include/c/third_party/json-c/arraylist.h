@@ -18,8 +18,6 @@
 #ifndef __ARRAYLIST_H__
 #define __ARRAYLIST_H__
 
-#include <stddef.h>
-
 typedef struct _Array_List array_list;
 
 #ifdef __cplusplus

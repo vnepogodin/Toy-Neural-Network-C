@@ -72,14 +72,14 @@ struct _Matrix {
     }                                          	\
 }STMT_END
 
-#define allocSpace(matrix) STMT_START{                                                         \
-    posix_memalign((void **)&(matrix)->data, 1024UL, (unsigned long)(matrix)->rows);           \
-                                                                                               \
-    register int i = 0;                                                                        \
-    while (i < (matrix)->rows) {                                                               \
-        posix_memalign((void **)&(matrix)->data[i], 1024UL, (unsigned long)(matrix)->columns); \
-        ++i;                                                   	                               \
-    }                                                                                          \
+#define allocSpace(matrix, r, cols) STMT_START{                                     \
+    posix_memalign((void **)&(matrix)->data, 1024UL, (unsigned long)(r));           \
+                                                                                    \
+    register int k = 0;                                                             \
+    while (k < (r)) {                                                               \
+        posix_memalign((void **)&(matrix)->data[k], 1024UL, (unsigned long)(cols)); \
+        ++k;                                                   	                    \
+    }                                                                               \
 }STMT_END
 
 static void json_strsplit(register float* result, const char* _str, const int columns) {
@@ -131,11 +131,11 @@ static void json_strsplit(register float* result, const char* _str, const int co
 }
 
 static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
-    json_object *t;
+    json_object *temp_json = NULL;
 
-    json_object_object_get_ex(j, key, &t);
+    json_object_object_get_ex(j, key, &temp_json);
 
-    return t;
+    return temp_json;
 }
 
 
@@ -156,27 +156,24 @@ static json_object* json_find(const json_object *__restrict const j, const char*
 Matrix* matrix_new_with_args(const int rows, const int columns) {
     Matrix *__matrix_m = NULL;
 
-    register const unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
-    register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
-
-    posix_memalign((void **)&__matrix_m, alignment, size);
+    /* assumed 0.001MB page sizes */
+    posix_memalign((void **)&__matrix_m, 1024UL, 1024UL);
 
     if (__matrix_m != NULL) {
         __matrix_m->rows = rows;
         __matrix_m->columns = columns;
 
-        allocSpace(__matrix_m);
+        allocSpace(__matrix_m, rows, columns);
 
         register float *ptr = &__matrix_m->data[0][0];
 
         register int end = rows * columns;
         PTR_START(end)
-            *ptr = 0;
+            *ptr = 0.F;
         PTR_END
 
         __matrix_m->len = i;
     }
-
 
     return __matrix_m;
 }
@@ -196,19 +193,17 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
 Matrix* matrix_new(void) {
     Matrix *__matrix_m = NULL;
 
-    register const unsigned long alignment = 256UL; /* assumed 0.00026MB page sizes */
-    register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
-
-    posix_memalign((void **)&__matrix_m, alignment, size);
+    /* assumed 0.00026MB page sizes */
+    posix_memalign((void **)&__matrix_m, 256UL, 256UL);
 
     if (__matrix_m != NULL) {
         __matrix_m->rows = 1;
         __matrix_m->columns = 1;
 
-        posix_memalign((void **)&__matrix_m->data, sizeof(float **), 1);
-        posix_memalign((void **)&__matrix_m->data[0], sizeof(float *), 1);
+        posix_memalign((void **)&__matrix_m->data, sizeof(float **), 1UL);
+        posix_memalign((void **)&__matrix_m->data[0], sizeof(float *), 1UL);
 
-        __matrix_m->data[0][0] = 0;
+        __matrix_m->data[0][0] = 0.F;
 
         __matrix_m->len = 1;
     }
@@ -234,16 +229,14 @@ Matrix* matrix_new(void) {
 Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
     Matrix *__matrix_m = NULL;
 
-    register const unsigned long alignment = 1024UL; /* assumed 0.001MB page sizes */
-    register unsigned long size = ((sizeof(Matrix) + alignment - 1UL) / alignment) * alignment; /* multiple of alignment */
-
-    posix_memalign((void **)&__matrix_m, alignment, size);
+    /* assumed 0.001MB page sizes */
+    posix_memalign((void **)&__matrix_m, 1024UL, 1024UL);
 
     if (__matrix_m != NULL) {
         __matrix_m->rows = __matrix_param->rows;
         __matrix_m->columns = __matrix_param->columns;
 
-        allocSpace(__matrix_m);
+        allocSpace(__matrix_m, __matrix_param->rows, __matrix_param->columns);
 
         register float *ptr             = &__matrix_m->data[0][0];
         register const float *ref_ptr   = &__matrix_param->data[0][0];
@@ -272,7 +265,6 @@ void matrix_free(register Matrix *__matrix_param) {
 
     PTR_START(__matrix_param->rows)
         posix_memalign_free(*ptr);
-        *ptr = NULL;
     PTR_END
 #endif
 
@@ -339,7 +331,7 @@ void matrix_multiply(register Matrix *a_param, const Matrix *const b_param) {
         a_param->rows       = b_param->rows;
         a_param->columns    = b_param->columns;
 
-        allocSpace(a_param);
+        allocSpace(a_param, b_param->rows, b_param->columns);
 
         register int i = 0;
         while (i < a_param->rows) {
@@ -442,17 +434,19 @@ void matrix_randomize(register Matrix *m_param) {
     unsigned int __random = buf[0];
 
     PTR_START(m_param->len)
-        *ptr = 0.F + (rand_r(&__random) * (1.F - 0.F) / RAND_MAX);
+        *ptr = (float)(rand_r(&__random) * 1.F / (float)RAND_MAX);
 #elif _WIN32
     UINT __random = 0U;
 
     BCryptGenRandom(NULL, (BYTE*)&__random, sizeof(UINT), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
 
     PTR_START(m_param->len)
-        *ptr = 0.F + (__random * (1.F - 0.F) / UINT_MAX);
+        *ptr = (float)(__random * 1.F / UINT_MAX);
 #else
+    unsigned int __random = arc4random();
+
     PTR_START(m_param->len)
-        *ptr = 0.F + (arc4random() * (1.F - 0.F) / (float)INT32_MAX);
+        *ptr = (float)rand_r(&__random) * 1.F / (float)RAND_MAX;
 #endif
 
     PTR_END
@@ -787,7 +781,7 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
     register float *ptr = &__matrix_m->data[0][0];
 
     register float* buf = (float *)malloc((unsigned long)__matrix_m->columns);
-    json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), 0)), __matrix_m->columns);
+    json_strsplit(buf, json_object_to_json_string_ext(json_object_array_get_idx(json_find(t_param, "data"), 0), JSON_C_TO_STRING_SPACED), __matrix_m->columns);
 
     register int i = 0;
     register int counter = 0;
@@ -801,7 +795,7 @@ Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
             ++i;
 
             if (i != __matrix_m->rows)
-                json_strsplit(buf, json_object_get_string(json_object_array_get_idx(json_find(t_param, "data"), (unsigned long)i)), __matrix_m->columns);
+                json_strsplit(buf, json_object_to_json_string_ext(json_object_array_get_idx(json_find(t_param, "data"), (unsigned long)i), JSON_C_TO_STRING_SPACED), __matrix_m->columns);
         }
     }
 

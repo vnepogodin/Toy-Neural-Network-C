@@ -12,16 +12,12 @@
  * The copyrights to the contents of this file are licensed under the MIT License
  * (http://www.opensource.org/licenses/mit-license.php)
  */
-
-#include "config.h"
-
 #include "printbuf.h"
 
-#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <string.h>
-#include <stdarg.h>
 
 struct _Printbuf {
     int bpos;
@@ -94,7 +90,15 @@ static int printbuf_extend(printbuf *p, const int min_size) {
 }
 
 printbuf* printbuf_new(void) {
+#ifdef DEBUG
+    printbuf *p = NULL;
+
+    /* assumed 0.0005MB page sizes */
+    posix_memalign((void **)&p, 512UL, 512UL);
+#else
     printbuf *p = (printbuf *)calloc(1UL, sizeof(printbuf));
+#endif
+
 	if (p == NULL)
 		return NULL;
 
@@ -147,49 +151,12 @@ int printbuf_memset(printbuf *pb, int offset, const int charvalue, const int len
 	return 0;
 }
 
-int sprintbuf(printbuf *p, const char* msg, ...) {
-    char buf[128] = { 0 };
-
-	/* user stack buffer first */
-    va_list ap;
-	va_start(ap, msg);
-    register int size = vsnprintf(buf, 128UL, msg, ap);
-	va_end(ap);
-	/* if string is greater than stack buffer, then use dynamic string
-	 * with vasprintf.  Note: some implementation of vsnprintf return -1
-	 * if output is truncated whereas some return the number of bytes that
-	 * would have been written - this code handles both cases.
-	 */
-	if ((size == -1) || (size > 127)) {
-        register const unsigned long length = strlen(msg) + 1;
-        char* t = (char *)malloc(length);
-
-		va_start(ap, msg);
-#ifdef _WIN32
-        size = vsprintf_s(&t, length, msg, ap);
-#else
-        size = vsnprintf(t, length, msg, ap);
-#endif
-		if (size < 0) {
-			va_end(ap);
-			return -1;
-		}
-		va_end(ap);
-
-		printbuf_memappend(p, t, size);
-		free(t);
-	} else
-		printbuf_memappend(p, buf, size);
-
-    return size;
-}
-
-void printbuf_reset(printbuf *p) {
+inline void printbuf_reset(printbuf *p) {
 	p->buf[0] = '\0';
 	p->bpos = 0;
 }
 
-void printbuf_free(printbuf *p) {
+inline void printbuf_free(printbuf *p) {
 	if (p != NULL) {
 		free(p->buf);
 		free(p);

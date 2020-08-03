@@ -15,10 +15,8 @@
 
 /**
  * @file
- * @brief Internal string buffer handing.  Unless you're writing a
- *        json_object_to_json_string_fn implementation for use with
- *        json_object_set_serializer() direct use of this is not
- *        recommended.
+ * @brief Internal string buffer handing.
+ *
  */
 #ifndef __PRINTBUF_H__
 #define __PRINTBUF_H__
@@ -50,7 +48,7 @@ JSON_EXPORT void printbuf_subPos(printbuf *, const int);
 
 JSON_EXPORT void printbuf_setBufInPos(printbuf *, const int, const char);
 
-JSON_EXPORT printbuf* printbuf_new(void);
+printbuf* printbuf_new(void);
 
 /* As an optimization, printbuf_memappend_fast() is defined as a macro
  * that handles copying data if the buffer is large enough; otherwise
@@ -60,7 +58,7 @@ JSON_EXPORT printbuf* printbuf_new(void);
  * Your code should not use printbuf_memappend() directly unless it
  * checks the return code. Use printbuf_memappend_fast() instead.
  */
-JSON_EXPORT int printbuf_memappend(printbuf *, const char*, int);
+JSON_EXPORT int printbuf_memappend(printbuf *, const char*, const int);
 
 #define printbuf_memappend_fast(p, bufptr, bufsize) do{             \
 		if ((printbuf_getSize(p) - printbuf_getPos(p)) > bufsize) { \
@@ -101,23 +99,7 @@ JSON_EXPORT int printbuf_memappend(printbuf *, const char*, int);
  *
  * If offset is -1, this starts at the end of the current data in the buffer.
  */
-JSON_EXPORT int printbuf_memset(printbuf *, int, const int, const int);
-
-/**
- * Formatted print to printbuf.
- *
- * This function is the most expensive of the available functions for appending
- * string data to a printbuf and should be used only where convenience is more
- * important than speed. Avoid using this function in high performance code or
- * tight loops; in these scenarios, consider using snprintf() with a static
- * buffer in conjunction with one of the printbuf_*append() functions.
- *
- * See also:
- *   printbuf_memappend_fast()
- *   printbuf_memappend()
- *   printbuf_strappend()
- */
-JSON_EXPORT int sprintbuf(printbuf *, const char*, ...);
+int printbuf_memset(printbuf *, int, const int, const int);
 
 JSON_EXPORT void printbuf_reset(printbuf *p);
 

@@ -29,11 +29,11 @@ static inline float dsigmoid(float y) {
 }
 
 static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
-    json_object *t;
+    json_object *temp_json;
 
-    json_object_object_get_ex(j, key, &t);
+    json_object_object_get_ex(j, key, &temp_json);
 
-    return t;
+    return temp_json;
 }
 
 #define convert_ActivationFunction(func) \
@@ -308,7 +308,7 @@ NeuralNetwork* neural_network_deserialize(const json_object *__restrict const __
     matrix_print(nn->weights_ih);
 #endif
 
-    neural_network_setLearningRate(nn, (float)json_object_get_double(json_find(__json_param, "learning_rate")));
+    neural_network_setLearningRate(nn, json_object_get_float(json_find(__json_param, "learning_rate")));
     neural_network_setActivationFunction(nn, json_object_get_int(json_find(__json_param, "activation_function")));
 
     return nn;

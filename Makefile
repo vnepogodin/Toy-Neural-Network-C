@@ -5,14 +5,15 @@ all : c cpp
 .PHONY : all
 
 c:
-	$(MAKE) -C src/c CC=$(CC)
+	@cmake -Wdev -S src/c -B src/c/cmake-build-debug
+	@make -C src/c/cmake-build-debug CC=$(CC)
 
 cpp:
-	$(MAKE) -C src/c++ CXX=$(CXX) CXXFLAGS=$(CXXFLAGS)
+	@make -C src/c++ CXX=$(CXX) CXXFLAGS=$(CXXFLAGS)
 
 clean:
-	$(MAKE) -C src/c clean
-	$(MAKE) -C src/c++ clean
+	@make -C src/c/cmake-build-debug clean
+	@make -C src/c++ clean
 run:
-	$(MAKE) -C src/c run
-	$(MAKE) -C src/c++ run
+	@make -C src/c/cmake-build-debug run
+	@make -C src/c++ run

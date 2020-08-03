@@ -8,62 +8,25 @@
  * it under the terms of the MIT license. See COPYING for details.
  *
  */
-
-#include "config.h"
-
 #include "arraylist.h"
 
+#include <stdlib.h> /* malloc, calloc */
 #include <limits.h>
-#include <stdlib.h>
 
 struct _Array_List {
     unsigned long length;
     unsigned long size;
 
-    void **array;
     void (*free_fn)(void*);
+
+    void **array;
 };
 
-array_list* array_list_new(void(*free_fn)(void*), const int initial_size) {
-    array_list *result = NULL;
-    array_list *arr = (array_list *)malloc(sizeof(array_list));
-	if (arr != NULL) {
-        arr->size = (unsigned long)initial_size;
-        arr->length = 0;
-        arr->free_fn = free_fn;
-        arr->array = (void **)malloc(arr->size * sizeof(void *));
-        if (arr->array != NULL)
-            result = arr;
-        else
-            free(arr);
-	}
-
-	return result;
-}
-
-void array_list_free(array_list *arr) {
-	register unsigned long i = 0UL;
-	while (i < arr->length) {
-	    if (arr->array[i] != NULL)
-		arr->free_fn(arr->array[i]);
-	    ++i;
-	}
-	free(arr->array);
-	free(arr);
-}
-
-void* array_list_get_idx(array_list *arr, const unsigned long i) {
-    register void* result = NULL; 
-	if (!(i >= arr->length))
-		return arr->array[i];
-
-	return result;
-}
 
 static int array_list_expand_internal(array_list *arr, const unsigned long max) {
     register int result = 0;
 
-	if (max >= arr->size) {
+    if (max >= arr->size) {
         register unsigned long new_size = 0UL;
         /* Avoid undefined behaviour on unsigned long overflow */
         if (arr->size >= ULONG_MAX / 2)
@@ -82,7 +45,55 @@ static int array_list_expand_internal(array_list *arr, const unsigned long max) 
                 result = 0;
             }
         }
+    }
+
+    return result;
+}
+
+
+array_list* array_list_new(void(*free_fn)(void*), const int initial_size) {
+    array_list *result = NULL;
+
+#ifdef DEBUG
+    array_list *arr = NULL;
+
+    /* assumed 0.002MB page sizes */
+    posix_memalign((void **)&arr, 2048UL, 2048UL);
+#else
+    array_list *arr = (array_list *)malloc(sizeof(array_list));
+#endif
+
+	if (arr != NULL) {
+        arr->size = (unsigned long)initial_size;
+        arr->length = 0;
+        arr->free_fn = free_fn;
+        arr->array = (void **)calloc((unsigned long)initial_size, 8UL);
+
+        if (arr->array != NULL)
+            result = arr;
+        else
+            free(arr);
 	}
+
+	return result;
+}
+
+void array_list_free(array_list *arr) {
+	register unsigned long i = 0UL;
+	while (i < arr->length) {
+	    if (arr->array[i] != NULL)
+	        arr->free_fn(arr->array[i]);
+
+	    ++i;
+	}
+	free(arr->array);
+	free(arr);
+}
+
+void* array_list_get_idx(array_list *arr, const unsigned long i) {
+    register void* result = NULL; 
+	if (i < arr->length)
+		return arr->array[i];
 
 	return result;
 }

@@ -35,15 +35,15 @@ class random_in_range {
  public:
     random_in_range() : rng(std::random_device()()) {}
 
-    auto operator()(int32_t low, int32_t high) -> float_t {
-        std::uniform_real_distribution<float_t> _realDistribution(low, high);
+    auto operator()() -> float_t {
+        std::uniform_real_distribution<float_t> _realDistribution(0.0, 1.0);
         return _realDistribution(rng);
     }
 };
 
 // Constructors
-Matrix::Matrix(const int32_t rows, const int32_t columns)
-    : rows(rows), columns(columns) {
+Matrix::Matrix(const int32_t r, const int32_t cols)
+    : rows(r), columns(cols) {
     this->allocSpace();
 
     float_t *ptr = &this->data[0][0];
@@ -193,7 +193,7 @@ void Matrix::randomize() {
     random_in_range r;
 
     PTR_START(this->len)
-        *ptr = r(0, 1);
+        *ptr = r();
     PTR_END
 }
 

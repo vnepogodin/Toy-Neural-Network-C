@@ -7,7 +7,7 @@
 class Matrix {
  public:
     // Constructors
-    Matrix(const int32_t rows, const int32_t columns);
+    Matrix(const int32_t, const int32_t);
     Matrix();
     Matrix(const Matrix &);
 

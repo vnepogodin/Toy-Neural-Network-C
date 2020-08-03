@@ -19,8 +19,6 @@
 #ifndef __LINKHASH_H__
 #define __LINKHASH_H__
 
-#include "json_object.h"
-
 /**
  * An entry in the hash table
  */
@@ -72,33 +70,10 @@ extern unsigned char lh_entry_getConstant(lh_entry *);
 
 extern lh_entry* lh_entry_getNext(lh_entry *);
 
-extern const void* lh_entry_getK(lh_entry *);
-extern const void* lh_entry_getV(lh_entry *);
+extern const void* lh_entry_getK(const lh_entry *);
+extern const void* lh_entry_getV(const lh_entry *);
 
 extern void lh_entry_setV(lh_entry *, const void*);
-
-/**
- * Create a new linkhash table.
- *
- * @param size initial table size. The table is automatically resized
- * although this incurs a performance penalty.
- * @param free_fn callback function used to free memory for entries
- * when lh_table_free or lh_table_delete is called.
- * If NULL is provided, then memory for keys and values
- * must be freed by the caller.
- * @param hash_fn  function used to hash keys. 2 standard ones are defined:
- * lh_ptr_hash and lh_char_hash for hashing pointer values
- * and C strings respectively.
- * @param equal_fn comparison function to compare keys. 2 standard ones defined:
- * lh_ptr_hash and lh_char_hash for comparing pointer values
- * and C strings respectively.
- * @return On success, a pointer to the new linkhash table is returned.
- * 	On error, a null pointer is returned.
- */
-extern lh_table* lh_table_new(const int,
-                              void (*const)(lh_entry *),
-                              unsigned long (*const)(const void*),
-                              int (*const)(const void*, const void*));
 
 /**
  * Convenience function to create a new linkhash table with char keys.
@@ -138,15 +113,6 @@ extern int lh_table_insert_w_hash(lh_table *, const void*, const void*,
                                   const unsigned long, const unsigned);
 
 /**
- * Lookup a record in the table.
- *
- * @param t the table to lookup
- * @param k a pointer to the key to lookup
- * @return a pointer to the record structure of the value or NULL if it does not exist.
- */
-extern lh_entry* lh_table_lookup_entry(lh_table *, const void*);
-
-/**
  * Lookup a record in the table using a precalculated key hash.
  *
  * The hash h, which should be calculated with lh_get_hash() on k, is provided by
@@ -158,7 +124,7 @@ extern lh_entry* lh_table_lookup_entry(lh_table *, const void*);
  * @param h hash value of the key to lookup
  * @return a pointer to the record structure of the value or NULL if it does not exist.
  */
-extern lh_entry* lh_table_lookup_entry_w_hash(lh_table *, const void*, const unsigned long);
+extern lh_entry* lh_table_lookup_entry_w_hash(const lh_table *, const void*, const unsigned long);
 
 /**
  * Lookup a record in the table.
@@ -168,18 +134,7 @@ extern lh_entry* lh_table_lookup_entry_w_hash(lh_table *, const void*, const uns
  * @param v a pointer to a where to store the found value (set to NULL if it doesn't exist).
  * @return whether or not the key was found
  */
-extern int lh_table_lookup_ex(lh_table *, const void*, void **);
-
-/**
- * Resizes the specified table.
- *
- * @param t Pointer to table to resize.
- * @param new_size New table size. Must be positive.
- *
- * @return On success, <code>0</code> is returned.
- * 	On error, a negative value is returned.
- */
-int lh_table_resize(lh_table *, int);
+extern unsigned int lh_table_lookup_ex(const lh_table *, const void*, void **);
 
 
 extern lh_entry* lh_table_getHead(const lh_table *const);
