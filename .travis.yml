@@ -251,4 +251,5 @@ script:
 
   # compile and execute unit tests
   - sh configure.sh
+  - pwd
   - make CC=/usr/bin/${COMPILER_CC} CXX=/usr/bin/${COMPILER_CXX} && make run
