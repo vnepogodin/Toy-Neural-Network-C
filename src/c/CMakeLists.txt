@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(Neural-Network-C C)
 
-set(CMAKE_C_STANDARD 90)
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_FLAGS "-ffast-math -Wall -Wextra -Wshadow -Wcast-align -Wunused -Wconversion -Wsign-conversion -Wformat=2")
 
 add_subdirectory(tests)
