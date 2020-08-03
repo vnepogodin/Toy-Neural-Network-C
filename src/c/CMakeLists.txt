@@ -38,6 +38,9 @@ if (BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
         set_target_properties(${STATIC_LIB} PROPERTIES
                 OUTPUT_NAME ${PROJECT_NAME})
     endif()
+
+    target_link_libraries(${STATIC_LIB} PRIVATE m)
+
     list(APPEND CMAKE_TARGETS ${STATIC_LIB})
 endif ()
 

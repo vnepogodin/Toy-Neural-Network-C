@@ -12,15 +12,11 @@ add_executable(${TESTNAME} ${TESTNAME}.c)
 add_test(NAME ${TESTNAME} COMMAND ${PROJECT_SOURCE_DIR}/tests/${TESTNAME}.test)
 
 # XXX using the non-target_ versions of these doesn't work :(
-target_include_directories(
-  ${TESTNAME}
-  PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}
-  )
-target_link_libraries(
-  ${TESTNAME}
-  PRIVATE
-    ${PROJECT_NAME}
-  )
+target_include_directories(${TESTNAME}
+    PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(${TESTNAME}
+    PRIVATE
+    ${PROJECT_NAME})
 
 endforeach(TESTNAME)

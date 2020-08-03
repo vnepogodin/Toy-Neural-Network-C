@@ -4,7 +4,7 @@
 #include "../../include/c/nn.h"
 
 #include <stdlib.h> /* malloc */
-#include <math.h> /* exp */
+#include <math.h> /* expf */
 
 struct _NeuralNetwork {
     /* Variables */
@@ -20,7 +20,7 @@ struct _NeuralNetwork {
 
 /* Non member functions */
 static inline float sigmoid(float x) {
-    return 1.F / (1.F + (float)exp((double)-x));
+    return 1.F / (1.F + expf(-x));
 }
 
 static inline float dsigmoid(float y) {
