@@ -346,9 +346,9 @@ static int json_object_double_to_json_string_format(json_object *jso, printbuf *
              *  unless a custom format is set to omit the decimal.
              */
 #ifdef _WIN32
-            strcat_s(buf, ".0", 2UL);
+            strcat_s(buf, ".0", 3UL);
 #else
-	    strncat(buf, ".0", 2UL);
+	    strncat(buf, ".0", 3UL);
 #endif
             size += 2;
         }
