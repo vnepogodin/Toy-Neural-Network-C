@@ -345,7 +345,11 @@ static int json_object_double_to_json_string_format(json_object *jso, printbuf *
             /* Ensure it looks like a float, even if snprintf didn't,
              *  unless a custom format is set to omit the decimal.
              */
-            strcat(buf, ".0");
+#ifdef _WIN32
+            strcat_s(buf, ".0", 2UL);
+#else
+	    strncat(buf, ".0", 2UL);
+#endif
             size += 2;
         }
 
