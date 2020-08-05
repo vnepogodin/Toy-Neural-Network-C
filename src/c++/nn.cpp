@@ -4,9 +4,7 @@
 
 #include <cmath>  // std::exp
 
-namespace nn {
-    using function = float_t (*const)(float_t);  // Function alias
-};
+using nn_function = float_t (*const)(float_t);  // Function alias
 
 // Non member functions
 static inline auto sigmoid(float_t x) -> float_t {
@@ -18,23 +16,23 @@ static inline auto dsigmoid(float_t y) -> float_t {
     return y * (1.F - y);
 }
 
-static inline int32_t convert_ActivationFunction(nn::function &func) {
+static inline int32_t convert_ActivationFunction(nn_function &func) {
     return (*(func) == dsigmoid) ? 2 : 1;
 }
 
 
 // Constructor
-NeuralNetwork::NeuralNetwork(const int32_t input_nodes, const int32_t hidden_nodes, const int32_t output_nodes)
-    : input_nodes(input_nodes), hidden_nodes(hidden_nodes), output_nodes(output_nodes),
+NeuralNetwork::NeuralNetwork(const int32_t &input, const int32_t &hidden, const int32_t &output)
+    : input_nodes(input), hidden_nodes(hidden), output_nodes(output),
       // Rate
       learning_rate(0.1F),
       // Function
       activation_function(&sigmoid),
       // Matrix
-      weights_ih(hidden_nodes, input_nodes),
-      weights_ho(output_nodes, hidden_nodes),
-      bias_h(hidden_nodes, 1),
-      bias_o(output_nodes, 1)
+      weights_ih(hidden, input),
+      weights_ho(output, hidden),
+      bias_h(hidden, 1),
+      bias_o(output, 1)
 {
     this->weights_ih.randomize();
     this->weights_ho.randomize();
@@ -56,15 +54,6 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork &a)
       bias_h(a.bias_h),
       bias_o(a.bias_o) {}
 
-// Destructor
-NeuralNetwork::~NeuralNetwork() {
-    this->activation_function = nullptr;
-
-    this->weights_ih.clear();
-    this->weights_ho.clear();
-    this->bias_h.clear();
-    this->bias_o.clear();
-}
 
 // Functions
 auto NeuralNetwork::predict(const float_t* const &input_array) const noexcept -> const float_t* {

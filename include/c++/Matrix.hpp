@@ -13,7 +13,6 @@ class Matrix {
 
     // Destructors
     ~Matrix() = default;
-    void clear();
 
     // Operators
     auto operator=(const Matrix &) -> Matrix& = default;

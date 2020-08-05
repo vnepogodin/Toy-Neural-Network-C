@@ -24,10 +24,10 @@ class NeuralNetwork {
  public:
     // Constructors
     NeuralNetwork(const NeuralNetwork &);
-    NeuralNetwork(const int32_t input_nodes, const int32_t hidden_nodes, const int32_t output_nodes);
+    NeuralNetwork(const int32_t &input_nodes, const int32_t &hidden_nodes, const int32_t &output_nodes);
 
     // Destructor
-    virtual ~NeuralNetwork();
+    virtual ~NeuralNetwork() = default;
 
     // Functions
     auto predict(const float_t* const &) const noexcept -> const float_t*;

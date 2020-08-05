@@ -23,9 +23,6 @@
 
 #ifdef _WIN32
 #  define posix_memalign(p, a, s) (((*(p)) = _aligned_malloc((s), (a))), *(p) ? 0 : errno)
-#  define posix_memalign_free _aligned_free
-#else
-#  define posix_memalign_free free
 #endif  // _WIN32
 
 
@@ -33,10 +30,12 @@ class random_in_range {
     std::mt19937 rng;
 
  public:
-    random_in_range() : rng(std::random_device()()) {}
+    random_in_range()
+	: rng(std::random_device()()) {}
 
     auto operator()() -> float_t {
         std::uniform_real_distribution<float_t> _realDistribution(0.0, 1.0);
+
         return _realDistribution(rng);
     }
 };
@@ -89,21 +88,6 @@ Matrix::Matrix(const Matrix &m)
     this->iterator = ptr;
 
     this->len = i.load(std::memory_order_consume);
-}
-
-// Destructor
-void Matrix::clear() {
-#ifdef __APPLE__
-    int32_t i = 0;
-    while (i < this->rows) {
-        posix_memalign_free(this->data[i]);
-        ++i;
-    }
-#endif  // __APPLE__
-
-    posix_memalign_free(this->data);
-
-    this->data = nullptr;
 }
 
 // Operators
@@ -300,7 +284,6 @@ auto Matrix::transpose(const Matrix &m) -> Matrix {
 
 auto Matrix::multiply(const Matrix &a, const Matrix &b) -> Matrix {
     Matrix t;
-    t.clear();
 
     // Matrix product
     if (a.columns != b.rows) {
@@ -344,7 +327,6 @@ auto Matrix::multiply(const Matrix &a, const Matrix &b) -> Matrix {
 
 auto Matrix::subtract(const Matrix &a, const Matrix &b) -> Matrix {
     Matrix t;
-    t.clear();
 
     if (a.columns >= b.rows) {
         t = Matrix(b.rows, b.columns);
