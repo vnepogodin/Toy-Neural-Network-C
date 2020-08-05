@@ -26,6 +26,9 @@
 #endif  // _WIN32
 
 
+using matrix_function = float_t (*const)(float_t);  // Function alias
+
+
 class random_in_range {
     std::mt19937 rng;
 
@@ -41,7 +44,7 @@ class random_in_range {
 };
 
 // Constructors
-Matrix::Matrix(const int32_t r, const int32_t cols)
+Matrix::Matrix(const int32_t& r, const int32_t& cols)
     : rows(r), columns(cols) {
     this->allocSpace();
 
@@ -72,7 +75,7 @@ Matrix::Matrix()
 
 // Copy constructor
 //
-Matrix::Matrix(const Matrix &m)
+Matrix::Matrix(const Matrix& m)
     : rows(m.rows), columns(m.columns) {
     this->allocSpace();
 
@@ -91,7 +94,7 @@ Matrix::Matrix(const Matrix &m)
 }
 
 // Operators
-auto Matrix::operator-=(const Matrix &m) -> Matrix& {
+auto Matrix::operator-=(const Matrix& m) -> Matrix& {
     float_t *ptr         = &this->data[0][0];
     const float_t *m_ptr = &m.data[0][0];
 
@@ -104,7 +107,7 @@ auto Matrix::operator-=(const Matrix &m) -> Matrix& {
     return *this;
 }
 
-auto Matrix::operator*=(const Matrix &m) -> Matrix& {
+auto Matrix::operator*=(const Matrix& m) -> Matrix& {
     if (this->columns <= m.rows) {
         this->rows    = m.rows;
         this->columns = m.columns;
@@ -141,14 +144,14 @@ auto Matrix::operator*=(const Matrix &m) -> Matrix& {
 // Non member operator
 auto operator<<(std::ostream& stream, const Matrix& m) -> std::ostream& {
     int32_t counter = 0;
-    for (auto i : m) {
+    for (auto& i : m) {
         stream << i << " ";
 
-        counter++;
+        ++counter;
         if (counter == m.columns) {
             counter = 0;
 
-            if (&i != m.end())
+            if ((&i + 1) != m.end())
                 stream << "\n";
         }
     }
@@ -223,7 +226,7 @@ void Matrix::multiply(const float_t &num) {
     PTR_END
 }
 
-void Matrix::map(float_t (*const func)(float)) {
+void Matrix::map(matrix_function &func) {
     // Apply a function to every element of matrix
     float_t *ptr = &this->data[0][0];
 
@@ -238,7 +241,7 @@ auto Matrix::serialize() const noexcept -> const nlohmann::json {
     nlohmann::json temp_arr = nlohmann::json::array();
 
     int32_t counter = 0;
-    for (auto i : *this) {
+    for (auto& i : *this) {
         temp_arr += i;
         counter++;
 
@@ -255,7 +258,7 @@ auto Matrix::serialize() const noexcept -> const nlohmann::json {
 
 
 // Static functions
-auto Matrix::fromArray(const float_t* const &arr) -> Matrix {
+auto Matrix::fromArray(const float_t* const& arr) -> Matrix {
     Matrix t(2, 1);
 
     float_t *ptr = &t.data[0][0];
@@ -267,7 +270,7 @@ auto Matrix::fromArray(const float_t* const &arr) -> Matrix {
     return t;
 }
 
-auto Matrix::transpose(const Matrix &m) -> Matrix {
+auto Matrix::transpose(const Matrix& m) -> Matrix {
     Matrix t(m.rows, m.columns);
 
     float_t *ptr         = &t.data[0][0];
@@ -282,7 +285,7 @@ auto Matrix::transpose(const Matrix &m) -> Matrix {
     return t;
 }
 
-auto Matrix::multiply(const Matrix &a, const Matrix &b) -> Matrix {
+auto Matrix::multiply(const Matrix& a, const Matrix& b) -> Matrix {
     Matrix t;
 
     // Matrix product
@@ -325,7 +328,7 @@ auto Matrix::multiply(const Matrix &a, const Matrix &b) -> Matrix {
     return t;
 }
 
-auto Matrix::subtract(const Matrix &a, const Matrix &b) -> Matrix {
+auto Matrix::subtract(const Matrix& a, const Matrix& b) -> Matrix {
     Matrix t;
 
     if (a.columns >= b.rows) {
@@ -348,7 +351,7 @@ auto Matrix::subtract(const Matrix &a, const Matrix &b) -> Matrix {
     return t;
 }
 
-auto Matrix::map(const Matrix &m, float_t (*const func)(float)) -> Matrix {
+auto Matrix::map(const Matrix& m, matrix_function &func) -> Matrix {
     Matrix t(m.rows, m.columns);
 
     float_t *ptr          = &t.data[0][0];
@@ -363,7 +366,7 @@ auto Matrix::map(const Matrix &m, float_t (*const func)(float)) -> Matrix {
     return t;
 }
 
-auto Matrix::deserialize(const nlohmann::json &t) -> Matrix {
+auto Matrix::deserialize(const nlohmann::json& t) -> Matrix {
     Matrix m(t["rows"].get<int32_t>(),
              t["columns"].get<int32_t>());
  
