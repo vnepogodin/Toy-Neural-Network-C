@@ -1,15 +1,17 @@
-#include "../../../include/c++/nn.hpp"
+#include "../../../include/c++/nn.hpp"  // class NeuralNetwork
 
-#include <iostream>
+#include <iostream>  // std::cout
 
 auto main() -> int {
-    NeuralNetwork nn(5, 25, 1);
+    NeuralNetwork nn(2, 4, 1);
 
-    const float input[] = { 1.F, 0.F };
+    const float_t input[2] { 1.F, 0.F };
 
-    const float* output = nn.predict(input);
+    const auto output = nn.predict(input);
 
     std::cout << output[0] << "\n";
+
+    delete[] output;
 
     return 0;
 }

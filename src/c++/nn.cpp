@@ -56,18 +56,18 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork &a)
 
 
 // Functions
-auto NeuralNetwork::predict(const float_t* const &input_array) const noexcept -> const float_t* {
+auto NeuralNetwork::predict(const float_t* const &input_array) const noexcept -> float_t* {
     // Generating the Hidden Outputs
-    Matrix inputs = Matrix::fromArray(input_array);
+    const Matrix inputs = Matrix::fromArray(input_array, this->input_nodes);
     Matrix hidden = Matrix::multiply(this->weights_ih, inputs);
-    hidden.add(this->bias_h);
+    hidden += this->bias_h;
 
     // activation function!
     hidden.map(this->activation_function);
 
     // Generating the output's output!
     Matrix output = Matrix::multiply(this->weights_ho, hidden);
-    output.add(this->bias_o);
+    output += this->bias_o;
     output.map(this->activation_function);
 
     // Sending back to the caller!
@@ -83,72 +83,70 @@ void NeuralNetwork::setLearningRate(const float_t &lr) {
 
 // Setting function
 //
-void NeuralNetwork::setActivationFunction(const int32_t &flag) {
+void NeuralNetwork::setActivationFunction(const uint8_t &flag) {
     this->activation_function = nullptr;
 
-    if (flag == FUNC_SIGMOID)
+    if (flag & FUNC_SIGMOID)
         this->activation_function = sigmoid;
-    else if (flag == FUNC_DSIGMOID)
+    else if (flag & FUNC_DSIGMOID)
         this->activation_function = dsigmoid;
 }
 
 
 // Training neural network
 //
-void NeuralNetwork::train(const float_t* const &input_array, const float* const &target_array) {
+void NeuralNetwork::train(const float_t* const &input_array, const float_t* const& target_array) {
     // Generating the Hidden Outputs
-    Matrix inputs = Matrix::fromArray(input_array);
+    const Matrix inputs = Matrix::fromArray(input_array, this->input_nodes);
     Matrix hidden = Matrix::multiply(this->weights_ih, inputs);
-    hidden.add(this->bias_h);
+    hidden += this->bias_h;
     // activation function!
-    hidden.map(this->activation_function);
+    hidden.map(sigmoid);
 
     // Generating the output's output!
     Matrix outputs = Matrix::multiply(this->weights_ho, hidden);
-    outputs.add(this->bias_o);
-    outputs.map(this->activation_function);
+    outputs += this->bias_o;
+    outputs.map(sigmoid);
 
     // Convert array to matrix object
-    Matrix targets = Matrix::fromArray(target_array);
+    const Matrix targets = Matrix::fromArray(target_array, this->output_nodes);
 
     // Calculate the error
     // ERROR = TARGETS - OUTPUTS
-    Matrix output_errors = Matrix::subtract(targets, outputs);
+    const Matrix output_errors = Matrix::subtract(targets, outputs);
 
     // let gradient = outputs * (1 - outputs);
     // Calculate gradient
-    Matrix gradients = Matrix::map(outputs, this->activation_function);
+    Matrix gradients = Matrix::map(outputs, dsigmoid);
     gradients *= output_errors;
-    gradients.multiply(this->learning_rate);
+    gradients *= this->learning_rate;
 
 
     // Calculate deltas
-    Matrix hidden_T = Matrix::transpose(hidden);
-    Matrix weight_ho_deltas = Matrix::multiply(gradients, hidden_T);
+    const Matrix hidden_T = Matrix::transpose(hidden);
+    const Matrix weight_ho_deltas = Matrix::multiply(gradients, hidden_T);
 
     // Adjust the weights by deltas
-    this->weights_ho.add(weight_ho_deltas);
+    this->weights_ho += weight_ho_deltas;
     // Adjust the bias by its deltas (which is just the gradients)
-    this->bias_o.add(gradients);
+    this->bias_o += gradients;
 
     // Calculate the hidden layer errors
-    Matrix who_t = Matrix::transpose(this->weights_ho);
-    Matrix hidden_errors = Matrix::multiply(who_t, output_errors);
+    const Matrix who_t = Matrix::transpose(this->weights_ho);
+    const Matrix hidden_errors = Matrix::multiply(who_t, output_errors);
 
     // Calculate hidden gradient
-    Matrix hidden_gradient = Matrix::map(hidden, this->activation_function);
-
-    // FIXME
-    hidden_gradient.add(hidden_errors);
-    hidden_gradient.add(this->learning_rate);
+    Matrix hidden_gradient = Matrix::map(hidden, dsigmoid);
+    hidden_gradient *= hidden_errors;
+    hidden_gradient *= this->learning_rate;
 
     // Calcuate input->hidden deltas
-    Matrix inputs_T = Matrix::transpose(inputs);
-    Matrix weight_ih_deltas = Matrix::multiply(hidden_gradient, inputs_T);
+    const Matrix inputs_T = Matrix::transpose(inputs);
+    const Matrix weight_ih_deltas = Matrix::multiply(hidden_gradient, inputs_T);
 
-    this->weights_ih.add(weight_ih_deltas);
+    this->weights_ih += weight_ih_deltas;
     // Adjust the bias by its deltas (which is just the gradients)
-    this->bias_h.add(hidden_gradient);
+    this->bias_h += hidden_gradient;
 }
 
 
@@ -175,9 +173,9 @@ auto NeuralNetwork::serialize() const -> const nlohmann::json {
 // Deserialize from JSON
 //
 auto NeuralNetwork::deserialize(const nlohmann::json &t) -> NeuralNetwork {
-    NeuralNetwork nn = NeuralNetwork(t["input_nodes"].get<int32_t>(),
-                                     t["hidden_nodes"].get<int32_t>(),
-                                     t["output_nodes"].get<int32_t>());
+    NeuralNetwork nn(t["input_nodes"].get<int32_t>(),
+                     t["hidden_nodes"].get<int32_t>(),
+                     t["output_nodes"].get<int32_t>());
 
     nn.weights_ih = Matrix::deserialize(t["weights_ih"]);
     nn.weights_ho = Matrix::deserialize(t["weights_ho"]);

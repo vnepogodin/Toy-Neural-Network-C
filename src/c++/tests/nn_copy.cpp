@@ -1,7 +1,7 @@
-#include "../../../include/c++/nn.hpp"
+#include "../../../include/c++/nn.hpp"  // class NeuralNetwork
 
 auto main() -> int {
-    NeuralNetwork nn(5, 25, 1);
+    NeuralNetwork nn(2, 4, 1);
 
     NeuralNetwork temp(nn);
 

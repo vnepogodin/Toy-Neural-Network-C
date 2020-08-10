@@ -6,19 +6,19 @@
 
 /**
  * FUNC_SIGMOID:
- * @see nn.c 21-23.
+ * @see nn.cpp 21-23.
  *
  * Flag to sigmoid float_t function.
  */
-#define FUNC_SIGMOID 1
+#define FUNC_SIGMOID 0x01U
 
 /**
  * FUNC_DSIGMOID:
- * @see nn.c 25-28.
+ * @see nn.cpp 25-28.
  *
  * Flag to dsigmoid float_t function.
  */
-#define FUNC_DSIGMOID 2
+#define FUNC_DSIGMOID 0x02U
 
 class NeuralNetwork {
  public:
@@ -30,10 +30,10 @@ class NeuralNetwork {
     virtual ~NeuralNetwork() = default;
 
     // Functions
-    auto predict(const float_t* const &) const noexcept -> const float_t*;
-    void setLearningRate(const float_t &);
-    void setActivationFunction(const int32_t &);
-    void train(const float_t* const &, const float_t* const &);
+    auto predict(const float_t* const &) const noexcept -> float_t*;
+    void setLearningRate(const float_t&);
+    void setActivationFunction(const uint8_t&);
+    void train(const float_t* const&, const float_t* const&);
     auto serialize() const -> const nlohmann::json;
 
     // Static function
