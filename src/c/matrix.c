@@ -274,19 +274,17 @@ void matrix_add_float(register Matrix *a_param, const float num_param) {
  *
  */
 void matrix_add_matrix(register Matrix *a_param, const Matrix *const b_param) {
-    if ((a_param->rows != b_param->rows) || (a_param->columns != b_param->columns)) {
+    if ((a_param->rows == b_param->rows) || (a_param->columns == b_param->columns)) {
+        register float *ptr           = &a_param->data[0];
+        register const float *ref_ptr = &b_param->data[0];
+
+        PTR_START(a_param->len)
+            *ptr += *ref_ptr;
+
+            ++ref_ptr;
+        PTR_END
+    } else
         printf("Columns and Rows of A must match Columns and Rows of B.\n");
-        return;
-    }
-
-    register float *ptr           = &a_param->data[0];
-    register const float *ref_ptr = &b_param->data[0];
-
-    PTR_START(a_param->len)
-        *ptr += *ref_ptr;
-
-        ++ref_ptr;
-    PTR_END
 }
 
 /**
@@ -303,19 +301,17 @@ void matrix_add_matrix(register Matrix *a_param, const Matrix *const b_param) {
  *
  */
 void matrix_multiply(register Matrix *a_param, const Matrix *const b_param) {
-    if ((a_param->rows != b_param->rows) || (a_param->columns != b_param->columns)) {
+    if ((a_param->rows == b_param->rows) || (a_param->columns == b_param->columns)) {
+        register float *ptr         = &a_param->data[0];
+        register const float *b_ptr = &b_param->data[0];
+
+        PTR_START(a_param->len)
+            *ptr *= *b_ptr;
+
+            ++b_ptr;
+        PTR_END
+    } else
         printf("Columns and Rows of A must match Columns and Rows of B.\n");
-        return;
-    }
-
-    register float *ptr         = &a_param->data[0];
-    register const float *b_ptr = &b_param->data[0];
-
-    PTR_START(a_param->len)
-        *ptr *= *b_ptr;
-
-        ++b_ptr;
-    PTR_END
 }
 
 /**
