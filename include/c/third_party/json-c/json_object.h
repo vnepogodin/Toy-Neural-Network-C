@@ -9,19 +9,9 @@
  * it under the terms of the MIT license. See COPYING for details.
  *
  */
-
-/**
- * @file
- * @brief Core json-c API.  Start here, or with json_tokener.h
- */
 #ifndef __JSON_OBJECT_H__
 #define __JSON_OBJECT_H__
 
-
-
-/**
-* @brief The core type for all type of JSON objects handled by json-c
-*/
 typedef struct _Json_Object json_object;
 
 #define JSON_OBJECT_DEF_HASH_ENTRIES 16
@@ -130,19 +120,19 @@ extern json_object* json_object_get(json_object *obj);
  *
  * NULL may be passed, which which case this is a no-op.
  *
- * @param obj the json_object instance
+ * @param obj The json_object instance
  * @returns 1 if the object was freed.
  * @see json_object_get()
  */
-int json_object_put(json_object *obj);
+int json_object_put(json_object *);
 
 /** Stringify object to json format
  * @see json_object_to_json_string() for details on how to free string.
- * @param obj the json_object instance
+ * @param obj The json_object instance
  * @param flags formatting options, see JSON_C_TO_STRING_PRETTY and other constants
  * @returns a string in JSON format
  */
-const char* json_object_to_json_string_ext(json_object *obj, const int flags);
+const char* json_object_to_json_string_ext(json_object *, const int);
 
 /* object type methods */
 
@@ -165,14 +155,14 @@ extern json_object* json_object_new_object(void);
  * of processing. See the description of JSON_C_OBJECT_ADD_* flags for more
  * details.
  *
- * @param obj the json_object instance
- * @param key the object field name (a private copy will be duplicated)
+ * @param obj The json_object instance
+ * @param key The object field name (a private copy will be duplicated)
  * @param val a json_object or NULL member to associate with the given field
  * @param opts process-modifying options. To specify multiple options, use
  *             (OPT1|OPT2)
  */
-int json_object_object_add_ex(json_object *obj, const char* const key,
-                              json_object *const val, const unsigned opts);
+int json_object_object_add_ex(json_object *, const char* const,
+                              json_object *const, const unsigned);
 
 /** Get the json_object associated with a given object field.
  *
@@ -184,26 +174,26 @@ int json_object_object_add_ex(json_object *obj, const char* const key,
  * you need to have the child (value) reference maintain a different lifetime
  * than the owning parent (obj).  Ownership of value is retained by obj.
  *
- * @param obj the json_object instance
- * @param key the object field name
+ * @param obj The json_object instance
+ * @param key The object field name
  * @param value a pointer where to store a reference to the json_object
  *              associated with the given field name.
  *
  *              It is safe to pass a NULL value.
  * @returns whether or not the key exists
  */
-extern unsigned int json_object_object_get_ex(const json_object *obj, const char* key,
-                                                         json_object **value);
+extern unsigned int json_object_object_get_ex(const json_object *, const char*,
+                                              json_object **);
 
 /* Array type methods */
 
 /** Create a new empty json_object of type json_type_array
  * with the desired number of slots allocated.
  * @see json_object_array_shrink()
- * @param initial_size the number of slots to allocate
+ * @param initial_size The number of slots to allocate
  * @returns a json_object of type json_type_array
  */
-extern json_object *json_object_new_array_ext(const int initial_size);
+extern json_object *json_object_new_array_ext(const int);
 
 
 /** Add an element to the end of a json_object of type json_type_array
@@ -212,10 +202,10 @@ extern json_object *json_object_new_array_ext(const int initial_size);
  * fields to objects in code more compact. If you want to retain a reference
  * to an added object you must wrap the passed object with json_object_get
  *
- * @param obj the json_object instance
- * @param val the json_object to be added
+ * @param obj The json_object instance
+ * @param val The json_object to be added
  */
-extern int json_object_array_add(json_object *obj, json_object *val);
+extern int json_object_array_add(json_object *, json_object *);
 
 /** Get the element at specified index of array `obj` (which must be a json_object of type json_type_array)
  *
@@ -226,42 +216,42 @@ extern int json_object_array_add(json_object *obj, json_object *val);
  * Calling this with anything other than a json_type_array will trigger
  * an assert.
  *
- * @param obj the json_object instance
- * @param idx the index to get the element at
- * @returns the json_object at the specified index (or NULL)
+ * @param obj The json_object instance
+ * @param idx The index to get the element at
+ * @returns The json_object at the specified index (or NULL)
  */
-extern json_object* json_object_array_get_idx(const json_object *obj, unsigned long idx);
+extern json_object* json_object_array_get_idx(const json_object *, unsigned long);
 
 /**
  * Shrink the internal memory allocation of the array to just
  * enough to fit the number of elements in it, plus empty_slots.
  *
- * @param jso the json_object instance, must be json_type_array
- * @param empty_slots the number of empty slots to leave allocated
+ * @param jso The json_object instance, must be json_type_array
+ * @param empty_slots The number of empty slots to leave allocated
  */
-extern int json_object_array_shrink(json_object *jso, const int empty_slots);
+extern int json_object_array_shrink(json_object *, const int);
 
 /* int type methods */
 
 /** Create a new empty json_object of type json_type_int
  * Note that values are stored as 64-bit values internally.
  * To ensure the full range is maintained, use json_object_new_int64 instead.
- * @param i the integer
+ * @param i The integer
  * @returns a json_object of type json_type_int
  */
-extern json_object* json_object_new_int(const int i);
+extern json_object* json_object_new_int(const int);
 
 /** Create a new empty json_object of type json_type_int
- * @param i the integer
+ * @param i The integer
  * @returns a json_object of type json_type_int
  */
-extern json_object* json_object_new_int64(const long long i);
+extern json_object* json_object_new_int64(const long long);
 
 /** Create a new empty json_object of type json_type_uint
- * @param i the integer
+ * @param i The integer
  * @returns a json_object of type json_type_uint
  */
-extern json_object* json_object_new_uint64(const unsigned long long i);
+extern json_object* json_object_new_uint64(const unsigned long long);
 
 /** Get the int value of a json_object
  *
@@ -274,10 +264,10 @@ extern json_object* json_object_new_uint64(const unsigned long long i);
  * If the value of too big or too small to fit into 32-bit, INT32_MAX or
  * INT32_MIN are returned, respectively.
  *
- * @param obj the json_object instance
+ * @param obj The json_object instance
  * @returns an int
  */
-int json_object_get_int(const json_object *obj);
+int json_object_get_int(const json_object *);
 
 /* double type methods */
 
@@ -285,10 +275,10 @@ int json_object_get_int(const json_object *obj);
  *
  * @see json_object_double_to_json_string() for how to set a custom format string.
  *
- * @param d the double
+ * @param d The double
  * @returns a json_object of type json_type_double
  */
-extern json_object* json_object_new_double(const double d);
+extern json_object* json_object_new_double(const double);
 
 /**
  * Create a new json_object of type json_type_double, using
@@ -314,17 +304,17 @@ extern json_object* json_object_new_double(const double d);
  *       strdup(ds), json_object_free_userdata);
  * @endcode
  *
- * @param d the numeric value of the double.
- * @param ds the string representation of the double.  This will be copied.
+ * @param d The numeric value of the double.
+ * @param ds The string representation of the double.  This will be copied.
  */
-json_object* json_object_new_double_s(const double d, const char* ds);
+json_object* json_object_new_double_s(const double, const char*);
 
 /** Get the floating point value of a json_object
  *
- * @param obj the json_object instance
+ * @param obj The json_object instance
  * @returns a floating point number
  */
-float json_object_get_float(const json_object *obj);
+float json_object_get_float(const json_object *);
 
 #ifdef __cplusplus
 }

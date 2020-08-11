@@ -6,7 +6,7 @@
 
 /**
  * FUNC_SIGMOID:
- * @see nn.cpp 21-23.
+ * @see nn.cpp 10-12.
  *
  * Flag to sigmoid float_t function.
  */
@@ -14,7 +14,7 @@
 
 /**
  * FUNC_DSIGMOID:
- * @see nn.cpp 25-28.
+ * @see nn.cpp 14-17.
  *
  * Flag to dsigmoid float_t function.
  */

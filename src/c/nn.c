@@ -3,8 +3,8 @@
 #include "../../include/c/matrix.h"
 #include "../../include/c/nn.h"
 
-#include <stdlib.h> /* malloc */
-#include <math.h> /* expf */
+#include <stdlib.h>  /* malloc */
+#include <math.h>  /* expf */
 
 struct _NeuralNetwork {
     /* Variables */
@@ -42,12 +42,10 @@ static json_object* json_find(const json_object *__restrict const j,
 
 
 /**
- * neural_network_new_with_nn:
- * @a: a reference #NeuralNetwork.
+ * Creates new #NeuralNetwork with data of `nn`.
+ * @param nn The reference #NeuralNetwork.
+ * @returns The new #NeuralNetwork
  *
- * Creates a new #NeuralNetwork with data of @a.
- *
- * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param) {
     register NeuralNetwork *__nn_temp = (NeuralNetwork *)malloc(56UL);
@@ -71,14 +69,12 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param)
 }
 
 /**
- * neural_network_new_with_args:
- * @input_nodes: a const num input.
- * @hidden_nodes: a const num hidden.
- * @output_nodes: a const num output.
+ * Creates a new #NeuralNetwork with random data.
+ * @param input_nodes The input.
+ * @param hidden_nodes The hidden.
+ * @param output_nodes The output.
+ * @returns The new #NeuralNetwork
  *
- * Creates a new #NeuralNetwork with random data of #Matrix.
- *
- * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_new_with_args(const int input_nodes,
                                             const int hidden_nodes,
@@ -107,10 +103,8 @@ NeuralNetwork* neural_network_new_with_args(const int input_nodes,
 }
 
 /**
- * neural_network_free:
- * @nn: a #NeuralNetwork.
- *
  * Frees #NeuralNetwork.
+ * @param nn The #NeuralNetwork.
  *
  */
 void neural_network_free(register NeuralNetwork *__restrict __nn_param) {
@@ -125,13 +119,11 @@ void neural_network_free(register NeuralNetwork *__restrict __nn_param) {
 }
 
 /**
- * neural_network_predict:
- * @nn: a reference #NeuralNetwork.
- * @input_array: a input data.
- *
  * Output of #NeuralNetwork.
+ * @param nn The reference #NeuralNetwork.
+ * @param input_array The input data.
+ * @returns float array
  *
- * Returns: float array
  */
 float* neural_network_predict(const NeuralNetwork *const nn,
                               const float* __restrict const input_array) {
@@ -158,11 +150,9 @@ float* neural_network_predict(const NeuralNetwork *const nn,
 }
 
 /**
- * neural_network_setLearningRate:
- * @nn: a #NeuralNetwork.
- * @lr: a learning rate of neural network.
- *
  * Setting learning rate.
+ * @param nn The #NeuralNetwork.
+ * @param lr The learning rate of neural network.
  *
  */
 void neural_network_setLearningRate(register NeuralNetwork *__restrict nn,
@@ -171,11 +161,9 @@ void neural_network_setLearningRate(register NeuralNetwork *__restrict nn,
 }
 
 /**
- * neural_network_setActivationFunction:
- * @nn: a #NeuralNetwork.
- * @flag: a some function.
- *
  * Setting function.
+ * @param nn The #NeuralNetwork.
+ * @param flag The some function.
  *
  */
 void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn,
@@ -189,12 +177,10 @@ void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn,
 }
 
 /**
- * neural_network_train:
- * @nn: a #NeuralNetwork.
- * @input_array: a input data.
- * @target_array: a output data.
- *
- * Trains a neural network.
+ * Trains neural network.
+ * @param nn The #NeuralNetwork.
+ * @param input_array The input data.
+ * @param target_array The output data.
  *
  */
 void neural_network_train(register NeuralNetwork *nn,
@@ -271,12 +257,10 @@ void neural_network_train(register NeuralNetwork *nn,
 
 
 /**
- * neural_network_serialize:
- * @nn: a reference #NeuralNetwork.
- *
  * Serialize #Matrix to JSON.
+ * @param nn The reference #NeuralNetwork.
+ * @returns The new #json_object
  *
- * Returns: the new #json_object
  */
 json_object* neural_network_serialize(const NeuralNetwork *__restrict const __nn_param) {
     register json_object *t = json_object_new_object();
@@ -301,12 +285,10 @@ json_object* neural_network_serialize(const NeuralNetwork *__restrict const __nn
 }
 
 /**
- * neural_network_deserialize:
- * @t: The reference #json_object.
- *
  * Deserialize JSON.
+ * @param json The reference #json_object.
+ * @returns The new #NeuralNetwork
  *
- * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_deserialize(const json_object *__restrict const __json_param) {
     register NeuralNetwork *nn = (NeuralNetwork *)malloc(57);

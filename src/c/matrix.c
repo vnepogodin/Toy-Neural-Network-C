@@ -24,32 +24,24 @@ struct _Matrix {
 
 
 /**
- * STMT_START:
- *
  * Used within multi-statement macros so that they can be used in places
  * where only one statement is expected by the compiler.
  */
 #define STMT_START do
 
 /**
- * STMT_END:
- *
  * Used within multi-statement macros so that they can be used in places
  * where only one statement is expected by the compiler.
  */
 #define STMT_END while(0)
 
 /**
- * PTR_START(end):
- *
  * Used within multi-statement macros so that they can be used in places
  * where only one statement is expected by the compiler.
  */
 #define PTR_START(end) register int i = 0; while (i < (end)) {
 
 /**
- * PTR_END:
- *
  * Used within multi-statement macros so that they can be used in places
  * where only one statement is expected by the compiler.
  */
@@ -60,7 +52,7 @@ struct _Matrix {
 #  define posix_memalign_free _aligned_free
 #else
 #  define posix_memalign_free free
-#endif /* _WIN32 */
+#endif  /* _WIN32 */
 
 
 /* Non member functions */
@@ -134,18 +126,16 @@ static json_object* json_find(const json_object *__restrict const j, const char*
 
 
 /**
- * matrix_new_with_args:
- * @rows:    a const rows    of matrix.
- * @columns: a const columns of matrix.
- * @example:
- *				2 rows, 3 columns
- *
- *				   [0][0][0]
- *				   [0][0][0]
- *
  * Creates a new #Matrix with an all data = 0.
+ * @param rows The rows of matrix.
+ * @param columns The columns of matrix.
+ * @returns The new #Matrix
+ * @example
+ *        2 rows, 3 columns
  *
- * Returns: the new #Matrix
+ *           [0][0][0]
+ *           [0][0][0]
+ *
  */
 Matrix* matrix_new_with_args(const int rows, const int columns) {
     Matrix *__matrix_m = NULL;
@@ -173,16 +163,14 @@ Matrix* matrix_new_with_args(const int rows, const int columns) {
 }
 
 /**
- * matrix_new:
- * @example:
- *				1 rows, 1 columns
- *
- *				      [0]
- *
  * Creates a new #Matrix with 1 rows and 1 columns,
  * and with an all data = 0.
+ * @returns The new #Matrix
+ * @example
+ *        1 rows, 1 columns
  *
- * Returns: the new #Matrix
+ *              [0]
+ *
  */
 Matrix* matrix_new(void) {
     Matrix *__matrix_m = NULL;
@@ -205,19 +193,16 @@ Matrix* matrix_new(void) {
 }
 
 /**
- * matrix_new_with_matrix:
- * @__matrix: a const #Matrix.
- * @example:
- *
- *		2 rows, 1 columns  ->	2 rows, 1 columns
- *
- *			  [232]		   ->		 [232]
- *			  [21]		   ->		 [21]
- *
  * Creates a new #Matrix with reference rows and columns,
  * and with a reference data.
+ * @param matrix The const #Matrix.
+ * @returns The new #Matrix
+ * @example
+ *        2 rows, 1 columns  ->  2 rows, 1 columns
  *
- * Returns: the new #Matrix
+ *            [232]          ->        [232]
+ *            [21]           ->        [21]
+ *
  */
 Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
     Matrix *__matrix_m = NULL;
@@ -247,10 +232,9 @@ Matrix* matrix_new_with_matrix(const Matrix *const __matrix_param) {
 }
 
 /**
- * matrix_free:
- * @__matrix: a #Matrix.
- *
  * Frees #Matrix.
+ * @param matrix The #Matrix.
+ *
  */
 void matrix_free(register Matrix *__matrix_param) {
     free(__matrix_param->data);
@@ -260,17 +244,14 @@ void matrix_free(register Matrix *__matrix_param) {
 }
 
 /**
- * matrix_add_float:
- * @a: a #Matrix.
- * @n: a reference const float num.
- * @example:
- *
+ * Add `num` to `matrix`->data.
+ * @param matrix The #Matrix.
+ * @param num The reference const float number.
+ * @example
  *	2 rows, 1 columns
  *
  *		[321]	+		3.3
  *		[74]	+	    3.3
- *
- * Add @n to @a data
  *
  */
 void matrix_add_float(register Matrix *a_param, const float num_param) {
@@ -282,17 +263,14 @@ void matrix_add_float(register Matrix *a_param, const float num_param) {
 }
 
 /**
- * matrix_add_matrix:
- * @a: a #Matrix.
- * @b: a reference #Matrix.
- * @example:
+ * Add `b`->data to `a`->data.
+ * @param a The #Matrix.
+ * @param b The reference #Matrix.
+ * @example
+ *  2 rows, 1 columns   2 rows, 1 columns
  *
- *	2 rows, 1 columns	2 rows, 1 columns
- *
- *		[321]	+	     [0.1]
- *		[74]	+            [0.78]
- *
- * Add @b data to @a data
+ *      [321]        +       [0.1]
+ *      [74]         +       [0.78]
  *
  */
 void matrix_add_matrix(register Matrix *a_param, const Matrix *const b_param) {
@@ -312,19 +290,16 @@ void matrix_add_matrix(register Matrix *a_param, const Matrix *const b_param) {
 }
 
 /**
- * matrix_multiply:
- * @a: a #Matrix.
- * @b: a reference #Matrix.
+ * Hadamard product.
+ * @param a The #Matrix.
+ * @param b The reference #Matrix.
  * @see https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
  * @example:
+ *        3 rows, 1 columns       2 rows, 1 columns
  *
- *		3 rows, 1 columns   	2 rows, 1 columns
- *
- *			  [64]
- *			  [87]	    *	     [232]
- *			  [21]		     [21]
- *
- * Hadamard product
+ *             [64]
+ *             [87]          *         [232]
+ *             [21]                    [21]
  *
  */
 void matrix_multiply(register Matrix *a_param, const Matrix *const b_param) {
@@ -344,17 +319,14 @@ void matrix_multiply(register Matrix *a_param, const Matrix *const b_param) {
 }
 
 /**
- * matrix_multiply_scalar:
- * @m: a #Matrix.
- * @num: a reference floating-point number.
- * @example:
+ * Add number to `matrix`->data.
+ * @param matrix The #Matrix.
+ * @param num The reference floating-point number.
+ * @example
+ *	      2 rows, 1 columns
  *
- *	2 rows, 1 columns
- *
- *		[321]	*   3.3
- *		[74]	*   3.3
- *
- * Add @n to @a data
+ *             [321]         *        3.3
+ *             [74]          *        3.3
  *
  */
 void matrix_multiply_scalar(register Matrix *m_param, const float num_param) {
@@ -367,18 +339,15 @@ void matrix_multiply_scalar(register Matrix *m_param, const float num_param) {
 }
 
 /**
- * matrix_toArray:
- * @m: a reference #Matrix.
- * @example:
+ * Create array by #Matrix.
+ * @param matrix The reference #Matrix.
+ * @returns The new const float array
+ * @example
+ *        2 rows, 1 columns
  *
- *      2 rows, 1 columns
+ *             [321]      ->      [321]
+ *             [74]       ->      [74]
  *
- *           [321]      ->      [321]
- *           [74]       ->      [74]
- *
- * Create array by #Matrix
- *
- * Returns: the new const float array
  */
 float* matrix_toArray(const Matrix *const m_param) {
     float* arr = (float *)malloc((unsigned long)m_param->len * sizeof(float));
@@ -394,16 +363,13 @@ float* matrix_toArray(const Matrix *const m_param) {
 }
 
 /**
- * matrix_randomize:
- * @m: a #Matrix.
- * @example:
+ * Randomize `matrix`->data (from 0 to 2) - 1.
+ * @param matrix The #Matrix.
+ * @example
+ *	2 rows, 1 columns   2 rows, 1 columns
  *
- *	2 rows, 1 columns	2 rows, 1 columns
- *
- *            [321]     ->            [0.1]
- *            [74]      ->            [0.78]
- *
- * Randomize @m data (from 0 to 2) - 1
+ *       [321]       ->      [0.1]
+ *       [74]        ->      [0.78]
  *
  */
 void matrix_randomize(register Matrix *m_param) {
@@ -440,16 +406,14 @@ void matrix_randomize(register Matrix *m_param) {
 }
 
 /**
- * matrix_map:
- * @m: a #Matrix.
- * @func: a float function.
- * @example:
- *
+ * Data of `matrix` equal, return value of `func`.
+ * @param matrix The #Matrix.
+ * @param func The float function.
+ * @code
  * float func(float num) {
- *	return num * 2
+ *	return num * 2;
  * }
- *
- * Data of @m equal, return value of @func
+ * @endcode
  *
  */
 void matrix_map(register Matrix *m_param, float (*const func_param)(float)) {
@@ -461,10 +425,8 @@ void matrix_map(register Matrix *m_param, float (*const func_param)(float)) {
 }
 
 /**
- * matrix_print:
- * @m: a const #Matrix.
- *
- * Print elements of @m data
+ * Print elements of `matrix`->data.
+ * @param matrix The const #Matrix.
  *
  */
 void matrix_print(const Matrix *const m_param) {
@@ -488,12 +450,10 @@ void matrix_print(const Matrix *const m_param) {
 }
 
 /**
- * matrix_serialize:
- * @m: a const #Matrix.
+ * Serialize `matrix` to JSON.
+ * @param matrix The const #Matrix.
+ * @returns The new #json_object
  *
- * Serialize @m to JSON
- *
- * Returns: the new #json_object
  */
 json_object* matrix_serialize(const Matrix *const m_param) {
     register json_object *t = json_object_new_object();
@@ -527,17 +487,15 @@ json_object* matrix_serialize(const Matrix *const m_param) {
 
 
 /**
- * matrix_fromArray:
- * @arr: a reference float array.
- * @example:
- *			2 rows, 1 columns
+ * Create #Matrix by `arr`.
+ * @param arr The reference float array.
+ * @returns The new #Matrix
+ * @example
+ *        2 rows, 1 columns
  *
- *      [321]   ->           [321]
- *      [74]    ->           [74]
+ *             [321]       ->    [321]
+ *             [74]        ->    [74]
  *
- * Create #Matrix by array
- *
- * Returns: the new #Matrix
  */
 Matrix* matrix_fromArray(const float* __restrict const arr_param, const int len_param) {
     register Matrix *t = matrix_new_with_args(len_param, 1);
@@ -552,13 +510,11 @@ Matrix* matrix_fromArray(const float* __restrict const arr_param, const int len_
 }
 
 /**
- * matrix_transpose_static:
- * @m: a const #Matrix.
+ * Transpositing `matrix`->data.
+ * @param matrix The const #Matrix.
  * @see https://en.wikipedia.org/wiki/Transpose
+ * @returns The new #Matrix
  *
- * Transpositing @m data
- *
- * Returns: the new #Matrix
  */
 Matrix* matrix_transpose_static(const Matrix *const m_param) {
     register Matrix *t = matrix_new_with_args(m_param->columns, m_param->rows);
@@ -582,13 +538,11 @@ Matrix* matrix_transpose_static(const Matrix *const m_param) {
 }
 
 /**
- * matrix_multiply_static:
- * @a: a const #Matrix.
- * @b: a const #Matrix.
+ * Add to new #Matrix, multiply of `a`->data and `b`->data.
+ * @param a The const #Matrix.
+ * @param b The const #Matrix.
+ * @returns The new #Matrix
  *
- * Add to new #Matrix, multiply of @a data and @b data
- *
- * Returns: the new #Matrix
  */
 Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Matrix *__restrict const b_param) {
     /* Matrix product */
@@ -626,15 +580,15 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Mat
 }
 
 /**
- * matrix_subtract_static:
- * @a: a const #Matrix.
- * @b: a const #Matrix.
- * @example:
+ * Subtract `a`->data and `b`->data.
+ * @param a The const #Matrix.
+ * @param b The const #Matrix.
+ * @returns The new #Matrix
+ * @example
+ *        2 rows, 1 columns   2 rows, 1 columns
  *
- *	2 rows, 1 columns	2 rows, 1 columns
- *
- *           [321]          -        [3.3]
- *           [74]           -        [3.3]
+ *             [321]        -      [3.3]
+ *             [74]         -      [3.3]
  *
  *                         | |
  *                         \ /
@@ -642,9 +596,6 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Mat
  *                        [317.7]
  *                        [70.7]
  *
- * Subtract @a data and @b data.
- *
- * Returns: the new #Matrix
  */
 Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const b_param) {
     if ((a_param->rows != b_param->rows) || (a_param->columns != b_param->columns)) {
@@ -670,13 +621,11 @@ Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const 
 
 
 /**
- * matrix_map_static:
- * @m: a const #Matrix.
- * @func: a float func.
+ * Apply `func` to every element of `matrix`.
+ * @param matrix The const #Matrix.
+ * @param func The float function.
+ * @returns The new #Matrix
  *
- * Apply a function to every element of matrix.
- *
- * Returns: the new #Matrix
  */
 Matrix* matrix_map_static(const Matrix *const m_param, float (*const func_param)(float)) {
     register Matrix *t = matrix_new_with_matrix(m_param);
@@ -691,17 +640,15 @@ Matrix* matrix_map_static(const Matrix *const m_param, float (*const func_param)
 }
 
 /**
- * matrix_deserialize:
- * @t: a const #json_object.
- * @example:
+ * Create new #Matrix by json file or string.
+ * @param json The const #json_object.
+ * @returns The new #Matrix
+ * @example
  *
  * {"rows":10,"columns":4,"data":[[0.19060910095479766,-0.7044789872907934,0.12916417175926737,-0.4493542740188917],[-0.8856888126717002,-0.9031315595837806,-0.25989472073659314,0.5503610418820337],[0.015814800116810357,0.20458699223751559,0.4144319562653632,-0.44217425771287694],[-0.6479931730467494,1.0466013336675943,0.34151503310804115,-0.9019454688191391],[0.6360219561553282,-0.7970648255401476,0.6967338500765156,1.026139659585225],[0.7070906013077707,-0.029736810492719402,0.4291704886090242,-0.5162258314269367],[0.5127199375296518,0.9105995373130602,-0.016193872134645272,-0.6064552608044859],[-0.37527682605966417,0.6967128785525135,-0.19384958454126475,0.7929244831790743],[0.12271433171587676,-0.42020640380104357,0.3119476057291891,-0.29433625893968235],[0.974302294354497,0.5381564104252675,0.7234688874658266,0.6823117502912057]]}
  * or
  * cities.json
  *
- * Create new #Matrix by json file or string.
- *
- * Returns: the new #Matrix
  */
 Matrix* matrix_deserialize(const json_object *__restrict const t_param) {
     register Matrix *__matrix_m = matrix_new_with_args(json_object_get_int(json_find(t_param, "rows")),
