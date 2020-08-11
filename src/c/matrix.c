@@ -522,7 +522,7 @@ Matrix* matrix_transpose_static(const Matrix *const m_param) {
     PTR_START(t->rows)
         register int j = 0;
         while (j < t->columns) {
-            ptr[counter] = m_ptr[j * t->rows + i];
+            ptr[counter] = m_ptr[(j * t->rows) + i];
 
             ++counter;
             ++j;
@@ -560,7 +560,7 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Mat
             register int k = 0;
             register float sum = 0.F;
             while (k < a_param->columns) {
-                sum += a_ptr[i * a_param->columns + k] * b_ptr[k * t->rows + j];
+                sum += a_ptr[(i * a_param->columns) + k] * b_ptr[(k * t->rows) + j];
 
                 ++k;
             }
