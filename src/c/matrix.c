@@ -442,7 +442,7 @@ void matrix_print(const Matrix *const m_param) {
         if(counter == m_param->columns) {
             counter = 0;
 
-            if ((ptr + 1) != (&m_param->data[0] + m_param->len))
+            if ((i + 1) != m_param->len)
                 printf("\n");
         }
         ++i;
