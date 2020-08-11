@@ -131,6 +131,8 @@ auto Matrix::operator*=(const Matrix& m) -> Matrix& {
     const float_t *m_ptr = &m.data[0];
 
     // hadamard product
+    // @see https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
+    //
     PTR_START(this->len)
         *ptr *= *m_ptr;
 
@@ -246,12 +248,12 @@ auto Matrix::transpose(const Matrix& m) -> Matrix {
 
     int32_t counter = 0;
     PTR_START(t.rows)
-        int32_t j = 0;
+        std::atomic<int32_t> j(0);
         while(j < t.columns) {
-            ptr[counter] = m_ptr[j * t.rows + i.load(std::memory_order_consume)];
+            ptr[counter] = m_ptr[j.load(std::memory_order_consume) * t.rows + i.load(std::memory_order_consume)];
 
             ++counter;
-            ++j;
+            j.fetch_add(1, std::memory_order_release);
         }
         i.fetch_add(1, std::memory_order_release);
     }
@@ -273,21 +275,21 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) -> Matrix {
     const float_t *a_ptr  = &a.data[0];
     const float_t *b_ptr  = &b.data[0];
 
-    int32_t counter = 0;
+    std::atomic<int32_t> counter(0);
     PTR_START(t.rows)
-        int32_t j = 0;
+        std::atomic<int32_t> j(0);
         while (j < t.columns) {
-            int32_t k = 0;
+            std::atomic<int32_t> k(0);
             float_t sum = 0;
             while (k < a.columns) {
-                sum += a_ptr[i.load(std::memory_order_consume) * a.columns + k] * b_ptr[k * t.rows + j];
+                sum += a_ptr[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)] * b_ptr[k.load(std::memory_order_consume) * t.rows + j.load(std::memory_order_consume)];
 
-                ++k;
+                k.fetch_add(1, std::memory_order_release);
             }
-            ptr[counter] = sum;
+            ptr[counter.load(std::memory_order_consume)] = sum;
 
-            ++counter;
-            ++j;
+            counter.fetch_add(1, std::memory_order_release);
+            j.fetch_add(1, std::memory_order_release);
         }
         i.fetch_add(1, std::memory_order_release);
     }

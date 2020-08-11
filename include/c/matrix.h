@@ -19,21 +19,20 @@ Matrix* matrix_new_with_matrix(const Matrix *const);
 void matrix_free(register Matrix *);
 
 /* Operators */
-void matrix_subtract(register Matrix *, const Matrix *const);
-void matrix_multiply(register Matrix *, const Matrix *const);
-
-/* Functions */
-Matrix* matrix_fromArray(const float* __restrict const, const int);
-void matrix_toArray(register float* __restrict, const Matrix *const);
-void matrix_randomize(register Matrix *);
 void matrix_add_matrix(register Matrix *, const Matrix *const);
 void matrix_add_float(register Matrix *, const float);
+void matrix_multiply(register Matrix *, const Matrix *const);
 void matrix_multiply_scalar(register Matrix *, const float);
+
+/* Functions */
+float* matrix_toArray(const Matrix *const);
+void matrix_randomize(register Matrix *);
 void matrix_map(register Matrix *, float (*const)(float));
 void matrix_print(const Matrix *const);
 json_object* matrix_serialize(const Matrix *const);
 
 /* Static functions */
+Matrix* matrix_fromArray(const float* __restrict const, const int);
 Matrix* matrix_transpose_static(const Matrix *const);
 Matrix* matrix_multiply_static(const Matrix *__restrict const, const Matrix *__restrict const);
 Matrix* matrix_subtract_static(const Matrix *const, const Matrix *const);

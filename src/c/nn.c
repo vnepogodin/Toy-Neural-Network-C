@@ -28,7 +28,8 @@ static inline float dsigmoid(float y) {
     return y * (1.F - y);
 }
 
-static json_object* json_find(const json_object *__restrict const j, const char* __restrict key) {
+static json_object* json_find(const json_object *__restrict const j,
+                              const char* __restrict key) {
     json_object *temp_json;
 
     json_object_object_get_ex(j, key, &temp_json);
@@ -49,7 +50,7 @@ static json_object* json_find(const json_object *__restrict const j, const char*
  * Returns: the new #NeuralNetwork
  */
 NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param) {
-    register NeuralNetwork *__nn_temp = (NeuralNetwork *)malloc(57);
+    register NeuralNetwork *__nn_temp = (NeuralNetwork *)malloc(56UL);
 
     __nn_temp->input_nodes = __nn_param->input_nodes;
     __nn_temp->hidden_nodes = __nn_param->hidden_nodes;
@@ -79,8 +80,10 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param)
  *
  * Returns: the new #NeuralNetwork
  */
-NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hidden_nodes, const int output_nodes) {
-    register NeuralNetwork *nn = (NeuralNetwork *)malloc(57);
+NeuralNetwork* neural_network_new_with_args(const int input_nodes,
+                                            const int hidden_nodes,
+                                            const int output_nodes) {
+    register NeuralNetwork *nn = (NeuralNetwork *)malloc(56UL);
 
     nn->input_nodes = input_nodes;
     nn->hidden_nodes = hidden_nodes;
@@ -111,7 +114,7 @@ NeuralNetwork* neural_network_new_with_args(const int input_nodes, const int hid
  *
  */
 void neural_network_free(register NeuralNetwork *__restrict __nn_param) {
-    neural_network_setActivationFunction(__nn_param, 0);
+    __nn_param->activation_function = NULL;
 
     matrix_free(__nn_param->weights_ih);
     matrix_free(__nn_param->weights_ho);
@@ -130,7 +133,8 @@ void neural_network_free(register NeuralNetwork *__restrict __nn_param) {
  *
  * Returns: float array
  */
-void neural_network_predict(register float* __restrict __arr_param, const NeuralNetwork *const nn, const float* __restrict const input_array) {
+float* neural_network_predict(const NeuralNetwork *const nn,
+                              const float* __restrict const input_array) {
     /* Generating the Hidden Outputs */
     register Matrix *input = matrix_fromArray(input_array, nn->input_nodes);
     register Matrix *hidden = matrix_multiply_static(nn->weights_ih, input);
@@ -140,15 +144,17 @@ void neural_network_predict(register float* __restrict __arr_param, const Neural
     /* Activation function! */
     matrix_map(hidden, nn->activation_function);
 
-    /* Generating the output'Ms output! */
+    /* Generating the output's output! */
     register Matrix *output = matrix_multiply_static(nn->weights_ho, hidden);
     matrix_free(hidden);
     matrix_add_matrix(output, nn->bias_o);
     matrix_map(output, nn->activation_function);
 
     /* Sending back to the caller! */
-    matrix_toArray(__arr_param, output);
+    float* result = matrix_toArray(output);
     matrix_free(output);
+
+    return result;
 }
 
 /**
@@ -159,7 +165,8 @@ void neural_network_predict(register float* __restrict __arr_param, const Neural
  * Setting learning rate.
  *
  */
-void neural_network_setLearningRate(register NeuralNetwork *__restrict nn, const float lr) {
+void neural_network_setLearningRate(register NeuralNetwork *__restrict nn,
+                                    const float lr) {
     nn->learning_rate = lr;
 }
 
@@ -171,12 +178,13 @@ void neural_network_setLearningRate(register NeuralNetwork *__restrict nn, const
  * Setting function.
  *
  */
-void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn, const int flag) {
+void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn,
+                                          const unsigned char flag) {
     nn->activation_function = NULL;
 
-    if (flag == FUNC_SIGMOID)
+    if (flag & FUNC_SIGMOID)
         nn->activation_function = sigmoid;
-    else if (flag == FUNC_DSIGMOID)
+    else if (flag & FUNC_DSIGMOID)
         nn->activation_function = dsigmoid;
 }
 
@@ -189,19 +197,21 @@ void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn,
  * Trains a neural network.
  *
  */
-void neural_network_train(register NeuralNetwork *nn, const float* __restrict const input_array, const float* __restrict const target_array) {
-    /*           Generating the Hidden Outputs            */
+void neural_network_train(register NeuralNetwork *nn,
+                          const float* __restrict const input_array,
+                          const float* __restrict const target_array) {
+    /* Generating the Hidden Outputs */
     register Matrix *inputs = matrix_fromArray(input_array, nn->input_nodes);
     register Matrix *hidden = matrix_multiply_static(nn->weights_ih, inputs);
     matrix_free(inputs);
     matrix_add_matrix(hidden, nn->bias_h);
-    /*          Activation function!          */
-    matrix_map(hidden, nn->activation_function);
+    /*  Activation function!  */
+    matrix_map(hidden, sigmoid);
 
-    /*                  Generating the output's output!                     */
+    /* Generating the output's output! */
     register Matrix *outputs = matrix_multiply_static(nn->weights_ho, hidden);
     matrix_add_matrix(outputs, nn->bias_o);
-    matrix_map(outputs, nn->activation_function);
+    matrix_map(outputs, sigmoid);
 
     /* Convert array to matrix object */
     register Matrix *targets = matrix_fromArray(target_array, nn->output_nodes);
@@ -213,14 +223,16 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
 
     /* let gradient = outputs * (1 - outputs);
      * Calculate gradient */
-    register Matrix *gradients = matrix_map_static(outputs, nn->activation_function);
+    register Matrix *gradients = matrix_map_static(outputs, dsigmoid);
     matrix_free(outputs);
     matrix_multiply(gradients, output_errors);
     matrix_multiply_scalar(gradients, nn->learning_rate);
 
 
     /* Calculate deltas */
-    register Matrix *weight_ho_deltas = matrix_multiply_static(gradients, hidden);
+    register Matrix *hidden_T = matrix_transpose_static(hidden);
+    register Matrix *weight_ho_deltas = matrix_multiply_static(gradients, hidden_T);
+    matrix_free(hidden_T);
 
     /* Adjust the weights by deltas */
     matrix_add_matrix(nn->weights_ho, weight_ho_deltas);
@@ -230,21 +242,25 @@ void neural_network_train(register NeuralNetwork *nn, const float* __restrict co
     matrix_add_matrix(nn->bias_o, gradients);
     matrix_free(gradients);
 
-    /* Calculate hidden gradient */
-    register Matrix *hidden_gradient = matrix_map_static(hidden, nn->activation_function);
-    matrix_free(hidden);
-
     /* Calculate the hidden layer errors */
-    register Matrix *hidden_errors = matrix_multiply_static(nn->weights_ho, output_errors);
+    register Matrix *who_t = matrix_transpose_static(nn->weights_ho);
+    register Matrix *hidden_errors = matrix_multiply_static(who_t, output_errors);
     matrix_free(output_errors);
-    matrix_add_matrix(hidden_gradient, hidden_errors);
+    matrix_free(who_t);
+
+    /* Calculate hidden gradient */
+    register Matrix *hidden_gradient = matrix_map_static(hidden, dsigmoid);
+    matrix_free(hidden);
+    matrix_multiply(hidden_gradient, hidden_errors);
     matrix_free(hidden_errors);
-    matrix_add_float(hidden_gradient, nn->learning_rate);
+    matrix_multiply_scalar(hidden_gradient, nn->learning_rate);
 
     /* Calcuate input->hidden deltas */
     inputs = matrix_fromArray(input_array, nn->input_nodes);
-    register Matrix *weight_ih_deltas = matrix_multiply_static(hidden_gradient, inputs);
+    register Matrix *inputs_T = matrix_transpose_static(inputs);
+    register Matrix *weight_ih_deltas = matrix_multiply_static(hidden_gradient, inputs_T);
     matrix_free(inputs);
+    matrix_free(inputs_T);
 
     matrix_add_matrix(nn->weights_ih, weight_ih_deltas);
     matrix_free(weight_ih_deltas);

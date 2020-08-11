@@ -1,11 +1,11 @@
-#include "../../../include/c/nn.h"
+#include "../../../include/c/nn.h"  /* NeuralNetwork */
 
-#include "../../../include/c/third_party/json-c/json_object.h"
+#include "../../../include/c/third_party/json-c/json_object.h"  /* json_object */
 
-#include <stdio.h>
+#include <stdio.h>  /* printf */
 
 int main(void) {
-    register NeuralNetwork *nn = neural_network_new_with_args(5, 25, 1);
+    register NeuralNetwork *nn = neural_network_new_with_args(2, 4, 1);
 
     register json_object *j = neural_network_serialize(nn);
 

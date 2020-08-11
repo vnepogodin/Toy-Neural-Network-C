@@ -1,6 +1,6 @@
 // Other techniques for learning
-#include "../../include/c++/Matrix.hpp"
-#include "../../include/c++/nn.hpp"
+#include "../../include/c++/Matrix.hpp"  // class Matrix
+#include "../../include/c++/nn.hpp"  // class NeuralNetwork
 
 #include <cmath>  // std::exp
 
@@ -83,7 +83,7 @@ void NeuralNetwork::setLearningRate(const float_t &lr) {
 
 // Setting function
 //
-void NeuralNetwork::setActivationFunction(const uint8_t &flag) {
+void NeuralNetwork::setActivationFunction(const uint8_t& flag) {
     this->activation_function = nullptr;
 
     if (flag & FUNC_SIGMOID)
@@ -95,7 +95,7 @@ void NeuralNetwork::setActivationFunction(const uint8_t &flag) {
 
 // Training neural network
 //
-void NeuralNetwork::train(const float_t* const &input_array, const float_t* const& target_array) {
+void NeuralNetwork::train(const float_t* const& input_array, const float_t* const& target_array) {
     // Generating the Hidden Outputs
     const Matrix inputs = Matrix::fromArray(input_array, this->input_nodes);
     Matrix hidden = Matrix::multiply(this->weights_ih, inputs);
@@ -153,18 +153,19 @@ void NeuralNetwork::train(const float_t* const &input_array, const float_t* cons
 // Serialize to JSON
 //
 auto NeuralNetwork::serialize() const -> const nlohmann::json {
-    nlohmann::json t;
-    t["input_nodes"] = this->input_nodes;
-    t["hidden_nodes"] = this->hidden_nodes;
-    t["output_nodes"] = this->output_nodes;
+    nlohmann::json t = nlohmann::json::object({
+    {"input_nodes", this->input_nodes},
+    {"hidden_nodes", this->hidden_nodes},
+    {"output_nodes", this->output_nodes},
 
-    t["weights_ih"] = this->weights_ih.serialize();
-    t["weights_ho"] = this->weights_ho.serialize();
-    t["bias_h"] = this->bias_h.serialize();
-    t["bias_o"] = this->bias_o.serialize();
+    {"weights_ih", this->weights_ih.serialize()},
+    {"weights_ho", this->weights_ho.serialize()},
 
-    t["learning_rate"] = this->learning_rate;
-    t["activation_function"] = convert_ActivationFunction(this->activation_function);
+    {"bias_h", this->bias_h.serialize()},
+    {"bias_o", this->bias_o.serialize()},
+
+    {"learning_rate", this->learning_rate},
+    {"activation_function", convert_ActivationFunction(this->activation_function)}});
 
     return t;
 }
