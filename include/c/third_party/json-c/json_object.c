@@ -95,20 +95,20 @@ struct json_object_int {
 #define JC_CONCAT3(a, b, c) a##b##c
 
 #define JSON_OBJECT_NEW(jtype)                                                       \
-	(struct JC_CONCAT(json_object_, jtype) *)json_object_new(                        \
-	    JC_CONCAT(json_type_, jtype), sizeof(struct JC_CONCAT(json_object_, jtype)), \
-	    (int (*)(json_object *, printbuf *, int, int))&JC_CONCAT3(json_object_, jtype, _to_json_string))
+    (struct JC_CONCAT(json_object_, jtype) *)json_object_new(                        \
+        JC_CONCAT(json_type_, jtype), sizeof(struct JC_CONCAT(json_object_, jtype)), \
+        (int (*)(json_object *, printbuf *, int, int))&JC_CONCAT3(json_object_, jtype, _to_json_string))
 
 /** Iterate through all keys and values of an object (ANSI C Safe)
  * @param obj the json_object instance
  * @param iter the object iterator, use type json_object_iter
  */
 #define json_object_object_foreachC(obj, iter)                                              \
-	for (iter.entry = lh_table_getHead(json_object_get_object(obj));                        \
-	     (iter.entry ? (iter.key = (char *)lh_entry_getK(iter.entry),                       \
-	                   iter.val = (json_object *)lh_entry_getV(iter.entry), iter.entry)     \
-	                 : 0);                                                                  \
-	     iter.entry = lh_entry_getNext(iter.entry))
+    for (iter.entry = lh_table_getHead(json_object_get_object(obj));                        \
+         (iter.entry ? (iter.key = (char *)lh_entry_getK(iter.entry),                       \
+                       iter.val = (json_object *)lh_entry_getV(iter.entry), iter.entry)     \
+                     : 0);                                                                  \
+         iter.entry = lh_entry_getNext(iter.entry))
 
 
 
@@ -125,10 +125,8 @@ static int json_escape_str(printbuf *pb, const char *str, unsigned long len, con
     register int pos = 0;
     register int start_offset = 0;
 
-    register unsigned char c = 0U;
-
     while (len--) {
-        c = (unsigned char)str[pos];
+        register unsigned char c = (unsigned char)str[pos];
 
         switch (c) {
             case '\b':
@@ -173,6 +171,7 @@ static int json_escape_str(printbuf *pb, const char *str, unsigned long len, con
                     char sbuf[7] = { 0 };
                     snprintf(sbuf, 7, "\\u00%c%c", json_hex_chars[c >> 4U], json_hex_chars[c & (unsigned)0xf]);
                     printbuf_memappend_fast(pb, sbuf, 6);
+
                     ++pos;
                     start_offset = pos;
                 }
@@ -217,32 +216,32 @@ static inline void json_object_set_serializer(json_object *jso, int (*to_string_
  * Helper functions to more safely cast to a particular type of json_object
  */
 static inline struct json_object_object *JC_OBJECT(json_object *jso) {
-	return (void *)jso;
+    return (void *)jso;
 }
 static inline const struct json_object_object *JC_OBJECT_C(const json_object *jso) {
-	return (const void *)jso;
+    return (const void *)jso;
 }
 static inline struct json_object_array *JC_ARRAY(json_object *jso) {
-	return (void *)jso;
+    return (void *)jso;
 }
 static inline const struct json_object_array *JC_ARRAY_C(const json_object *jso) {
-	return (const void *)jso;
+    return (const void *)jso;
 }
 static inline struct json_object_double *JC_DOUBLE(json_object *jso) {
-	return (void *)jso;
+    return (void *)jso;
 }
 static inline const struct json_object_double *JC_DOUBLE_C(const json_object *jso) {
-	return (const void *)jso;
+    return (const void *)jso;
 }
 static inline struct json_object_int *JC_INT(json_object *jso) {
-	return (void *)jso;
+    return (void *)jso;
 }
 static inline const struct json_object_int *JC_INT_C(const json_object *jso) {
-	return (const void *)jso;
+    return (const void *)jso;
 }
 
 /** Get the hashtable of a json_object of type json_type_object
- * @param obj the json_object instance
+ * @param obj The json_object instance
  * @returns a linkhash
  */
 static inline lh_table* json_object_get_object(const json_object *jso) {
@@ -348,7 +347,7 @@ static int json_object_double_to_json_string_format(json_object *jso, printbuf *
 #ifdef _WIN32
             strcat_s(buf, ".0", 3UL);
 #else
-	    strncat(buf, ".0", 3UL);
+            strncat(buf, ".0", 3UL);
 #endif
             size += 2;
         }
@@ -522,59 +521,59 @@ static inline void json_object_lh_entry_free(lh_entry *ent) {
 
 /* reference counting */
 inline json_object* json_object_get(json_object *jso) {
-	if (jso == NULL)
-		return NULL;
+    if (jso == NULL)
+        return NULL;
 
-	/* Don't overflow the reference counter. */
-	assert(jso->_ref_count < UINT_MAX);
+    /* Don't overflow the reference counter. */
+    assert(jso->_ref_count < UINT_MAX);
 
 #ifdef _WIN32
-	++jso->_ref_count;
+    ++jso->_ref_count;
 #else
-	__sync_add_and_fetch(&jso->_ref_count, 1);
+    __sync_add_and_fetch(&jso->_ref_count, 1);
 #endif
 
-	return jso;
+    return jso;
 }
 
 int json_object_put(json_object *jso) {
-	if (jso == NULL)
-		return 0;
+    if (jso == NULL)
+        return 0;
 
-	/* Avoid invalid free and crash explicitly instead of (silently)
-	 * seg_faulting.
-	 */
-	assert(jso->_ref_count > 0);
+    /* Avoid invalid free and crash explicitly instead of (silently)
+     * seg_faulting.
+     */
+    assert(jso->_ref_count > 0);
 
-	/* Note: this only allow the refcount to remain correct
-	 * when multiple threads are adjusting it.  It is still an error
-	 * for a thread to decrement the refcount if it doesn't "own" it,
-	 * as that can result in the thread that loses the race to 0
-	 * operating on an already-freed object.
-	 */
+    /* Note: this only allow the refcount to remain correct
+     * when multiple threads are adjusting it.  It is still an error
+     * for a thread to decrement the refcount if it doesn't "own" it,
+     * as that can result in the thread that loses the race to 0
+     * operating on an already-freed object.
+     */
 #ifdef _WIN32
-	if (--jso->_ref_count > 0)
-		return 0;
+    if (--jso->_ref_count > 0)
+        return 0;
 #else
-	if (__sync_sub_and_fetch(&jso->_ref_count, 1) > 0)
-		return 0;
+    if (__sync_sub_and_fetch(&jso->_ref_count, 1) > 0)
+        return 0;
 #endif
 
-	if (jso->_user_delete != NULL)
-		jso->_user_delete(jso, jso->_userdata);
+    if (jso->_user_delete != NULL)
+        jso->_user_delete(jso, jso->_userdata);
 
-	switch (jso->o_type) {
-	case json_type_object:
+    switch (jso->o_type) {
+    case json_type_object:
         json_object_object_delete(jso);
         break;
-	case json_type_array:
+    case json_type_array:
         json_object_array_delete(jso);
         break;
-	default:
+    default:
         json_object_generic_delete(jso);
         break;
-	}
-	return 1;
+    }
+    return 1;
 }
 
 /* extended conversion to string */
@@ -589,60 +588,62 @@ const char* json_object_to_json_string_ext(json_object *jso, const int flags) {
         }
     }
 
-	return r;
+    return r;
 }
 
 /* json_object_object */
 inline json_object* json_object_new_object(void) {
-	struct json_object_object *jso = JSON_OBJECT_NEW(object);
-	if (jso == NULL)
-		return NULL;
+    struct json_object_object *jso = JSON_OBJECT_NEW(object);
+    if (jso == NULL)
+        return NULL;
 
-	jso->c_object = lh_kchar_table_new(JSON_OBJECT_DEF_HASH_ENTRIES, &json_object_lh_entry_free);
-	if (jso->c_object == NULL) {
-		json_object_generic_delete(&jso->base);
-		return NULL;
-	}
-	return &jso->base;
+    jso->c_object = lh_kchar_table_new(JSON_OBJECT_DEF_HASH_ENTRIES, &json_object_lh_entry_free);
+    if (jso->c_object == NULL) {
+        json_object_generic_delete(&jso->base);
+        return NULL;
+    }
+    return &jso->base;
 }
 
 int json_object_object_add_ex(json_object *jso, const char* const key, json_object *const val, const unsigned char opts) {
-	assert(json_object_get_type(jso) == json_type_object);
+    assert(json_object_get_type(jso) == json_type_object);
 
-	/* We lookup the entry and replace the value, rather than just deleting
-	 * and re-adding it, so the existing key remains valid.
-	 */
-	register const unsigned long hash = lh_get_hash(JC_OBJECT(jso)->c_object, (const void *)key);
-	lh_entry *existing_entry = (opts & JSON_C_OBJECT_ADD_KEY_IS_NEW)
+    /* We lookup the entry and replace the value, rather than just deleting
+     * and re-adding it, so the existing key remains valid.
+     */
+    register const unsigned long hash = lh_get_hash(JC_OBJECT(jso)->c_object, (const void *)key);
+    lh_entry *existing_entry = (opts & JSON_C_OBJECT_ADD_KEY_IS_NEW)
         ? NULL
         : lh_table_lookup_entry_w_hash(JC_OBJECT(jso)->c_object, (const void *)key, hash);
 
-	/* The caller must avoid creating loops in the object tree, but do a
-	 * quick check anyway to make sure we're not creating a trivial loop.
-	 */
-	if (jso == val)
-		return -1;
+    /* The caller must avoid creating loops in the object tree, but do a
+     * quick check anyway to make sure we're not creating a trivial loop.
+     */
+    if (jso == val)
+        return -1;
 
-	if (existing_entry == NULL) {
-		const void *const k = (opts & JSON_C_OBJECT_KEY_IS_CONSTANT) ? (const void *)key : strdup(key);
-		if (k == NULL)
-			return -1;
+    if (existing_entry == NULL) {
+        const void *const k = (opts & JSON_C_OBJECT_KEY_IS_CONSTANT) ? (const void *)key : strdup(key);
+        if (k == NULL)
+            return -1;
 
-		return lh_table_insert_w_hash(JC_OBJECT(jso)->c_object, k, val, hash, opts);
-	}
+        return lh_table_insert_w_hash(JC_OBJECT(jso)->c_object, k, val, hash, opts);
+    }
 
-	json_object *existing_value = (json_object *)lh_entry_getV(existing_entry);
-	if (existing_value != NULL)
-		json_object_put(existing_value);
+    json_object *existing_value = (json_object *)lh_entry_getV(existing_entry);
+    if (existing_value != NULL)
+        json_object_put(existing_value);
 
     lh_entry_setV(existing_entry, val);
-	return 0;
+
+    return 0;
 }
 
 inline unsigned int json_object_object_get_ex(const json_object *jso, const char* key, json_object **value) {
     register unsigned int result = 0U;
-	if (jso != NULL) {
-	    result = lh_table_lookup_ex(JC_OBJECT_C(jso)->c_object, (const void *)key, (void **)value);
+
+    if (jso != NULL) {
+        result = lh_table_lookup_ex(JC_OBJECT_C(jso)->c_object, (const void *)key, (void **)value);
     }
 
     return result;
@@ -650,7 +651,7 @@ inline unsigned int json_object_object_get_ex(const json_object *jso, const char
 
 /* json_object_int */
 inline json_object* json_object_new_int(const int i) {
-	return json_object_new_int64(i);
+    return json_object_new_int64(i);
 }
 
 int json_object_get_int(const json_object *jso) {
@@ -670,26 +671,24 @@ int json_object_get_int(const json_object *jso) {
                     cint64 = (long long)json_int->cint.c_uint64;
             }
             /* Make sure we return the correct values for out of range numbers. */
+            result = (int)cint64;
+
             if (cint64 <= INT_MIN)
                 result = INT_MIN;
 
             if (cint64 >= INT_MAX)
                 result = INT_MAX;
-
-            result = (int)cint64;
-
             break;
         }
         case json_type_double: {
             register const double cdouble = JC_DOUBLE_C(jso)->c_double;
+            result = (int)cdouble;
+
             if (cdouble <= INT_MIN)
                 result = INT_MIN;
 
             if (cdouble >= INT_MAX)
-                result =  INT_MAX;
-
-            result = (int)cdouble;
-
+                result = INT_MAX;
             break;
         }
         default:
@@ -703,37 +702,37 @@ int json_object_get_int(const json_object *jso) {
 inline json_object* json_object_new_int64(const long long i) {
     register json_object *result = NULL;
 
-	struct json_object_int *jso = JSON_OBJECT_NEW(int);
-	if (jso != NULL) {
+    struct json_object_int *jso = JSON_OBJECT_NEW(int);
+    if (jso != NULL) {
         jso->cint.c_int64 = i;
         jso->cint_type = json_object_int_type_int64;
 
         result = &jso->base;
     }
 
-	return result;
+    return result;
 }
 
 inline json_object* json_object_new_uint64(const unsigned long long i) {
     register json_object *result = NULL;
 
-	struct json_object_int *jso = JSON_OBJECT_NEW(int);
-	if (jso != NULL) {
+    struct json_object_int *jso = JSON_OBJECT_NEW(int);
+    if (jso != NULL) {
         jso->cint.c_uint64 = i;
         jso->cint_type = json_object_int_type_uint64;
 
         result = &jso->base;
     }
 
-	return result;
+    return result;
 }
 
 /* json_object_double */
 inline json_object* json_object_new_double(const double d) {
     register json_object *result = NULL;
 
-	struct json_object_double *jso = JSON_OBJECT_NEW(double);
-	if (jso != NULL) {
+    struct json_object_double *jso = JSON_OBJECT_NEW(double);
+    if (jso != NULL) {
         jso->c_double = d;
 
         result = &jso->base;
@@ -746,7 +745,7 @@ json_object* json_object_new_double_s(const double d, const char* ds) {
     register json_object *result = NULL;
     json_object *jso = json_object_new_double(d);
 
-	if (jso != NULL) {
+    if (jso != NULL) {
         register const char* new_ds = strdup(ds);
 
         if (new_ds != NULL) {
@@ -755,15 +754,15 @@ json_object* json_object_new_double_s(const double d, const char* ds) {
             result = jso;
         } else
             json_object_generic_delete(jso);
-	}
+    }
 
-	return result;
+    return result;
 }
 
 float json_object_get_float(const json_object *jso) {
     register float result = 0.F;
 
-	if (jso != NULL) {
+    if (jso != NULL) {
         assert((jso->o_type == json_type_double) || (jso->o_type == json_type_int));
 
         switch (jso->o_type) {
@@ -785,38 +784,38 @@ float json_object_get_float(const json_object *jso) {
         }
     }
 
-	return result;
+    return result;
 }
 
 /* json_object_array */
 inline json_object* json_object_new_array_ext(const int initial_size) {
-	struct json_object_array *jso = JSON_OBJECT_NEW(array);
-	if (jso == NULL)
-		return NULL;
+    struct json_object_array *jso = JSON_OBJECT_NEW(array);
+    if (jso == NULL)
+        return NULL;
 
-	jso->c_array = array_list_new(&json_object_array_entry_free, initial_size);
-	if (jso->c_array == NULL) {
-		free(jso);
-		return NULL;
-	}
+    jso->c_array = array_list_new(&json_object_array_entry_free, initial_size);
+    if (jso->c_array == NULL) {
+        free(jso);
+        return NULL;
+    }
 
-	return &jso->base;
+    return &jso->base;
 }
 
 inline int json_object_array_add(json_object *jso, json_object *val) {
-	assert(json_object_get_type(jso) == json_type_array);
+    assert(json_object_get_type(jso) == json_type_array);
 
-	return array_list_add(JC_ARRAY(jso)->c_array, val);
+    return array_list_add(JC_ARRAY(jso)->c_array, val);
 }
 
 inline json_object* json_object_array_get_idx(const json_object *jso, unsigned long idx) {
-	assert(json_object_get_type(jso) == json_type_array);
+    assert(json_object_get_type(jso) == json_type_array);
 
-	return (json_object *)array_list_get_idx(JC_ARRAY_C(jso)->c_array, idx);
+    return (json_object *)array_list_get_idx(JC_ARRAY_C(jso)->c_array, idx);
 }
 
 inline int json_object_array_shrink(json_object *jso, const int empty_slots) {
-	assert(empty_slots >= 0);
+    assert(empty_slots >= 0);
 
-	return array_list_shrink(JC_ARRAY(jso)->c_array, (unsigned long)empty_slots);
+    return array_list_shrink(JC_ARRAY(jso)->c_array, (unsigned long)empty_slots);
 }
