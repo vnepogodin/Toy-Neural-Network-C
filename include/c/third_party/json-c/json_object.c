@@ -606,7 +606,7 @@ inline json_object* json_object_new_object(void) {
 	return &jso->base;
 }
 
-int json_object_object_add_ex(json_object *jso, const char* const key, json_object *const val, const unsigned opts) {
+int json_object_object_add_ex(json_object *jso, const char* const key, json_object *const val, const unsigned char opts) {
 	assert(json_object_get_type(jso) == json_type_object);
 
 	/* We lookup the entry and replace the value, rather than just deleting
@@ -642,7 +642,7 @@ int json_object_object_add_ex(json_object *jso, const char* const key, json_obje
 inline unsigned int json_object_object_get_ex(const json_object *jso, const char* key, json_object **value) {
     register unsigned int result = 0U;
 	if (jso != NULL) {
-	    result = lh_table_lookup_ex(JC_OBJECT_C(jso)->c_object, (const void *) key, (void **)value);
+	    result = lh_table_lookup_ex(JC_OBJECT_C(jso)->c_object, (const void *)key, (void **)value);
     }
 
     return result;

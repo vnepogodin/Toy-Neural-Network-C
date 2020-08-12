@@ -8,11 +8,6 @@
  * it under the terms of the MIT license. See COPYING for details.
  *
  */
-
-/**
- * @file
- * @brief Methods to parse an input string into a tree of json_object objects.
- */
 #ifndef __JSON_TOKENER_H__
 #define __JSON_TOKENER_H__
 
@@ -24,7 +19,6 @@ extern "C" {
 
 /**
  * Parse a json_object out of the string `str`.
- *
  */
 json_object* json_tokener_parse(const char*);
 
@@ -32,4 +26,4 @@ json_object* json_tokener_parse(const char*);
 }
 #endif
 
-#endif /* __JSON_TOKENER_H__ */
+#endif  /* __JSON_TOKENER_H__ */

@@ -9,13 +9,6 @@
  * it under the terms of the MIT license. See COPYING for details.
  *
  */
-
-/**
- * @file
- * @brief Internal methods for working with json_type_object objects.  Although
- *        this is exposed by the json_object_get_object() function and within the
- *        json_object_iter type, it is not recommended for direct use.
- */
 #ifndef __LINKHASH_H__
 #define __LINKHASH_H__
 
@@ -102,7 +95,7 @@ extern void lh_table_free(lh_table *);
  *  the caller, to allow for optimization when multiple operations with the same
  *  key are known to be needed.
  *
- * @param t the table to insert into.
+ * @param t The table to insert into.
  * @param k a pointer to the key to insert.
  * @param v a pointer to the value to insert.
  * @param h hash value of the key to insert
@@ -110,7 +103,7 @@ extern void lh_table_free(lh_table *);
  *             so t's free function knows to avoid freeing the key.
  */
 extern int lh_table_insert_w_hash(lh_table *, const void*, const void*,
-                                  const unsigned long, const unsigned);
+                                  const unsigned long, const unsigned char);
 
 /**
  * Lookup a record in the table using a precalculated key hash.
@@ -119,7 +112,7 @@ extern int lh_table_insert_w_hash(lh_table *, const void*, const void*,
  *  the caller, to allow for optimization when multiple operations with the same
  *  key are known to be needed.
  *
- * @param t the table to lookup
+ * @param t The table to lookup
  * @param k a pointer to the key to lookup
  * @param h hash value of the key to lookup
  * @return a pointer to the record structure of the value or NULL if it does not exist.
@@ -129,7 +122,7 @@ extern lh_entry* lh_table_lookup_entry_w_hash(const lh_table *, const void*, con
 /**
  * Lookup a record in the table.
  *
- * @param t the table to lookup
+ * @param t The table to lookup
  * @param k a pointer to the key to lookup
  * @param v a pointer to a where to store the found value (set to NULL if it doesn't exist).
  * @return whether or not the key was found
@@ -146,7 +139,7 @@ extern lh_entry* lh_table_getHead(const lh_table *const);
  * the hash several times and allows them to do it just once and then pass
  * in the hash to all utility functions. Depending on use case, this can be a
  * considerable performance improvement.
- * @param t the table (used to obtain hash function)
+ * @param t The table (used to obtain hash function)
  * @param k a pointer to the key to lookup
  * @return the key's hash
  */

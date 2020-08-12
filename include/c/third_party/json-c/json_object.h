@@ -21,7 +21,7 @@ typedef struct _Json_Object json_object;
  * which causes the output to have
  * minimal whitespace inserted to make things slightly more readable.
  */
-#define JSON_C_TO_STRING_SPACED 1U
+#define JSON_C_TO_STRING_SPACED 0x01U
 /**
  * A flag for the json_object_to_json_string_ext() and
  * json_object_to_file_ext() functions which causes
@@ -30,7 +30,7 @@ typedef struct _Json_Object json_object;
  * See the "Two Space Tab" option at http://jsonformatter.curiousconcept.com/
  * for an example of the format.
  */
-#define JSON_C_TO_STRING_PRETTY 2U
+#define JSON_C_TO_STRING_PRETTY 0x02U
 /**
  * A flag for the json_object_to_json_string_ext() and
  * json_object_to_file_ext() functions which causes
@@ -38,16 +38,16 @@ typedef struct _Json_Object json_object;
  *
  * Instead of a "Two Space Tab" this gives a single tab character.
  */
-#define JSON_C_TO_STRING_PRETTY_TAB 8U
+#define JSON_C_TO_STRING_PRETTY_TAB 0x08U
 /**
  * A flag to drop trailing zero for float values
  */
-#define JSON_C_TO_STRING_NOZERO 4U
+#define JSON_C_TO_STRING_NOZERO 0x04U
 
 /**
  * Don't escape forward slashes.
  */
-#define JSON_C_TO_STRING_NOSLASHESCAPE 16U
+#define JSON_C_TO_STRING_NOSLASHESCAPE 0x16U
 
 /**
  * A flag for the json_object_object_add_ex function which
@@ -59,7 +59,7 @@ typedef struct _Json_Object json_object;
  * knows for sure the key values are unique (e.g. because the
  * code adds a well-known set of constant key values).
  */
-#define JSON_C_OBJECT_ADD_KEY_IS_NEW 2U
+#define JSON_C_OBJECT_ADD_KEY_IS_NEW 0x02U
 /**
  * A flag for the json_object_object_add_ex function which
  * flags the key as being constant memory. This means that
@@ -77,7 +77,7 @@ typedef struct _Json_Object json_object;
  *   json_object_object_add_ex(obj, "ip", json,
  *       JSON_C_OBJECT_KEY_IS_CONSTANT);
  */
-#define JSON_C_OBJECT_KEY_IS_CONSTANT 4U
+#define JSON_C_OBJECT_KEY_IS_CONSTANT 0x04U
 
 
 #ifdef __cplusplus
@@ -98,12 +98,12 @@ extern "C" {
  *    of execution that all expect to free it (with `json_object_put()`) when
  *    they're done.
  *
- * @param obj the json_object instance
+ * @param obj The json_object instance
  * @see json_object_put()
  * @see json_object_object_get()
  * @see json_object_array_get_idx()
  */
-extern json_object* json_object_get(json_object *obj);
+extern json_object* json_object_get(json_object *);
 
 /**
  * Decrement the reference count of json_object and free if it reaches zero.
@@ -162,7 +162,7 @@ extern json_object* json_object_new_object(void);
  *             (OPT1|OPT2)
  */
 int json_object_object_add_ex(json_object *, const char* const,
-                              json_object *const, const unsigned);
+                              json_object *const, const unsigned char);
 
 /** Get the json_object associated with a given object field.
  *

@@ -114,14 +114,14 @@ static int json_parse_uint64(const char* buf, unsigned long long *return_value) 
 	return ((val == 0) || (end == buf)) ? 1 : 0;
 }
 
-static int json_tokener_parse_double(const char* buf, const int len, double *return_value) {
+static unsigned char json_tokener_parse_double(const char* buf, const int len, double *return_value) {
     char *end = NULL;
     *return_value = strtod(buf, &end);
 
     register const char* _expr = buf + len;
-    register int result = 1;
+    register unsigned char result = 1U;
     if (_expr == end)
-        result = 0; /* It worked */
+        result = 0U; /* It worked */
 
     return result;
 }
@@ -139,15 +139,14 @@ static inline void json_tokener_reset_level(struct json_tokener *tok, const int 
 }
 
 /**
- * Reset the state of a json_tokener, to prepare to parse a
- * brand new JSON object.
+ * Reset the state of a json_tokener, to prepare
+ * to parse a brand new JSON object.
  */
 static inline void json_tokener_reset(struct json_tokener *tok) {
     if (tok != NULL) {
-        register int i = tok->depth;
-        while (i >= 0) {
-            json_tokener_reset_level(tok, i);
-            --i;
+        while (tok->depth >= 0) {
+            json_tokener_reset_level(tok, tok->depth);
+            --tok->depth;
         }
 
         tok->depth = 0;
