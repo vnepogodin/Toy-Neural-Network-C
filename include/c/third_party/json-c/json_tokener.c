@@ -100,18 +100,18 @@ struct json_tokener {
 
 /* PARSING */
 static int json_parse_uint64(const char* buf, unsigned long long *return_value) {
-	while (*buf == ' ')
-		buf++;
+    while (*buf == ' ')
+        buf++;
 
-	if (*buf == '-')
-		return 1; /* error: uint cannot be negative */
+    if (*buf == '-')
+        return 1; /* error: uint cannot be negative */
 
-	char *end = NULL;
-	register const unsigned long long val = strtoull(buf, &end, 10);
-	if (end != buf)
-		*return_value = val;
+    char *end = NULL;
+    register const unsigned long long val = strtoull(buf, &end, 10);
+    if (end != buf)
+        *return_value = val;
 
-	return ((val == 0) || (end == buf)) ? 1 : 0;
+    return ((val == 0) || (end == buf)) ? 1 : 0;
 }
 
 static unsigned char json_tokener_parse_double(const char* buf, const int len, double *return_value) {
@@ -178,8 +178,8 @@ static struct json_tokener* json_tokener_new_ex(const int depth) {
 #else
     struct json_tokener *tok = (struct json_tokener *)calloc(1UL, sizeof(struct json_tokener));
 #endif
-	if (tok == NULL)
-		return NULL;
+    if (tok == NULL)
+        return NULL;
 
 #ifdef DEBUG
     tok->stack = NULL;
@@ -190,15 +190,15 @@ static struct json_tokener* json_tokener_new_ex(const int depth) {
     tok->stack = (struct json_tokener_srec *)calloc((unsigned long)depth, sizeof(struct json_tokener_srec));
 #endif
 
-	if (tok->stack == NULL) {
-		free(tok);
-		return NULL;
-	}
+    if (tok->stack == NULL) {
+        free(tok);
+        return NULL;
+    }
 
-	tok->pb = printbuf_new();
-	tok->max_depth = depth;
-	json_tokener_reset(tok);
-	return tok;
+    tok->pb = printbuf_new();
+    tok->max_depth = depth;
+    json_tokener_reset(tok);
+    return tok;
 }
 
 static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* str, const int len) {
@@ -663,5 +663,5 @@ json_object* json_tokener_parse(const char* str) {
         result = obj;
     }
 
-	return result;
+    return result;
 }

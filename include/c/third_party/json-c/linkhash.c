@@ -168,7 +168,7 @@ inline lh_entry* lh_table_getHead(const lh_table *const __table_param) {
     return __table_param->head;
 }
 
-inline unsigned long lh_get_hash(const lh_table *__table_param, const void *k) {
+inline unsigned long lh_get_hash(const lh_table *const __table_param, const void* const k) {
     return __table_param->hash_fn(k);
 }
 
@@ -196,45 +196,6 @@ static int get_random_seed(void) {
     return (int)arc4random();
 #endif
 }
-
-/* hash functions */
-static unsigned long lh_char_hash(const void *k);
-
-/* comparison functions */
-static int lh_char_equal(const void *k1, const void *k2) {
-    return strcmp((const char *)k1, (const char *)k2) == 0;
-}
-
-
-static int lh_table_resize(lh_table *t, const int new_size) {
-    lh_table *new_t = lh_table_new(new_size, NULL, t->hash_fn, t->equal_fn);
-    if (new_t == NULL)
-        return -1;
-
-    lh_entry *ent = t->head;
-    while (ent != NULL) {
-        register unsigned long h = lh_get_hash(new_t, ent->k);
-        register unsigned char opts = 0;
-        if (ent->k_is_constant)
-            opts = JSON_C_OBJECT_KEY_IS_CONSTANT;
-
-        if (lh_table_insert_w_hash(new_t, ent->k, ent->v, h, opts) != 0) {
-            lh_table_free(new_t);
-            return -1;
-        }
-
-        ent = ent->next;
-    }
-    free(t->table);
-    t->table = new_t->table;
-    t->size = new_size;
-    t->head = new_t->head;
-    t->tail = new_t->tail;
-    free(new_t);
-
-    return 1;
-}
-
 
 /*
  * hashlittle from lookup3.c, by Bob Jenkins, May 2006, Public Domain.
@@ -418,6 +379,8 @@ acceptable.  Do NOT use for cryptographic purposes.
 -------------------------------------------------------------------------------
 */
 
+/* hash functions */
+
 /* clang-format off */
 static unsigned hashlittle(const void *key, unsigned long length, unsigned initval) {
     /* internal state */
@@ -587,6 +550,44 @@ static unsigned long lh_char_hash(const void *k) {
 
     return hashlittle((const char *)k, strlen((const char *)k), (unsigned)random_seed);
 }
+
+/* comparison functions */
+static int lh_char_equal(const void *k1, const void *k2) {
+    return strcmp((const char *)k1, (const char *)k2) == 0;
+}
+
+
+static int lh_table_resize(lh_table *t, const int new_size) {
+    lh_table *new_t = lh_table_new(new_size, NULL, t->hash_fn, t->equal_fn);
+    if (new_t == NULL)
+        return -1;
+
+    lh_entry *ent = t->head;
+    while (ent != NULL) {
+        register unsigned long h = lh_get_hash(new_t, ent->k);
+        register unsigned char opts = 0;
+        if (ent->k_is_constant)
+            opts = JSON_C_OBJECT_KEY_IS_CONSTANT;
+
+        if (lh_table_insert_w_hash(new_t, ent->k, ent->v, h, opts) != 0) {
+            lh_table_free(new_t);
+            return -1;
+        }
+
+        ent = ent->next;
+    }
+    free(t->table);
+    t->table = new_t->table;
+    t->size = new_size;
+    t->head = new_t->head;
+    t->tail = new_t->tail;
+    free(new_t);
+
+    return 1;
+}
+
+
+
 
 lh_table* lh_kchar_table_new(const int size, void(*const free_fn)(lh_entry *)) {
     return lh_table_new(size, free_fn, lh_char_hash, lh_char_equal);
