@@ -541,38 +541,41 @@ Matrix* matrix_transpose_static(const Matrix *const m_param) {
  *
  */
 Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Matrix *__restrict const b_param) {
+    Matrix *result = NULL;
+
     /* Matrix product */
     if (a_param->columns != b_param->rows) {
         printf("Columns of A must match rows of B.\n");
-        return NULL;
-    }
+    } else {
+        register Matrix *t = matrix_new_with_args(a_param->rows, b_param->columns);
 
-    register Matrix *t = matrix_new_with_args(a_param->rows, b_param->columns);
+        register float *ptr	        = &t->data[0];
+        register const float *a_ptr = &a_param->data[0];
+        register const float *b_ptr = &b_param->data[0];
 
-    register float *ptr	        = &t->data[0];
-    register const float *a_ptr = &a_param->data[0];
-    register const float *b_ptr = &b_param->data[0];
+        register int counter = 0;
+        
+        PTR_START(t->rows)
+            register int j = 0;
+            while (j < t->columns) {
+                register int k = 0;
+                register float sum = 0.F;
+                while (k < a_param->columns) {
+                    sum += a_ptr[(i * a_param->columns) + k] * b_ptr[(k * t->rows) + j];
 
-    register int counter = 0;
-    PTR_START(t->rows)
-        register int j = 0;
-        while (j < t->columns) {
-            register int k = 0;
-            register float sum = 0.F;
-            while (k < a_param->columns) {
-                sum += a_ptr[(i * a_param->columns) + k] * b_ptr[(k * t->rows) + j];
+                    ++k;
+                }
+                ptr[counter] = sum;
 
-                ++k;
+                ++counter;
+                ++j;
             }
-            ptr[counter] = sum;
-
-            ++counter;
-            ++j;
+            ++i;
         }
-        ++i;
-    }
 
-    return t;
+        result = t;
+    }
+    return result;
 }
 
 /**

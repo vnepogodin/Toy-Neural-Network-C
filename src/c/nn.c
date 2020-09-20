@@ -169,9 +169,9 @@ void neural_network_setActivationFunction(register NeuralNetwork *__restrict nn,
                                           const unsigned char flag) {
     nn->activation_function = NULL;
 
-    if (flag & FUNC_SIGMOID)
+    if (flag == FUNC_SIGMOID)
         nn->activation_function = sigmoid;
-    else if (flag & FUNC_DSIGMOID)
+    else if (flag == FUNC_DSIGMOID)
         nn->activation_function = dsigmoid;
 }
 
@@ -306,7 +306,7 @@ NeuralNetwork* neural_network_deserialize(const json_object *__restrict const __
 #endif
 
     neural_network_setLearningRate(nn, json_object_get_float(json_find(__json_param, "learning_rate")));
-    neural_network_setActivationFunction(nn, json_object_get_int(json_find(__json_param, "activation_function")));
+    neural_network_setActivationFunction(nn, (unsigned char)json_object_get_int(json_find(__json_param, "activation_function")));
 
     return nn;
 }
