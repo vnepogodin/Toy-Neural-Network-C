@@ -554,7 +554,7 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Mat
         register const float *b_ptr = &b_param->data[0];
 
         register int counter = 0;
-        
+
         PTR_START(t->rows)
             register int j = 0;
             while (j < t->columns) {
@@ -575,6 +575,7 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Mat
 
         result = t;
     }
+
     return result;
 }
 
@@ -597,25 +598,28 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const a_param, const Mat
  *
  */
 Matrix* matrix_subtract_static(const Matrix *const a_param, const Matrix *const b_param) {
+    Matrix *result = NULL;
+
     if ((a_param->rows != b_param->rows) || (a_param->columns != b_param->columns)) {
         printf("Columns and Rows of A must match Columns and Rows of B.\n");
-        return NULL;
+    } else {
+        register Matrix *t = matrix_new_with_args(a_param->rows, b_param->columns);
+
+        register float *ptr	        = &t->data[0];
+        register const float *a_ptr = &a_param->data[0];
+        register const float *b_ptr = &b_param->data[0];
+
+        PTR_START(t->len)
+            *ptr = *a_ptr - *b_ptr;
+
+            ++a_ptr;
+            ++b_ptr;
+        PTR_END
+
+        result = t;
     }
 
-    register Matrix *t = matrix_new_with_args(a_param->rows, b_param->columns);
-
-    register float *ptr	        = &t->data[0];
-    register const float *a_ptr = &a_param->data[0];
-    register const float *b_ptr = &b_param->data[0];
-
-    PTR_START(t->len)
-        *ptr = *a_ptr - *b_ptr;
-
-        ++a_ptr;
-        ++b_ptr;
-    PTR_END
-
-    return t;
+    return result;
 }
 
 
