@@ -60,13 +60,13 @@ printbuf* printbuf_new(void);
  */
 JSON_EXPORT int printbuf_memappend(printbuf *, const char*, const unsigned long);
 
-#define printbuf_memappend_fast(p, bufptr, bufsize) do{             \
-		if ((printbuf_getSize(p) - printbuf_getPos(p)) > bufsize) { \
-			printbuf_memcpy(p, (bufptr), (unsigned long)(bufsize)); \
-			printbuf_addPos(p, (int)(bufsize));                     \
-			printbuf_setBufInPos(p, printbuf_getPos(p), '\0');      \
-		} else                                                      \
-			printbuf_memappend(p, (bufptr), (int)(bufsize));        \
+#define printbuf_memappend_fast(p, bufptr, bufsize) do{                \
+		if ((printbuf_getSize(p) - printbuf_getPos(p)) > bufsize) {    \
+			printbuf_memcpy(p, (bufptr), (unsigned long)(bufsize));    \
+			printbuf_addPos(p, (int)(bufsize));                        \
+			printbuf_setBufInPos(p, printbuf_getPos(p), '\0');         \
+		} else                                                         \
+			printbuf_memappend(p, (bufptr), (unsigned long)(bufsize)); \
 }while(0)
 
 /**

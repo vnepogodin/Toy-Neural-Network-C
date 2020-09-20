@@ -116,18 +116,18 @@ printbuf* printbuf_new(void) {
 
 inline int printbuf_memappend(printbuf *p, const char* buf, const unsigned long size) {
     /* Prevent signed integer overflows with large buffers. */
-    if (size > (INT_MAX - p->bpos - 1))
+    if ((int)size > (INT_MAX - p->bpos - 1))
         return -1;
 
-    if (p->size <= (p->bpos + size + 1)) {
-        if (printbuf_extend(p, p->bpos + size + 1) < 0)
+    if (p->size <= (p->bpos + (int)size + 1)) {
+        if (printbuf_extend(p, p->bpos + (int)size + 1) < 0)
             return -1;
     }
 
-    memcpy(p->buf + p->bpos, buf, (unsigned long)size);
-    p->bpos += size;
+    memcpy(p->buf + p->bpos, buf, size);
+    p->bpos += (int)size;
     p->buf[p->bpos] = '\0';
-    return size;
+    return (int)size;
 }
 
 int printbuf_memset(printbuf *pb, int offset, const int value, const int len) {
