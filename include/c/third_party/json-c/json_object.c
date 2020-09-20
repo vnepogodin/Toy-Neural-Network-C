@@ -122,8 +122,8 @@ static inline void json_object_generic_delete(json_object *jso) {
 static int json_escape_str(printbuf *pb, const char *str, unsigned long len, const int flags) {
     static const char json_hex_chars[22] = "0123456789abcdefABCDEF";
 
-    register int pos = 0;
-    register int start_offset = 0;
+    register unsigned long pos          = 0UL;
+    register unsigned long start_offset = 0UL;
 
     while (len--) {
         register unsigned char c = (unsigned char)str[pos];
@@ -272,7 +272,8 @@ static unsigned long json_object_array_length(const json_object *jso) {
 }
 
 static inline json_object* json_object_new(enum json_type o_type, const unsigned long alloc_size, int(*to_json_string)(json_object *, printbuf *, int, int)) {
-    register json_object *result = NULL;
+    json_object *result = NULL;
+
 #ifdef DEBUG
     json_object *jso = NULL;
 
@@ -593,16 +594,18 @@ const char* json_object_to_json_string_ext(json_object *jso, const int flags) {
 
 /* json_object_object */
 inline json_object* json_object_new_object(void) {
+    json_object *result = NULL;
     struct json_object_object *jso = JSON_OBJECT_NEW(object);
-    if (jso == NULL)
-        return NULL;
 
-    jso->c_object = lh_kchar_table_new(JSON_OBJECT_DEF_HASH_ENTRIES, &json_object_lh_entry_free);
-    if (jso->c_object == NULL) {
-        json_object_generic_delete(&jso->base);
-        return NULL;
+    if (jso != NULL) {
+        jso->c_object = lh_kchar_table_new(JSON_OBJECT_DEF_HASH_ENTRIES, &json_object_lh_entry_free);
+
+        if (jso->c_object != NULL)
+            result = &jso->base;
+        else
+            json_object_generic_delete(result);
     }
-    return &jso->base;
+    return result;
 }
 
 int json_object_object_add_ex(json_object *jso, const char* const key, json_object *const val, const unsigned char opts) {
@@ -700,7 +703,7 @@ int json_object_get_int(const json_object *jso) {
 }
 
 inline json_object* json_object_new_int64(const long long i) {
-    register json_object *result = NULL;
+    json_object *result = NULL;
 
     struct json_object_int *jso = JSON_OBJECT_NEW(int);
     if (jso != NULL) {
@@ -789,17 +792,19 @@ float json_object_get_float(const json_object *jso) {
 
 /* json_object_array */
 inline json_object* json_object_new_array_ext(const int initial_size) {
-    struct json_object_array *jso = JSON_OBJECT_NEW(array);
-    if (jso == NULL)
-        return NULL;
+    json_object *result = NULL;
+    register struct json_object_array *jso = JSON_OBJECT_NEW(array);
 
-    jso->c_array = array_list_new(&json_object_array_entry_free, initial_size);
-    if (jso->c_array == NULL) {
-        free(jso);
-        return NULL;
+    if (jso != NULL) {
+        jso->c_array = array_list_new(&json_object_array_entry_free, initial_size);
+
+        if (jso->c_array != NULL)
+            result = &jso->base;
+        else
+            free(jso);
     }
 
-    return &jso->base;
+    return result;
 }
 
 inline int json_object_array_add(json_object *jso, json_object *val) {

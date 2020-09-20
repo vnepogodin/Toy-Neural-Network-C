@@ -87,28 +87,14 @@ static lh_table* lh_table_new(const int size,
                               void (*const free_fn)(lh_entry *),
                               unsigned long (*const hash_fn)(const void*),
                               int (*const equal_fn)(const void*, const void*)) {
-#ifdef DEBUG
-    lh_table *t = NULL;
-
-    /* assumed 0.004MB page sizes */
-    posix_memalign((void **)&t, 4096UL, 4096UL);
-#else
     lh_table *t = (lh_table *)calloc(1, sizeof(lh_table));
-#endif
 
     if (t == NULL)
         return NULL;
 
     t->count = 0;
     t->size = size;
-
-#ifdef DEBUG
-    t->table = NULL;
-
-    posix_memalign((void **)&t->table, 2048UL, (unsigned long)size);
-#else
     t->table = (lh_entry *)calloc((unsigned long)size, sizeof(lh_entry));
-#endif
 
     if (t->table == NULL) {
         free(t);
@@ -442,23 +428,27 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
             break;
         case 9:
             c += k8[8];                      /* fall through */
+            break;
         case 8:
             b += k[2] + ((unsigned)k[3] << 16U);
             a += k[0] + ((unsigned)k[1] << 16U);
             break;
         case 7:
             b += (unsigned)k8[6] << 16U;      /* fall through */
+            break;
         case 6:
             b += k[2];
             a += k[0] + ((unsigned)k[1] << 16U);
             break;
         case 5:
             b += k8[4];                      /* fall through */
+            break;
         case 4:
             a += k[0] + ((unsigned)k[1] << 16U);
             break;
         case 3:
             a += ((unsigned)k8[2]) << 16U;      /* fall through */
+            break;
         case 2:
             a += k[0];
             break;
@@ -496,27 +486,38 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
         /*-------------------------------- last block: affect all 32 bits of (c) */
         switch(length) { /* all the case statements fall through */
         case 12:
-            c += (unsigned)k[11] << 24U; /* FALLTHRU */
+            c += (unsigned)k[11] << 24U; /* fall through */
+            break;
         case 11:
-            c += (unsigned)k[10] << 16U; /* FALLTHRU */
+            c += (unsigned)k[10] << 16U; /* fall through */
+            break;
         case 10:
-            c += (unsigned)k[9] << 8U; /* FALLTHRU */
+            c += (unsigned)k[9] << 8U; /* fall through */
+            break;
         case 9:
-            c += k[8]; /* FALLTHRU */
+            c += k[8]; /* fall through */
+            break;
         case 8:
-            b += (unsigned)k[7] << 24U; /* FALLTHRU */
+            b += (unsigned)k[7] << 24U; /* fall through */
+            break;
         case 7:
-            b += (unsigned)k[6] << 16U; /* FALLTHRU */
+            b += (unsigned)k[6] << 16U; /* fall through */
+            break;
         case 6:
-            b += (unsigned)k[5] << 8U; /* FALLTHRU */
+            b += (unsigned)k[5] << 8U; /* fall through */
+            break;
         case 5:
-            b += k[4]; /* FALLTHRU */
+            b += k[4]; /* fall through */
+            break;
         case 4:
-            a += (unsigned)k[3] << 24U; /* FALLTHRU */
+            a += (unsigned)k[3] << 24U; /* fall through */
+            break;
         case 3:
-            a += (unsigned)k[2] << 16U; /* FALLTHRU */
+            a += (unsigned)k[2] << 16U; /* fall through */
+            break;
         case 2:
-            a += (unsigned)k[1] << 8U; /* FALLTHRU */
+            a += (unsigned)k[1] << 8U; /* fall through */
+            break;
         case 1:
             a += k[0];
             break;

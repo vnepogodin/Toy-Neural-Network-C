@@ -196,6 +196,12 @@ static struct json_tokener* json_tokener_new_ex(const int depth) {
     }
 
     tok->pb = printbuf_new();
+    if (tok->pb == NULL) {
+        free(tok);
+        free(tok->stack);
+        return NULL;
+    }
+
     tok->max_depth = depth;
     json_tokener_reset(tok);
     return tok;
@@ -219,7 +225,7 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
     json_object *obj = NULL;
     char c = 1;
 
-    while (1) { /* Note: c never might not be 0! */
+    while (1) {
         c = *str;
 
         redo_char:
@@ -296,7 +302,7 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
                 json_tokener_reset_level(tok, tok->depth);
                 tok->depth--;
                 goto redo_char;
-            case json_tokener_state_null: { /* aka starts with 'n' */
+            case json_tokener_state_null: { /* starts with 'n' */
                 printbuf_memappend_fast(tok->pb, &c, 1);
 
                 register const unsigned long size = json_min((unsigned long)tok->st_pos + 1UL, 3UL);

@@ -54,68 +54,73 @@ static int array_list_expand_internal(array_list *arr, const unsigned long max) 
 array_list* array_list_new(void(*free_fn)(void*), const int initial_size) {
     array_list *result = NULL;
 
+    if (!((initial_size < 0) || ((unsigned long)initial_size >= (ULONG_MAX / sizeof(void *))))) {
 #ifdef DEBUG
-    array_list *arr = NULL;
+        array_list *arr = NULL;
 
-    /* assumed 0.002MB page sizes */
-    posix_memalign((void **)&arr, 2048UL, 2048UL);
+        /* assumed 0.002MB page sizes */
+        posix_memalign((void **)&arr, 2048UL, 2048UL);
 #else
-    array_list *arr = (array_list *)malloc(sizeof(array_list));
+        array_list *arr = (array_list *)malloc(sizeof(array_list));
 #endif
 
-	if (arr != NULL) {
-        arr->size = (unsigned long)initial_size;
-        arr->length = 0;
-        arr->free_fn = free_fn;
-        arr->array = (void **)calloc((unsigned long)initial_size, 8UL);
+        if (arr != NULL) {
+            arr->size = (unsigned long)initial_size;
+            arr->length = 0;
+            arr->free_fn = free_fn;
+            arr->array = (void **)calloc((unsigned long)initial_size, 8UL);
 
-        if (arr->array != NULL)
-            result = arr;
-        else
-            free(arr);
-	}
+            if (arr->array != NULL)
+                result = arr;
+            else
+                free(arr);
+        }
+    }
 
-	return result;
+    return result;
 }
 
 void array_list_free(array_list *arr) {
-	register unsigned long i = 0UL;
-	while (i < arr->length) {
-	    if (arr->array[i] != NULL)
-	        arr->free_fn(arr->array[i]);
+    register unsigned long i = 0UL;
+    while (i < arr->length) {
+        if (arr->array[i] != NULL)
+            arr->free_fn(arr->array[i]);
 
-	    ++i;
-	}
-	free(arr->array);
-	free(arr);
+        ++i;
+    }
+    free(arr->array);
+    free(arr);
 }
 
 void* array_list_get_idx(array_list *arr, const unsigned long i) {
-    register void* result = NULL; 
-	if (i < arr->length)
-		return arr->array[i];
+    register void* result = NULL;
+    if (i < arr->length)
+        result = arr->array[i];
 
-	return result;
+    return result;
 }
 
 int array_list_shrink(array_list *arr, const unsigned long empty_slots) {
+    if (empty_slots >= (ULONG_MAX / (sizeof(void *) - arr->length)))
+        return -1;
+
     register unsigned long new_size = arr->length + empty_slots;
-	if (new_size == arr->size)
-		return 0;
+    if (new_size == arr->size)
+        return 0;
 
-	if (new_size > arr->size)
-		return array_list_expand_internal(arr, new_size);
+    if (new_size > arr->size)
+        return array_list_expand_internal(arr, new_size);
 
-	if (new_size == 0)
-		new_size = 1;
+    if (new_size == 0)
+        new_size = 1;
 
     register void* t = realloc(arr->array, new_size * sizeof(void *));
     if (t == NULL)
-		return -1;
+        return -1;
 
-	arr->array = (void **)t;
-	arr->size = new_size;
-	return 0;
+    arr->array = (void **)t;
+    arr->size = new_size;
+    return 0;
 }
 
 /* Repeat some of array_list_put_idx() so we can skip several
@@ -125,14 +130,15 @@ int array_list_add(array_list *arr, const void* const data) {
     register unsigned long idx = arr->length;
     register int result = -1;
 
-	if ((idx <= (ULONG_MAX - 1)) && (array_list_expand_internal(arr, idx + 1) != 1)) {
+    if ((idx <= (ULONG_MAX - 1)) && (array_list_expand_internal(arr, idx + 1) != 1)) {
         arr->array[idx] = (void *)data;
         arr->length++;
+
         result = 0;
-	}
-	return result;
+    }
+    return result;
 }
 
 inline unsigned long array_list_length(const array_list *arr) {
-	return arr->length;
+    return arr->length;
 }
