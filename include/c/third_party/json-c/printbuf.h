@@ -58,7 +58,7 @@ printbuf* printbuf_new(void);
  * Your code should not use printbuf_memappend() directly unless it
  * checks the return code. Use printbuf_memappend_fast() instead.
  */
-JSON_EXPORT int printbuf_memappend(printbuf *, const char*, const int);
+JSON_EXPORT int printbuf_memappend(printbuf *, const char*, const unsigned long);
 
 #define printbuf_memappend_fast(p, bufptr, bufsize) do{             \
 		if ((printbuf_getSize(p) - printbuf_getPos(p)) > bufsize) { \

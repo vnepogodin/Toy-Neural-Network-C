@@ -664,9 +664,9 @@ lh_entry* lh_table_lookup_entry_w_hash(const lh_table *t, const void *k, const u
     return NULL;
 }
 
-unsigned int lh_table_lookup_ex(const lh_table *t, const void *k, void **v) {
+unsigned char lh_table_lookup_ex(const lh_table *t, const void *k, void **v) {
     register const lh_entry *e = lh_table_lookup_entry_w_hash(t, k, lh_get_hash(t, k));
-    register unsigned int result = 0U;
+    register unsigned char result = 0U;
     if (e != NULL) {
         if (v != NULL)
             *v = (void *)lh_entry_getV(e);

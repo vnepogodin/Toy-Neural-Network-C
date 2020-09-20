@@ -30,8 +30,7 @@ static inline float dsigmoid(float y) {
 
 static json_object* json_find(const json_object *__restrict const j,
                               const char* __restrict key) {
-    json_object *temp_json;
-
+    json_object *temp_json = NULL;
     json_object_object_get_ex(j, key, &temp_json);
 
     return temp_json;
@@ -291,7 +290,7 @@ json_object* neural_network_serialize(const NeuralNetwork *__restrict const __nn
  *
  */
 NeuralNetwork* neural_network_deserialize(const json_object *__restrict const __json_param) {
-    register NeuralNetwork *nn = (NeuralNetwork *)malloc(57);
+    register NeuralNetwork *nn = (NeuralNetwork *)malloc(56UL);
 
     nn->input_nodes = json_object_get_int(json_find(__json_param, "input_nodes"));
     nn->hidden_nodes = json_object_get_int(json_find(__json_param, "hidden_nodes"));

@@ -127,6 +127,7 @@ static int json_escape_str(printbuf *pb, const char *str, unsigned long len, con
 
     while (len--) {
         register unsigned char c = (unsigned char)str[pos];
+        register unsigned long buf_l = pos - start_offset;
 
         switch (c) {
             case '\b':
@@ -142,8 +143,9 @@ static int json_escape_str(printbuf *pb, const char *str, unsigned long len, con
                     break;
                 }
 
-                if ((pos - start_offset) > 0)
-                    printbuf_memappend(pb, str + start_offset, pos - start_offset);
+
+                if (buf_l > 0)
+                    printbuf_memappend(pb, str + start_offset, buf_l);
 
                 if (c == '\b')
                     printbuf_memappend(pb, "\\b", 2);
@@ -165,8 +167,8 @@ static int json_escape_str(printbuf *pb, const char *str, unsigned long len, con
                 break;
             default:
                 if (c < ' ') {
-                    if (pos - start_offset > 0)
-                        printbuf_memappend(pb, str + start_offset, pos - start_offset);
+                    if (buf_l > 0)
+                        printbuf_memappend(pb, str + start_offset, buf_l);
 
                     char sbuf[7] = { 0 };
                     snprintf(sbuf, 7, "\\u00%c%c", json_hex_chars[c >> 4U], json_hex_chars[c & (unsigned)0xf]);
@@ -279,7 +281,7 @@ static inline json_object* json_object_new(enum json_type o_type, const unsigned
 
     posix_memalign((void **)&jso, 4096UL, 4096UL); /* assumed 0.004MB page sizes */
 #else
-    json_object *jso = (json_object *)malloc(alloc_size);
+    register json_object *jso = (json_object *)malloc(alloc_size);
 #endif
 
     if (jso != NULL) {
@@ -381,7 +383,7 @@ static int json_object_double_to_json_string_format(json_object *jso, printbuf *
     if (size >= 128)
         size = 127;
 
-    printbuf_memappend(pb, buf, size);
+    printbuf_memappend(pb, buf, (unsigned long)size);
     return size;
 }
 
@@ -442,7 +444,7 @@ static inline int json_object_int_to_json_string(json_object *jso, printbuf *pb)
     else
         snprintf(sbuf, 21, "%llu", JC_INT(jso)->cint.c_uint64);
 
-    return printbuf_memappend(pb, sbuf, (int)strlen(sbuf));
+    return printbuf_memappend(pb, sbuf, strlen(sbuf));
 }
 
 static int json_object_array_to_json_string(json_object *jso, printbuf *pb, const int level, const int flags) {
@@ -498,7 +500,7 @@ static int json_object_array_to_json_string(json_object *jso, printbuf *pb, cons
  */
 static inline int json_object_userdata_to_json_string(json_object *jso, printbuf *pb) {
     register int userdata_len = (int)strlen((const char *)jso->_userdata);
-    printbuf_memappend(pb, (const char *)jso->_userdata, userdata_len);
+    printbuf_memappend(pb, (const char *)jso->_userdata, (unsigned long)userdata_len);
 
     return userdata_len;
 }
@@ -609,7 +611,7 @@ inline json_object* json_object_new_object(void) {
 }
 
 int json_object_object_add_ex(json_object *jso, const char* const key, json_object *const val, const unsigned char opts) {
-    assert(json_object_get_type(jso) == json_type_object);
+    assert(jso->o_type == json_type_object);
 
     /* We lookup the entry and replace the value, rather than just deleting
      * and re-adding it, so the existing key remains valid.
@@ -642,14 +644,16 @@ int json_object_object_add_ex(json_object *jso, const char* const key, json_obje
     return 0;
 }
 
-inline unsigned int json_object_object_get_ex(const json_object *jso, const char* key, json_object **value) {
-    register unsigned int result = 0U;
+inline unsigned char json_object_object_get_ex(const json_object *jso, const char* key, json_object **value) {
+    if (value != NULL)
+        *value = NULL;
 
-    if (jso != NULL) {
-        result = lh_table_lookup_ex(JC_OBJECT_C(jso)->c_object, (const void *)key, (void **)value);
-    }
+    if (NULL == jso)
+        return 0;
 
-    return result;
+    assert(jso->o_type == json_type_object);
+
+    return lh_table_lookup_ex(JC_OBJECT_C(jso)->c_object, (const void *)key, (void **)value);
 }
 
 /* json_object_int */
@@ -808,13 +812,13 @@ inline json_object* json_object_new_array_ext(const int initial_size) {
 }
 
 inline int json_object_array_add(json_object *jso, json_object *val) {
-    assert(json_object_get_type(jso) == json_type_array);
+    assert(jso->o_type == json_type_array);
 
     return array_list_add(JC_ARRAY(jso)->c_array, val);
 }
 
 inline json_object* json_object_array_get_idx(const json_object *jso, unsigned long idx) {
-    assert(json_object_get_type(jso) == json_type_array);
+    assert(jso->o_type == json_type_array);
 
     return (json_object *)array_list_get_idx(JC_ARRAY_C(jso)->c_array, idx);
 }

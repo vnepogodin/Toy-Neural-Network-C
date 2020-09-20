@@ -99,66 +99,66 @@ printbuf* printbuf_new(void) {
     printbuf *p = (printbuf *)calloc(1UL, sizeof(printbuf));
 #endif
 
-	if (p == NULL)
-		return NULL;
+    if (p == NULL)
+        return NULL;
 
-	p->size = 32;
-	p->bpos = 0;
+    p->size = 32;
+    p->bpos = 0;
     p->buf = (char *)malloc((unsigned long)p->size);
-	if (p->buf == NULL) {
-		free(p);
-		return NULL;
-	}
+    if (p->buf == NULL) {
+        free(p);
+        return NULL;
+    }
 
-	p->buf[0] = '\0';
-	return p;
+    p->buf[0] = '\0';
+    return p;
 }
 
-inline int printbuf_memappend(printbuf *p, const char* buf, const int size) {
-	/* Prevent signed integer overflows with large buffers. */
-	if (size > (INT_MAX - p->bpos - 1))
-		return -1;
+inline int printbuf_memappend(printbuf *p, const char* buf, const unsigned long size) {
+    /* Prevent signed integer overflows with large buffers. */
+    if (size > (INT_MAX - p->bpos - 1))
+        return -1;
 
-	if (p->size <= (p->bpos + size + 1)) {
-		if (printbuf_extend(p, p->bpos + size + 1) < 0)
-			return -1;
-	}
+    if (p->size <= (p->bpos + size + 1)) {
+        if (printbuf_extend(p, p->bpos + size + 1) < 0)
+            return -1;
+    }
 
-	memcpy(p->buf + p->bpos, buf, (unsigned long)size);
-	p->bpos += size;
-	p->buf[p->bpos] = '\0';
-	return size;
+    memcpy(p->buf + p->bpos, buf, (unsigned long)size);
+    p->bpos += size;
+    p->buf[p->bpos] = '\0';
+    return size;
 }
 
-int printbuf_memset(printbuf *pb, int offset, const int charvalue, const int len) {
-	if (offset == -1)
-		offset = pb->bpos;
+int printbuf_memset(printbuf *pb, int offset, const int value, const int len) {
+    if (offset == -1)
+        offset = pb->bpos;
 
-	/* Prevent signed integer overflows with large buffers. */
-	if (len > (INT_MAX - offset))
-		return -1;
+    /* Prevent signed integer overflows with large buffers. */
+    if (len > (INT_MAX - offset))
+        return -1;
 
     register const int size_needed = offset + len;
-	if (pb->size < size_needed) {
-		if (printbuf_extend(pb, size_needed) < 0)
-			return -1;
-	}
+    if (pb->size < size_needed) {
+        if (printbuf_extend(pb, size_needed) < 0)
+            return -1;
+    }
 
-	memset(pb->buf + offset, charvalue, (unsigned long)len);
-	if (pb->bpos < size_needed)
-		pb->bpos = size_needed;
+    memset(pb->buf + offset, value, (unsigned long)len);
+    if (pb->bpos < size_needed)
+        pb->bpos = size_needed;
 
-	return 0;
+    return 0;
 }
 
 inline void printbuf_reset(printbuf *p) {
-	p->buf[0] = '\0';
-	p->bpos = 0;
+    p->buf[0] = '\0';
+    p->bpos = 0;
 }
 
 inline void printbuf_free(printbuf *p) {
-	if (p != NULL) {
-		free(p->buf);
-		free(p);
-	}
+    if (p != NULL) {
+        free(p->buf);
+        free(p);
+    }
 }

@@ -127,7 +127,7 @@ extern lh_entry* lh_table_lookup_entry_w_hash(const lh_table *, const void*, con
  * @param v a pointer to a where to store the found value (set to NULL if it doesn't exist).
  * @return whether or not the key was found
  */
-extern unsigned int lh_table_lookup_ex(const lh_table *, const void*, void **);
+extern unsigned char lh_table_lookup_ex(const lh_table *, const void*, void **);
 
 
 extern lh_entry* lh_table_getHead(const lh_table *const);

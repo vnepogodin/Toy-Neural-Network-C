@@ -182,7 +182,7 @@ int json_object_object_add_ex(json_object *, const char* const,
  *              It is safe to pass a NULL value.
  * @returns whether or not the key exists
  */
-extern unsigned int json_object_object_get_ex(const json_object *, const char*,
+extern unsigned char json_object_object_get_ex(const json_object *, const char*,
                                               json_object **);
 
 /* Array type methods */
