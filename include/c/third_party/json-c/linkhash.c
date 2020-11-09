@@ -10,176 +10,84 @@
  *
  */
 #include "linkhash.h"
-#include "json_object.h"
 
+#include <limits.h> /* INT_MAX, LONG_MAX.. */
+#include <stddef.h>
 #include <stdlib.h> /* arc4random, rand_r */
 #include <string.h> /* strlen */
-#include <limits.h> /* INT_MAX, LONG_MAX.. */
 
 #ifdef __linux__
-# include <fcntl.h> /* openat, O_RDONLY */
+# include <fcntl.h>  /* openat, O_RDONLY */
 # include <unistd.h> /* pread, close */
 #elif _WIN32
-# include <windows.h>
+# define WIN32_LEAN_AND_MEAN
 # include <bcrypt.h> /* BCryptGenRandom */
+# include <windows.h>
 #endif
 
+/* hash functions */
+static inline unsigned long lh_char_hash(const void *k);
+static inline unsigned long lh_perllike_str_hash(const void* k) {
+  const char* rkey = (const char *)k;
+  unsigned hashval = 1U;
 
-struct _LH_Entry {
-    /*
-     * A flag for users of linkhash to know whether or not they
-     * need to free k.
-     */
-    unsigned char k_is_constant;
+  while (*rkey)
+    hashval = hashval * 33U + (unsigned)*rkey++;
 
-    const void *k;
-    const void *v;
+  return hashval;
+}
+static lh_hash_fn *char_hash_fn = lh_char_hash;
 
-    /*
-     * The next entry
-     */
-    lh_entry *next;
-};
-
-struct _LH_Table {
-    /**
-     * Size of our hash.
-     */
-    int size;
-    /**
-     * Numbers of entries.
-     */
-    int count;
-
-    /**
-     * A pointer onto the function responsible for freeing an entry.
-     */
-    void (*free_fn)(lh_entry *);
-    unsigned long (*hash_fn)(const void*);
-    int (*equal_fn)(const void*, const void*);
-
-    /**
-     * The first entry.
-     */
-    lh_entry *head;
-
-    /**
-     * The last entry.
-     */
-    lh_entry *tail;
-
-    lh_entry *table;
-};
-
-
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h> /* Get InterlockedCompareExchange */
-#endif
-
-#ifdef __UNCONST
-#define _LH_UNCONST(a) __UNCONST(a)
-#else
-#define _LH_UNCONST(a) ((void *)(unsigned long)(const void *)(a))
-#endif
-
-static lh_table* lh_table_new(const int size,
-                              void (*const free_fn)(lh_entry *),
-                              unsigned long (*const hash_fn)(const void*),
-                              int (*const equal_fn)(const void*, const void*)) {
-    lh_table *t = (lh_table *)calloc(1, sizeof(lh_table));
-
-    if (t == NULL)
-        return NULL;
-
-    t->count = 0;
-    t->size = size;
-    t->table = (lh_entry *)calloc((unsigned long)size, sizeof(lh_entry));
-
-    if (t->table == NULL) {
-        free(t);
-        return NULL;
-    }
-
-    t->free_fn = free_fn;
-    t->hash_fn = hash_fn;
-    t->equal_fn = equal_fn;
-
-    register int i = 0;
-    while (i < size) {
-        t->table[i].k = LH_EMPTY;
-        ++i;
-    }
-
-    return t;
+/* comparison functions */
+static inline int lh_char_equal(const void *k1, const void *k2) {
+  return (strcmp((const char *)k1, (const char *)k2) == 0);
 }
 
-
-inline unsigned char lh_entry_getConstant(lh_entry *__entry_param) {
-    return __entry_param->k_is_constant;
+static inline int lh_ptr_equal(const void *k1, const void *k2) {
+  return (k1 == k2);
 }
 
-inline lh_entry* lh_entry_getNext(lh_entry *__entry_param) {
-    return __entry_param->next;
+int json_global_set_string_hash(const int h) {
+  switch (h) {
+  case JSON_C_STR_HASH_DFLT:
+    char_hash_fn = lh_char_hash;
+    break;
+  case JSON_C_STR_HASH_PERLLIKE:
+    char_hash_fn = lh_perllike_str_hash;
+    break;
+  default:
+    return -1;
+  }
+  return 0;
 }
 
-/**
- * Return a non-const version of lh_entry.k.
- *
- * lh_entry.k is const to indicate and help ensure that linkhash itself doesn't modify
- * it, but callers are allowed to do what they want with it.
- * See also lh_entry.k_is_constant
- */
-inline const void* lh_entry_getK(const lh_entry *__entry_param) {
-    return _LH_UNCONST(__entry_param->k);
+static inline unsigned long lh_ptr_hash(const void *k) {
+  /* CAW: refactored to be 64bit nice */
+  return (unsigned long)((((ptrdiff_t)k * (ptrdiff_t)LH_PRIME) >> 4UL) & (ptrdiff_t)ULONG_MAX);
 }
-
-/**
- * Return a non-const version of lh_entry.v.
- *
- * v is const to indicate and help ensure that linkhash itself doesn't modify
- * it, but callers are allowed to do what they want with it.
- */
-inline const void* lh_entry_getV(const lh_entry *__entry_param) {
-    return _LH_UNCONST(__entry_param->v);
-}
-
-
-inline void lh_entry_setV(lh_entry *__entry_param, const void* __value_param) {
-    __entry_param->v = __value_param;
-}
-
-
-inline lh_entry* lh_table_getHead(const lh_table *const __table_param) {
-    return __table_param->head;
-}
-
-inline unsigned long lh_get_hash(const lh_table *const __table_param, const void* const k) {
-    return __table_param->hash_fn(k);
-}
-
 
 static int get_random_seed(void) {
 #ifdef __linux__
-    register int fd = openat(0, "/dev/urandom", O_RDONLY, 0);
-    unsigned char buf[1] = { 0U };
+  register int fd = openat(0, "/dev/urandom", O_RDONLY, 0);
+  unsigned char buf[1] = {0U};
 
-    if (fd != -1) {
-        pread(fd, buf, 1, 0);
-        close(fd);
-    }
+  if (fd != -1) {
+    pread(fd, buf, 1, 0);
+    close(fd);
+  }
 
-    unsigned int __random = buf[0];
+  unsigned __random = buf[0];
 
-    return rand_r(&__random);
+  return rand_r(&__random);
 #elif _WIN32
-    UINT __random = 0U;
+  UINT __random = 0U;
 
-    BCryptGenRandom(NULL, (BYTE*)&__random, sizeof(UINT), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+  BCryptGenRandom(NULL, (BYTE *)&__random, sizeof(UINT),
+                  BCRYPT_USE_SYSTEM_PREFERRED_RNG);
 
-    return (int)__random;
+  return (int)__random;
 #else
-    return (int)arc4random();
+  return (int)arc4random();
 #endif
 }
 
@@ -230,12 +138,15 @@ on 1 byte), but shoehorning those bytes into integers efficiently is messy.
  * My best guess at if you are big-endian or little-endian.  This may
  * need adjustment.
  */
-#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && __BYTE_ORDER == __LITTLE_ENDIAN) || \
-    (defined(i386) || defined(__i386__) || defined(__i486__) || defined(__i586__) ||          \
-     defined(__i686__) || defined(vax) || defined(MIPSEL))
+#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) &&                      \
+     __BYTE_ORDER == __LITTLE_ENDIAN) ||                                       \
+    (defined(i386) || defined(__i386__) || defined(__i486__) ||                \
+     defined(__i586__) || defined(__i686__) || defined(vax) ||                 \
+     defined(MIPSEL))
 #define HASH_LITTLE_ENDIAN 1
 #define HASH_BIG_ENDIAN 0
-#elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && __BYTE_ORDER == __BIG_ENDIAN) || \
+#elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) &&                       \
+       __BYTE_ORDER == __BIG_ENDIAN) ||                                        \
     (defined(sparc) || defined(POWERPC) || defined(mc68000) || defined(sel))
 #define HASH_LITTLE_ENDIAN 0
 #define HASH_BIG_ENDIAN 1
@@ -244,6 +155,8 @@ on 1 byte), but shoehorning those bytes into integers efficiently is messy.
 #define HASH_BIG_ENDIAN 0
 #endif
 
+#define hashsize(n) (1U << (n))
+#define hashmask(n) (hashsize(n) - 1U)
 #define rot(x, k) (((x) << (k)) | ((x) >> (32U - (k))))
 
 /*
@@ -291,14 +204,14 @@ rotates.
 -------------------------------------------------------------------------------
 */
 /* clang-format off */
-#define mix(a, b, c) do{                \
-    a -= c;  a ^= rot(c, 4U);  c += b;  \
-    b -= a;  b ^= rot(a, 6U);  a += c;  \
-    c -= b;  c ^= rot(b, 8U);  b += a;  \
-    a -= c;  a ^= rot(c, 16U); c += b;  \
-    b -= a;  b ^= rot(a, 19U); a += c;  \
-    c -= b;  c ^= rot(b, 4U);  b += a;  \
-}while(0)
+#define mix(a,b,c) { \
+	a -= c;  a ^= rot(c, 4);  c += b; \
+	b -= a;  b ^= rot(a, 6);  a += c; \
+	c -= b;  c ^= rot(b, 8);  b += a; \
+	a -= c;  a ^= rot(c, 16); c += b; \
+	b -= a;  b ^= rot(a, 19); a += c; \
+	c -= b;  c ^= rot(b, 4);  b += a; \
+}
 /* clang-format on */
 
 /*
@@ -327,14 +240,14 @@ and these came close:
 -------------------------------------------------------------------------------
 */
 /* clang-format off */
-#define final(a, b, c) {      \
-    c ^= b; c -= rot(b, 14U); \
-    a ^= c; a -= rot(c, 11U); \
-    b ^= a; b -= rot(a, 25U); \
-    c ^= b; c -= rot(b, 16U); \
-    a ^= c; a -= rot(c, 4U);  \
-    b ^= a; b -= rot(a, 14U); \
-    c ^= b; c -= rot(b, 24U); \
+#define final(a,b,c) { \
+	c ^= b; c -= rot(b, 14); \
+	a ^= c; a -= rot(c, 11); \
+	b ^= a; b -= rot(a, 25); \
+	c ^= b; c -= rot(b, 16); \
+	a ^= c; a -= rot(c, 4);  \
+	b ^= a; b -= rot(a, 14); \
+	c ^= b; c -= rot(b, 24); \
 }
 /* clang-format on */
 
@@ -365,169 +278,180 @@ acceptable.  Do NOT use for cryptographic purposes.
 -------------------------------------------------------------------------------
 */
 
-/* hash functions */
-
 /* clang-format off */
 static unsigned hashlittle(const void *key, unsigned long length, unsigned initval) {
-    /* internal state */
-    unsigned a;
-    unsigned b;
-    unsigned c;
-    union {
-        const void *ptr;
-        unsigned long i;
-    } u; /* needed for Mac Powerbook G4 */
+	unsigned a, b, c; /* internal state */
+	union {
+		const void *ptr;
+		unsigned long i;
+	} u; /* needed for Mac Powerbook G4 */
 
-    /* Set up the internal state */
-    a = b = c = 0xdeadbeef + ((unsigned)length) + initval;
+	/* Set up the internal state */
+	a = b = c = 0xdeadbeef + ((unsigned)length) + initval;
 
-    u.ptr = key;
-    if (HASH_LITTLE_ENDIAN && ((u.i & 0x3) == 0)) {
-        const unsigned *k = (const unsigned *)key; /* read 32-bit chunks */
+	u.ptr = key;
+	if (HASH_LITTLE_ENDIAN && ((u.i & 0x3U) == 0)) {
+		const unsigned* k = (const unsigned *)key; /* read 32-bit chunks */
 
-        /*------ all but last block: aligned reads and affect 32 bits of (a, b, c) */
-        while (length > 12) {
-            a += k[0];
-            b += k[1];
-            c += k[2];
+		/*------ all but last block: aligned reads and affect 32 bits of (a,b,c) */
+		while (length > 12) {
+			a += k[0];
+			b += k[1];
+			c += k[2];
+			mix(a,b,c);
+			length -= 12;
+			k += 3;
+		}
 
-            mix(a, b, c);
+		/*----------------------------- handle the last (probably partial) block */
+		/*
+		 * "k[2]&0xffffff" actually reads beyond the end of the string, but
+		 * then masks off the part it's not allowed to read.  Because the
+		 * string is aligned, the masked-off tail is in the same word as the
+		 * rest of the string.  Every machine with memory protection I've seen
+		 * does it on word boundaries, so is OK with this.  But VALGRIND will
+		 * still catch it and complain.  The masking trick does make the hash
+		 * noticably faster for short strings (like English words).
+		 * AddressSanitizer is similarly picky about overrunning
+		 * the buffer. (http://clang.llvm.org/docs/AddressSanitizer.html
+		 */
+#ifdef VALGRIND
+#define PRECISE_MEMORY_ACCESS 1
+#elif defined(__SANITIZE_ADDRESS__) /* GCC's ASAN */
+#define PRECISE_MEMORY_ACCESS 1
+#elif defined(__has_feature)
+#if __has_feature(address_sanitizer) /* Clang's ASAN */
+#define PRECISE_MEMORY_ACCESS 1
+#endif
+#endif
+#ifndef PRECISE_MEMORY_ACCESS
 
-            length -= 12;
-            k += 3;
-        }
-    } else if (HASH_LITTLE_ENDIAN && ((u.i & 0x1) == 0)) {
-        const unsigned short *k = (const unsigned short *)key; /* read 16-bit chunks */
+		switch(length) {
+		case 12: c += k[2]; b += k[1]; a += k[0]; break;
+		case 11: c += k[2] & 0xffffffU; b += k[1]; a += k[0]; break;
+		case 10: c += k[2] & 0xffffU; b += k[1]; a += k[0]; break;
+		case 9 : c += k[2] & 0xffU; b += k[1]; a += k[0]; break;
+		case 8 : b += k[1]; a += k[0]; break;
+		case 7 : b += k[1] & 0xffffffU; a += k[0]; break;
+		case 6 : b += k[1] & 0xffffU; a += k[0]; break;
+		case 5 : b += k[1] & 0xffU; a += k[0]; break;
+		case 4 : a += k[0]; break;
+		case 3 : a += k[0] & 0xffffffU; break;
+		case 2 : a += k[0] & 0xffffU; break;
+		case 1 : a += k[0] & 0xffU; break;
+		case 0 : return c; /* zero length strings require no mixing */
+		}
 
-        /*--------------- all but last block: aligned reads and different mixing */
-        while (length > 12) {
-            a += k[0] + ((unsigned)k[1] << 16U);
-            b += k[2] + ((unsigned)k[3] << 16U);
-            c += k[4] + ((unsigned)k[5] << 16U);
+#else /* make valgrind happy */
 
-            mix(a, b, c);
+		const unsigned char* k8 = (const unsigned char *)k;
+		switch(length) {
+		case 12: c += k[2]; b += k[1]; a += k[0]; break;
+		case 11: c += ((unsigned)k8[10]) << 16U;  /* fall through */
+		case 10: c += ((unsigned)k8[9]) << 8U;    /* fall through */
+		case 9 : c += k8[8];                   /* fall through */
+		case 8 : b += k[1]; a += k[0]; break;
+		case 7 : b += ((unsigned)k8[6]) << 16U;   /* fall through */
+		case 6 : b += ((unsigned)k8[5]) << 8U;    /* fall through */
+		case 5 : b += k8[4];                   /* fall through */
+		case 4 : a += k[0]; break;
+		case 3 : a += ((unsigned)k8[2]) << 16U;   /* fall through */
+		case 2 : a += ((unsigned)k8[1]) << 8U;    /* fall through */
+		case 1 : a += k8[0]; break;
+		case 0 : return c;
+		}
 
-            length -= 12;
-            k += 6;
-        }
+#endif /* !valgrind */
 
-        /*----------------------------- handle the last (probably partial) block */
-        const unsigned char *k8 = (const unsigned char *)k;
-        switch(length) {
-        case 12:
-            c += k[4] + ((unsigned)k[5] << 16U);
-            b += k[2] + ((unsigned)k[3] << 16U);
-            a += k[0] + ((unsigned)k[1] << 16U);
-            break;
-        case 11:
-            c += (unsigned)k8[10] << 16U;     /* fall through */
-        case 10:
-            c += k[4];
-            b += k[2] + ((unsigned)k[3] << 16U);
-            a += k[0] + ((unsigned)k[1] << 16U);
-            break;
-        case 9:
-            c += k8[8];                      /* fall through */
-            break;
-        case 8:
-            b += k[2] + ((unsigned)k[3] << 16U);
-            a += k[0] + ((unsigned)k[1] << 16U);
-            break;
-        case 7:
-            b += (unsigned)k8[6] << 16U;      /* fall through */
-            break;
-        case 6:
-            b += k[2];
-            a += k[0] + ((unsigned)k[1] << 16U);
-            break;
-        case 5:
-            b += k8[4];                      /* fall through */
-            break;
-        case 4:
-            a += k[0] + ((unsigned)k[1] << 16U);
-            break;
-        case 3:
-            a += ((unsigned)k8[2]) << 16U;      /* fall through */
-            break;
-        case 2:
-            a += k[0];
-            break;
-        case 1:
-            a += k8[0];
-            break;
-        case 0:
-            return c;                     /* zero length requires no mixing */
-        }
-    } else {
-        /* need to read the key one byte at a time */
-        const unsigned char *k = (const unsigned char *)key;
+	}
+	else if (HASH_LITTLE_ENDIAN && ((u.i & 0x1U) == 0)) {
+		const unsigned short* k = (const unsigned short *)key; /* read 16-bit chunks */
 
-        /*--------------- all but the last block: affect some 32 bits of (a,b,c) */
-        while (length > 12) {
-            a += k[0];
-            a += (unsigned)k[1] << 8U;
-            a += (unsigned)k[2] << 16U;
-            a += (unsigned)k[3] << 24U;
-            b += k[4];
-            b += (unsigned)k[5] << 8U;
-            b += (unsigned)k[6] << 16U;
-            b += (unsigned)k[7] << 24U;
-            c += k[8];
-            c += (unsigned)k[9] << 8U;
-            c += (unsigned)k[10] << 16U;
-            c += (unsigned)k[11] << 24U;
+		/*--------------- all but last block: aligned reads and different mixing */
+		while (length > 12) {
+			a += k[0] + (((unsigned)k[1]) << 16U);
+			b += k[2] + (((unsigned)k[3]) << 16U);
+			c += k[4] + (((unsigned)k[5]) << 16U);
+			mix(a,b,c);
+			length -= 12;
+			k += 6;
+		}
 
-            mix(a, b, c);
+		/*----------------------------- handle the last (probably partial) block */
+        const unsigned char* k8 = (const unsigned char *)k;
+		switch(length) {
+		case 12: c += k[4] + (((unsigned)k[5]) << 16U);
+			 b += k[2] + (((unsigned)k[3]) << 16U);
+			 a += k[0] + (((unsigned)k[1]) << 16U);
+			 break;
+		case 11: c += ((unsigned)k8[10]) << 16U;     /* fall through */
+		case 10: c += k[4];
+			 b += k[2] + (((unsigned)k[3]) << 16U);
+			 a += k[0] + (((unsigned)k[1]) << 16U);
+			 break;
+		case 9 : c+=k8[8];                      /* fall through */
+		case 8 : b+=k[2]+(((unsigned)k[3])<<16U);
+			 a+=k[0]+(((unsigned)k[1])<<16U);
+			 break;
+		case 7 : b+=((unsigned)k8[6])<<16U;      /* fall through */
+		case 6 : b+=k[2];
+			 a+=k[0]+(((unsigned)k[1])<<16U);
+			 break;
+		case 5 : b+=k8[4];                      /* fall through */
+		case 4 : a+=k[0]+(((unsigned)k[1])<<16U);
+			 break;
+		case 3 : a+=((unsigned)k8[2])<<16;      /* fall through */
+		case 2 : a+=k[0];
+			 break;
+		case 1 : a+=k8[0];
+			 break;
+		case 0 : return c;                     /* zero length requires no mixing */
+		}
 
-            length -= 12;
-            k += 12;
-        }
+	} else {
+		/* need to read the key one byte at a time */
+		const unsigned char *k = (const unsigned char *)key;
 
-        /*-------------------------------- last block: affect all 32 bits of (c) */
-        switch(length) { /* all the case statements fall through */
-        case 12:
-            c += (unsigned)k[11] << 24U; /* fall through */
-            break;
-        case 11:
-            c += (unsigned)k[10] << 16U; /* fall through */
-            break;
-        case 10:
-            c += (unsigned)k[9] << 8U; /* fall through */
-            break;
-        case 9:
-            c += k[8]; /* fall through */
-            break;
-        case 8:
-            b += (unsigned)k[7] << 24U; /* fall through */
-            break;
-        case 7:
-            b += (unsigned)k[6] << 16U; /* fall through */
-            break;
-        case 6:
-            b += (unsigned)k[5] << 8U; /* fall through */
-            break;
-        case 5:
-            b += k[4]; /* fall through */
-            break;
-        case 4:
-            a += (unsigned)k[3] << 24U; /* fall through */
-            break;
-        case 3:
-            a += (unsigned)k[2] << 16U; /* fall through */
-            break;
-        case 2:
-            a += (unsigned)k[1] << 8U; /* fall through */
-            break;
-        case 1:
-            a += k[0];
-            break;
-        case 0:
-            return c;
-        }
-    }
+		/*--------------- all but the last block: affect some 32 bits of (a,b,c) */
+		while (length > 12) {
+			a += k[0];
+			a += ((unsigned)k[1])<<8;
+			a += ((unsigned)k[2])<<16;
+			a += ((unsigned)k[3])<<24;
+			b += k[4];
+			b += ((unsigned)k[5])<<8;
+			b += ((unsigned)k[6])<<16;
+			b += ((unsigned)k[7])<<24;
+			c += k[8];
+			c += ((unsigned)k[9])<<8;
+			c += ((unsigned)k[10])<<16;
+			c += ((unsigned)k[11])<<24;
+			mix(a,b,c);
+			length -= 12;
+			k += 12;
+		}
 
-    final(a, b, c)
-    return c;
+		/*-------------------------------- last block: affect all 32 bits of (c) */
+		switch(length) { /* all the case statements fall through */
+		case 12: c+=((unsigned)k[11])<<24; /* FALLTHRU */
+		case 11: c+=((unsigned)k[10])<<16; /* FALLTHRU */
+		case 10: c+=((unsigned)k[9])<<8; /* FALLTHRU */
+		case 9 : c+=k[8]; /* FALLTHRU */
+		case 8 : b+=((unsigned)k[7])<<24; /* FALLTHRU */
+		case 7 : b+=((unsigned)k[6])<<16; /* FALLTHRU */
+		case 6 : b+=((unsigned)k[5])<<8; /* FALLTHRU */
+		case 5 : b+=k[4]; /* FALLTHRU */
+		case 4 : a+=((unsigned)k[3])<<24; /* FALLTHRU */
+		case 3 : a+=((unsigned)k[2])<<16; /* FALLTHRU */
+		case 2 : a+=((unsigned)k[1])<<8; /* FALLTHRU */
+		case 1 : a+=k[0];
+			 break;
+		case 0 : return c;
+		}
+	}
+
+	final(a,b,c);
+	return c;
 }
 /* clang-format on */
 
@@ -537,142 +461,199 @@ static unsigned long lh_char_hash(const void *k) {
 #else
 #define RANDOM_SEED_TYPE int
 #endif
-    static volatile RANDOM_SEED_TYPE random_seed = -1;
+  static volatile RANDOM_SEED_TYPE random_seed = -1;
 
-    if (random_seed == -1) {
-        register const int seed = get_random_seed();
+  if (random_seed == -1) {
+    RANDOM_SEED_TYPE seed = get_random_seed();
 
 #ifdef _WIN32
-        InterlockedCompareExchange(&random_seed, seed, -1);
+    InterlockedCompareExchange(&random_seed, seed, -1);
 #else
-        (void)__sync_val_compare_and_swap(&random_seed, -1, seed);
+    (void)__sync_val_compare_and_swap(&random_seed, -1, seed);
 #endif
+  }
+
+  return hashlittle((const char *)k, strlen((const char *)k), (unsigned)random_seed);
+}
+
+lh_table *lh_table_new(int size, lh_entry_free_fn *free_fn,
+                              lh_hash_fn *hash_fn, lh_equal_fn *equal_fn) {
+  lh_table *t = (lh_table *)calloc(1UL, sizeof(lh_table));
+  if (t == NULL)
+    return NULL;
+
+  t->count = 0;
+  t->size = size;
+  t->table = (lh_entry *)calloc((size_t)size, sizeof(lh_entry));
+  if (t->table == NULL) {
+    free(t);
+    return NULL;
+  }
+
+  t->free_fn = free_fn;
+  t->hash_fn = hash_fn;
+  t->equal_fn = equal_fn;
+
+  for (int i = 0; i < size; i++)
+    t->table[i].k = LH_EMPTY;
+  return t;
+}
+
+inline lh_table *lh_kchar_table_new(int size,
+                                           lh_entry_free_fn *free_fn) {
+  return lh_table_new(size, free_fn, char_hash_fn, lh_char_equal);
+}
+
+inline lh_table *lh_kptr_table_new(int size, lh_entry_free_fn *free_fn) {
+  return lh_table_new(size, free_fn, lh_ptr_hash, lh_ptr_equal);
+}
+
+int lh_table_resize(lh_table *t, int new_size) {
+  lh_table *new_t = lh_table_new(new_size, NULL, t->hash_fn, t->equal_fn);
+  if (new_t == NULL)
+    return -1;
+  
+  lh_entry *ent = t->head;
+  for (; ent != NULL; ent = ent->next) {
+    unsigned long h = lh_get_hash(new_t, ent->k);
+    unsigned opts = 0U;
+    if (ent->k_is_constant)
+      opts = JSON_C_OBJECT_KEY_IS_CONSTANT;
+
+    if (lh_table_insert_w_hash(new_t, ent->k, ent->v, h, opts) != 0) {
+      lh_table_free(new_t);
+      return -1;
     }
+  }
+  free(t->table);
+  t->table = new_t->table;
+  t->size = new_size;
+  t->head = new_t->head;
+  t->tail = new_t->tail;
+  free(new_t);
 
-    return hashlittle((const char *)k, strlen((const char *)k), (unsigned)random_seed);
-}
-
-/* comparison functions */
-static int lh_char_equal(const void *k1, const void *k2) {
-    return strcmp((const char *)k1, (const char *)k2) == 0;
-}
-
-
-static int lh_table_resize(lh_table *t, const int new_size) {
-    lh_table *new_t = lh_table_new(new_size, NULL, t->hash_fn, t->equal_fn);
-    if (new_t == NULL)
-        return -1;
-
-    lh_entry *ent = t->head;
-    while (ent != NULL) {
-        register unsigned long h = lh_get_hash(new_t, ent->k);
-        register unsigned char opts = 0;
-        if (ent->k_is_constant)
-            opts = JSON_C_OBJECT_KEY_IS_CONSTANT;
-
-        if (lh_table_insert_w_hash(new_t, ent->k, ent->v, h, opts) != 0) {
-            lh_table_free(new_t);
-            return -1;
-        }
-
-        ent = ent->next;
-    }
-    free(t->table);
-    t->table = new_t->table;
-    t->size = new_size;
-    t->head = new_t->head;
-    t->tail = new_t->tail;
-    free(new_t);
-
-    return 1;
-}
-
-
-
-
-lh_table* lh_kchar_table_new(const int size, void(*const free_fn)(lh_entry *)) {
-    return lh_table_new(size, free_fn, lh_char_hash, lh_char_equal);
+  return 0;
 }
 
 void lh_table_free(lh_table *t) {
-    if (t->free_fn != NULL) {
-        register lh_entry *c = t->head;
-        while (c != NULL) {
-            t->free_fn(c);
-
-            c = c->next;
-        }
-    }
-    free(t->table);
-    free(t);
+  if (t->free_fn) {
+      register lh_entry *c = t->head;
+      for (; c != NULL; c = c->next)
+          t->free_fn(c);
+  }
+  free(t->table);
+  free(t);
 }
 
-int lh_table_insert_w_hash(lh_table *t, const void *k, const void *v, const unsigned long h, const unsigned char opts) {
-    if (t->count >= t->size * LH_LOAD_FACTOR) {
-        /* Avoid signed integer overflow with large tables. */
-        register const int new_size = (t->size > (INT_MAX / 2)) ? INT_MAX : t->size * 2;
-        if ((t->size == INT_MAX) || (!lh_table_resize(t, new_size)))
-            return -1;
-    }
+int lh_table_insert_w_hash(lh_table *t, const void *k, const void *v,
+                           const unsigned long h, const unsigned opts) {
+  if (t->count >= t->size * LH_LOAD_FACTOR) {
+    /* Avoid signed integer overflow with large tables. */
+    int new_size = (t->size > INT_MAX / 2) ? INT_MAX : (t->size * 2);
+    if (t->size == INT_MAX || lh_table_resize(t, new_size) != 0)
+      return -1;
+  }
+  size_t n = h % (size_t)t->size;
 
-    register unsigned long n = h % (unsigned long)t->size;
+  while (1) {
+    if (t->table[n].k == LH_EMPTY || t->table[n].k == LH_FREED)
+      break;
+    if ((int)++n == t->size)
+      n = 0;
+  }
 
-    while (1) {
-        if ((t->table[n].k == LH_EMPTY) || (t->table[n].k == LH_FREED))
-            break;
+  t->table[n].k = k;
+  t->table[n].k_is_constant = (opts & JSON_C_OBJECT_KEY_IS_CONSTANT);
+  t->table[n].v = v;
+  t->count++;
 
-        ++n;
-        if ((int)n == t->size)
-            n = 0;
-    }
+  if (t->head == NULL) {
+    t->head = t->tail = &t->table[n];
+    t->table[n].next = t->table[n].prev = NULL;
+  } else {
+    t->tail->next = &t->table[n];
+    t->table[n].prev = t->tail;
+    t->table[n].next = NULL;
+    t->tail = &t->table[n];
+  }
 
-    t->table[n].k = k;
-    t->table[n].k_is_constant = opts & JSON_C_OBJECT_KEY_IS_CONSTANT;
-    t->table[n].v = v;
-    t->count++;
-
-    if (t->head == NULL) {
-        t->head = t->tail = &t->table[n];
-        t->table[n].next = NULL;
-    } else {
-        t->tail->next = &t->table[n];
-        t->table[n].next = NULL;
-        t->tail = &t->table[n];
-    }
-
-    return 0;
+  return 0;
+}
+int lh_table_insert(lh_table *t, const void *k, const void *v) {
+  return lh_table_insert_w_hash(t, k, v, lh_get_hash(t, k), 0);
 }
 
+lh_entry *lh_table_lookup_entry_w_hash(lh_table *t, const void *k,
+                                              const unsigned long h) {
+  size_t n = h % (size_t)t->size;
 
-lh_entry* lh_table_lookup_entry_w_hash(const lh_table *t, const void *k, const unsigned long h) {
-    register unsigned long n = h % (unsigned long)t->size;
-
-    register int i = 0;
-    while (i < t->size) {
-        if (t->table[n].k == LH_EMPTY)
-            return NULL;
-
-        if ((t->table[n].k != LH_FREED) && (t->equal_fn(t->table[n].k, k)))
-            return &t->table[n];
-
-        ++n;
-        if ((int)n == t->size)
-            n = 0;
-
-        ++i;
-    }
-    return NULL;
+  register int count = 0;
+  while (count < t->size) {
+    if (t->table[n].k == LH_EMPTY)
+      return NULL;
+    if (t->table[n].k != LH_FREED && t->equal_fn(t->table[n].k, k))
+      return &t->table[n];
+    if ((int)++n == t->size)
+      n = 0;
+    count++;
+  }
+  return NULL;
 }
 
-unsigned char lh_table_lookup_ex(const lh_table *t, const void *k, void **v) {
-    register const lh_entry *e = lh_table_lookup_entry_w_hash(t, k, lh_get_hash(t, k));
-    register unsigned char result = 0U;
-    if (e != NULL) {
-        if (v != NULL)
-            *v = (void *)lh_entry_getV(e);
-
-        result = 1U; /* key found */
-    }
-
-    return result; /* key not found */
+lh_entry* lh_table_lookup_entry(lh_table *t, const void *k) {
+  return lh_table_lookup_entry_w_hash(t, k, lh_get_hash(t, k));
 }
+
+unsigned char lh_table_lookup_ex(lh_table *t, const void *k, void **v) {
+  lh_entry *e = lh_table_lookup_entry(t, k);
+  if (e != NULL) {
+    if (v != NULL)
+      *v = lh_entry_v(e);
+    return 1; /* key found */
+  }
+  if (v != NULL)
+    *v = NULL;
+  return 0; /* key not found */
+}
+
+int lh_table_delete_entry(lh_table *t, lh_entry *e) {
+  /* CAW: fixed to be 64bit nice, still need the crazy negative case... */
+  ptrdiff_t n = (ptrdiff_t)(e - t->table);
+
+  /* CAW: this is bad, really bad, maybe stack goes other direction on this
+   * machine... */
+  if (n < 0) {
+    return -2;
+  }
+
+  if (t->table[n].k == LH_EMPTY || t->table[n].k == LH_FREED)
+    return -1;
+  t->count--;
+  if (t->free_fn)
+    t->free_fn(e);
+  t->table[n].v = NULL;
+  t->table[n].k = LH_FREED;
+  if (t->tail == &t->table[n] && t->head == &t->table[n]) {
+    t->head = t->tail = NULL;
+  } else if (t->head == &t->table[n]) {
+    t->head->next->prev = NULL;
+    t->head = t->head->next;
+  } else if (t->tail == &t->table[n]) {
+    t->tail->prev->next = NULL;
+    t->tail = t->tail->prev;
+  } else {
+    t->table[n].prev->next = t->table[n].next;
+    t->table[n].next->prev = t->table[n].prev;
+  }
+  t->table[n].next = t->table[n].prev = NULL;
+  return 0;
+}
+
+int lh_table_delete(lh_table *t, const void *k) {
+  lh_entry *e = lh_table_lookup_entry(t, k);
+  if (e == NULL)
+    return -1;
+  return lh_table_delete_entry(t, e);
+}
+
+int lh_table_length(lh_table *t) { return t->count; }

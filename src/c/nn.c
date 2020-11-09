@@ -61,7 +61,7 @@ NeuralNetwork* neural_network_new_with_nn(const NeuralNetwork *const __nn_param)
     /* TODO: copy these as well */
     neural_network_setLearningRate(__nn_temp, __nn_param->learning_rate);
 
-    register unsigned char flag = convert_ActivationFunction(__nn_param->activation_function);
+    register const unsigned char flag = convert_ActivationFunction(__nn_param->activation_function);
     neural_network_setActivationFunction(__nn_temp, flag);
 
     return __nn_temp;
@@ -277,7 +277,7 @@ json_object* neural_network_serialize(const NeuralNetwork *__restrict const __nn
 
     json_object_object_add_ex(t, "learning_rate", json_object_new_double((double)__nn_param->learning_rate), 0U);
 
-    register int flag = convert_ActivationFunction(__nn_param->activation_function);
+    register const int flag = convert_ActivationFunction(__nn_param->activation_function);
     json_object_object_add_ex(t, "activation_function", json_object_new_int(flag), 0U);
 
     return t;

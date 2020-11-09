@@ -1,5 +1,4 @@
 #include "../../../include/c/nn.h"  /* NeuralNetwork */
-
 #include "../../../include/c/third_party/json-c/json_object.h"  /* json_object */
 
 #include <stdio.h>  /* printf */
@@ -12,6 +11,7 @@ int main(void) {
     register const char* data = json_object_to_json_string_ext(j, JSON_C_TO_STRING_PRETTY);
     printf("%s\n", data);
 
+    json_object_put(j);
     neural_network_free(nn);
     return 0;
 }

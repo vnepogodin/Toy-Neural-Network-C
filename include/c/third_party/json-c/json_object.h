@@ -118,7 +118,7 @@ extern json_object* json_object_get(json_object *);
  * is a member of (unless you know you've called `json_object_get(obj)` to
  * explicitly increment the refcount).
  *
- * NULL may be passed, which which case this is a no-op.
+ * NULL may be passed, which in case this is a no-op.
  *
  * @param obj The json_object instance
  * @returns 1 if the object was freed.
@@ -132,7 +132,7 @@ int json_object_put(json_object *);
  * @param flags formatting options, see JSON_C_TO_STRING_PRETTY and other constants
  * @returns a string in JSON format
  */
-const char* json_object_to_json_string_ext(json_object *, const int);
+extern const char* json_object_to_json_string_ext(json_object *, const int);
 
 /* object type methods */
 
@@ -307,7 +307,7 @@ extern json_object* json_object_new_double(const double);
  * @param d The numeric value of the double.
  * @param ds The string representation of the double.  This will be copied.
  */
-json_object* json_object_new_double_s(const double, const char*);
+extern json_object* json_object_new_double_s(const double, const char*);
 
 /** Get the floating point value of a json_object
  *

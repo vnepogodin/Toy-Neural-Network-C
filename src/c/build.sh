@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd cmake-build-debug
+cd build
 make
 make run
