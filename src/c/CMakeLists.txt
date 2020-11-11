@@ -2,8 +2,11 @@ cmake_minimum_required(VERSION 3.8)
 project(Neural-Network-C C)
 
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_FLAGS "-ffast-math -Wall -Wextra -Wshadow -Wcast-align -Wunused -Wconversion -Wsign-conversion -Wformat=2")
 
+if(NOT MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffast-math -Wall -Wextra -Wshadow -Wcast-align -Wunused -Wconversion -Wsign-conversion -Wformat=2")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
+endif()
 add_subdirectory(tests)
 
 set(NN_HEADERS
@@ -30,10 +33,3 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_link_libraries(${PROJECT_NAME} PUBLIC m)
 
 list(APPEND CMAKE_TARGETS ${PROJECT_NAME})
-
-if (NOT MSVC)
-add_custom_target(run
-    COMMAND echo "init" && ${PROJECT_BINARY_DIR}/tests/init && echo "nn_copy" && ${PROJECT_BINARY_DIR}/tests/nn_copy && echo "nn_predict" && ${PROJECT_BINARY_DIR}/tests/nn_predict && echo "nn_train" && ${PROJECT_BINARY_DIR}/tests/nn_train && echo "json_serialize" && ${PROJECT_BINARY_DIR}/tests/json_serialize && echo "json_deserialize" && ${PROJECT_BINARY_DIR}/tests/json_deserialize
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
-endif()

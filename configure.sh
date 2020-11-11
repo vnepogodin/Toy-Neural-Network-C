@@ -1,5 +1,5 @@
 #!/bin/bash
 
-mkdir src/c/build
-cd src/c/build
+mkdir build
+cd build
 cmake -Wdev ..

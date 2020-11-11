@@ -1,10 +1,5 @@
 *.DS_Store
-*init
-*nn_predict
-*nn_train
-*nn_copy
-*json_serialize
-*json_deserialize
+build
 
 # Prerequisites
 *.d
