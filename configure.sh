@@ -2,4 +2,4 @@
 
 mkdir build
 cd build
-cmake -Wdev ..
+cmake -Wdev -DCMAKE_BUILD_TYPE="release" ..

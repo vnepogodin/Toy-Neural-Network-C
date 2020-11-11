@@ -252,5 +252,6 @@ script:
   # compile and execute unit tests
   - sh configure.sh
   - sh build.sh
+  - cd build
   - cmake -DCMAKE_BUILD_TYPE="release" -DLANG=ON ..
   - make && make run
