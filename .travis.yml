@@ -253,5 +253,5 @@ script:
   - sh configure.sh
   - sh build.sh
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE="release" -DLANG=ON ..
+  - cmake -DLANG=ON ..
   - make && make run
