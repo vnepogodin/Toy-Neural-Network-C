@@ -257,20 +257,18 @@ static inline lh_table* json_object_get_object(const json_object *jso) {
 }
 
 /* type checking function */
-static inline enum json_type json_object_get_type(const json_object *jso) {
-    if (jso == NULL)
-        return json_type_null;
+//UNUSED static inline enum json_type json_object_get_type(const json_object *jso) {
+//    if (jso == NULL)
+//        return json_type_null;
 
-    return jso->o_type;
-}
+//    return jso->o_type;
+//}
 
 /** Get the length of a json_object of type json_type_array
  * @param obj the json_object instance
  * @returns an int
  */
 static unsigned long json_object_array_length(const json_object *jso) {
-    assert(json_object_get_type(jso) == json_type_array);
-
     return array_list_length(JC_ARRAY_C(jso)->c_array);
 }
 
