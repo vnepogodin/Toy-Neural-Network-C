@@ -131,7 +131,6 @@ jobs:
     env:
       - COMPILER_CC=gcc-9
       - COMPILER_CXX=g++-9
-      - CXXFLAGS=-std=gnu++17
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
