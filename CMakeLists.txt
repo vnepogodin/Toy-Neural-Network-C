@@ -4,7 +4,7 @@ project(Neural-Network)
 option(LANG "which language do you prefer.\nON - C++\nOFF - C" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE debug)
+    set(CMAKE_BUILD_TYPE release)
 endif()
 
 if (NOT LANG)

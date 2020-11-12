@@ -242,7 +242,8 @@ jobs:
 ################
 
 script:
-  - if [[ (-x $(which brew)) ]]; then
+  - |
+    if [[ (-x $(which brew)) ]]; then
        brew update
        brew install cmake
        brew upgrade cmake
@@ -256,5 +257,5 @@ script:
   - sh configure.sh
   - sh build.sh
   - cd build
-  - cmake -DLANG=ON --config Release ..
+  - cmake -DLANG=ON ..
   - make && make run

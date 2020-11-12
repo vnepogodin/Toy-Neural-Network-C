@@ -2,4 +2,4 @@
 
 mkdir build
 cd build
-cmake --config Release ..
+cmake ..
