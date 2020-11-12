@@ -16,7 +16,7 @@ include(cmake/CompilerWarnings.cmake)
 set_project_warnings(project_warnings)
 
 set(NN_HEADERS
-    #        ../../include/c++/third_party/json/json.hpp
+        ../../include/c++/third_party/json/json.hpp
         ../../include/c++/Matrix.hpp
         ../../include/c++/nn.hpp)
 
