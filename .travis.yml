@@ -54,7 +54,7 @@ jobs:
     env:
       - COMPILER_CC=gcc-4.8
       - COMPILER_CXX=g++-4.8
-      - CXXFLAGS=-std=c++11
+      - CXXFLAGS=-std=gnu++11
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -65,7 +65,7 @@ jobs:
     env:
       - COMPILER_CC=gcc-4.9
       - COMPILER_CXX=g++-4.9
-      - CXXFLAGS=-std=c++11
+      - CXXFLAGS=-std=gnu++11
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -76,7 +76,7 @@ jobs:
     env:
       - COMPILER_CC=gcc-5
       - COMPILER_CXX=g++-5
-      - CXXFLAGS=-std=c++11
+      - CXXFLAGS=-std=gnu++11
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -87,7 +87,7 @@ jobs:
     env:
       - COMPILER_CC=gcc-6
       - COMPILER_CXX=g++-6
-      - CXXFLAGS=-std=c++11
+      - CXXFLAGS=-std=gnu++11
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -98,7 +98,7 @@ jobs:
     env:
       - COMPILER_CC=gcc-7
       - COMPILER_CXX=g++-7
-      - CXXFLAGS=-std=c++11
+      - CXXFLAGS=-std=gnu++11
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -109,7 +109,7 @@ jobs:
     env:
       - COMPILER_CC=gcc-8
       - COMPILER_CXX=g++-8
-      - CXXFLAGS=-std=c++11
+      - CXXFLAGS=-std=gnu++11
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -120,7 +120,7 @@ jobs:
     env:
       - COMPILER_CC=gcc-9
       - COMPILER_CXX=g++-9
-      - CXXFLAGS=-std=c++11
+      - CXXFLAGS=-std=gnu++11
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -131,7 +131,7 @@ jobs:
     env:
       - COMPILER_CC=gcc-9
       - COMPILER_CXX=g++-9
-      - CXXFLAGS=-std=c++2a
+      - CXXFLAGS=-std=gnu++17
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test']
@@ -234,7 +234,7 @@ jobs:
     env:
       - COMPILER_CC=clang-7
       - COMPILER_CXX=clang++-7
-      - CXXFLAGS=-std=c++1z
+      - CXXFLAGS=-std=gnu++14
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-7']
