@@ -43,16 +43,6 @@ jobs:
   - os: linux
     compiler: gcc
     env:
-      - COMPILER_CC=gcc-5
-      - COMPILER_CXX=g++-5
-    addons:
-      apt:
-        sources: ['ubuntu-toolchain-r-test']
-        packages: ['g++-5', 'gcc-5']
-
-  - os: linux
-    compiler: gcc
-    env:
       - COMPILER_CC=gcc-6
       - COMPILER_CXX=g++-6
     addons:
