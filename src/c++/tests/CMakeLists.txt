@@ -4,11 +4,11 @@ foreach(TESTNAME
     init
     nn_copy
     nn_predict
-	nn_train
+    nn_train
     json_serialize
     json_deserialize)
 
-add_executable(${TESTNAME} ${TESTNAME}.c)
+add_executable(${TESTNAME} ${TESTNAME}.cpp)
 
 # XXX using the non-target_ versions of these doesn't work :(
 target_include_directories(${TESTNAME}

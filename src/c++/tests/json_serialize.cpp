@@ -2,10 +2,8 @@
 
 #include <iostream>  // std::cout
 
-auto main() -> int {
+auto main() -> int32_t {
     NeuralNetwork nn(2, 4, 1);
 
-    std::cout << nn.serialize().dump(2) << "\n";
-
-    return 0;
+    std::cout << nn.serialize() << '\n';
 }

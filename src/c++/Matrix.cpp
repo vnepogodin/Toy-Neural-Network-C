@@ -157,14 +157,14 @@ auto Matrix::operator*=(const float_t& num) -> Matrix& {
 auto operator<<(std::ostream& stream, const Matrix& m) -> std::ostream& {
     int32_t counter = 0;
     for (const auto& i : m) {
-        stream << i << " ";
+        stream << i << ' ';
 
         ++counter;
         if (counter == m.columns) {
             counter = 0;
 
             if ((&i + 1) != m.end())
-                stream << "\n";
+                stream << '\n';
         }
     }
 
@@ -204,25 +204,40 @@ void Matrix::map(matrix_function &func) {
     PTR_END
 }
 
-auto Matrix::serialize() const noexcept -> const nlohmann::json {
-    nlohmann::json t = nlohmann::json::object({ {"rows", this->rows}, {"columns", this->columns}, {"data", nlohmann::json::array()} });
+// TODO: Refactor
+//
+auto Matrix::serialize() const noexcept -> const std::string_view {
+    auto _str =   "{\"rows\":"    + std::to_string(this->rows)
+                + ",\"columns\":" + std::to_string(this->columns)
+                + ",\"data\":[";
+    std::string temp_arr = "[";
 
-    nlohmann::json temp_arr = nlohmann::json::array();
+    _str.reserve(_str.size() + (3 + this->columns) * this->rows);
+    temp_arr.reserve(3 + this->columns);
 
     int32_t counter = 0;
     for (const auto& i : *this) {
-        temp_arr += i;
+        temp_arr += std::to_string(i);
 
         ++counter;
-        if (counter == this->columns) {
-            t["data"] += temp_arr;
-
-            temp_arr = nlohmann::json::array();
+        if (counter != this->columns) {
+            temp_arr += ',';
+        } else {
             counter = 0;
+            _str += temp_arr + ']';
+
+            temp_arr = '[';
+            if ((&i + 1) != this->end())
+                _str += ',';
         }
     }
+    _str += "]}";
 
-    return t;
+    const int len = _str.size();
+    char res[len];
+    std::copy(_str.cbegin(), _str.cend() + 1, &res[0]);
+
+    return res;
 }
 
 
@@ -331,15 +346,23 @@ auto Matrix::map(const Matrix& m, matrix_function &func) -> Matrix {
     return t;
 }
 
-auto Matrix::deserialize(const nlohmann::json& t) -> Matrix {
-    Matrix m(t["rows"].get<int32_t>(),
-             t["columns"].get<int32_t>());
+auto Matrix::deserialize(const simdjson::dom::object& t) -> Matrix {
+    uint64_t rows = 0;
+    uint64_t cols = 0;
 
-    float_t *ptr = &m.data[0];
+    auto error = t["rows"].get(rows);
+    error = t["columns"].get(cols);
+
+    Matrix m(rows, cols);
+    float *ptr = &m.data[0];
+
+    const char* _str = "/data/";
 
     int32_t counter = 0;
     PTR_START(m.rows)
-        *ptr = t["data"][static_cast<unsigned long>(i.load(std::memory_order_consume))][static_cast<unsigned long>(counter)].get<float_t>();
+        std::string_view buf_s = _str + std::to_string(i.load(std::memory_order_consume)) + '/' + std::to_string(counter);
+
+        *ptr = (float)(double)t.at_pointer(buf_s);
         ++ptr;
         counter++;
 
