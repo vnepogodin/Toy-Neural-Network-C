@@ -151,40 +151,54 @@ void NeuralNetwork::train(const float_t* const& input_array, const float_t* cons
 
 
 // Serialize to JSON
+// TODO: Refactor
 //
-auto NeuralNetwork::serialize() const -> const nlohmann::json {
-    nlohmann::json t = nlohmann::json::object({
-    {"input_nodes", this->input_nodes},
-    {"hidden_nodes", this->hidden_nodes},
-    {"output_nodes", this->output_nodes},
+auto NeuralNetwork::serialize() const noexcept -> const std::string_view {
+    const auto& _str = "{\"activation_function\":"
+        + std::to_string(convert_ActivationFunction(this->activation_function))
+        + ",\"bias_h\":" + std::string(this->bias_h.serialize())
+        + ",\"bias_o\":" + std::string(this->bias_o.serialize())
+        + ",\"input_nodes\":" + std::to_string(this->input_nodes)
+        + ",\"hidden_nodes\":" + std::to_string(this->hidden_nodes)
+        + ",\"output_nodes\":" + std::to_string(this->output_nodes)
+        + ",\"weights_ih\":" + std::string(this->weights_ih.serialize())
+        + ",\"weights_ho\":" + std::string(this->weights_ho.serialize())
+        + ",\"learning_rate\":" + std::to_string(this->learning_rate)
+        + '}';
 
-    {"weights_ih", this->weights_ih.serialize()},
-    {"weights_ho", this->weights_ho.serialize()},
 
-    {"bias_h", this->bias_h.serialize()},
-    {"bias_o", this->bias_o.serialize()},
+    const int& len = _str.size();
+    auto res = new char[len];
+    std::copy(_str.cbegin(), _str.cend() + 1, &res[0]);
 
-    {"learning_rate", this->learning_rate},
-    {"activation_function", convert_ActivationFunction(this->activation_function)}});
-
-    return t;
+    return std::move(res);
 }
 
 
 // Deserialize from JSON
 //
-auto NeuralNetwork::deserialize(const nlohmann::json &t) -> NeuralNetwork {
-    NeuralNetwork nn(t["input_nodes"].get<int32_t>(),
-                     t["hidden_nodes"].get<int32_t>(),
-                     t["output_nodes"].get<int32_t>());
+auto NeuralNetwork::deserialize(const simdjson::dom::object& t) -> NeuralNetwork {
+    uint64_t in_nodes = 0;
+    uint64_t h_nodes = 0;
+    uint64_t out_nodes = 0;
+    uint64_t lr = 0;
+    uint64_t func = 0;
+
+    auto error = t["input_nodes"].get(in_nodes);
+    error = t["hidden_nodes"].get(h_nodes);
+    error = t["output_nodes"].get(out_nodes);
+    error = t["learning_rate"].get(lr);
+    error = t["activation_function"].get(func);
+
+    NeuralNetwork nn(in_nodes, h_nodes, out_nodes);
 
     nn.weights_ih = Matrix::deserialize(t["weights_ih"]);
     nn.weights_ho = Matrix::deserialize(t["weights_ho"]);
     nn.bias_h = Matrix::deserialize(t["bias_h"]);
     nn.bias_o = Matrix::deserialize(t["bias_o"]);
 
-    nn.setLearningRate(t["learning_rate"].get<float_t>());
-    nn.setActivationFunction(t["activation_function"].get<int32_t>());
+    nn.setLearningRate(lr);
+    nn.setActivationFunction(func);
 
     return nn;
 }

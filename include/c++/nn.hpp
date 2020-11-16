@@ -30,22 +30,22 @@ class NeuralNetwork {
     virtual ~NeuralNetwork() = default;
 
     // Functions
-    auto predict(const float_t* const &) const noexcept -> float_t*;
-    void setLearningRate(const float_t&);
+    auto predict(const float* const &) const noexcept -> float*;
+    void setLearningRate(const float&);
     void setActivationFunction(const uint8_t&);
-    void train(const float_t* const&, const float_t* const&);
-    auto serialize() const -> const nlohmann::json;
+    void train(const float* const&, const float* const&);
+    auto serialize() const noexcept -> const std::string_view;
 
     // Static function
-    static auto deserialize(const nlohmann::json &t) -> NeuralNetwork;
+    static auto deserialize(const simdjson::dom::object&) -> NeuralNetwork;
 
  private:
     // Variables
     int32_t input_nodes, hidden_nodes, output_nodes;
 
-    float_t learning_rate;
+    float learning_rate;
 
-    float_t (*activation_function)(float_t);
+    float (*activation_function)(float);
 
     Matrix weights_ih, weights_ho, bias_h, bias_o;
 };

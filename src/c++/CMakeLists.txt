@@ -4,7 +4,7 @@ project(Neural-Network-CPP CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 if(NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMDJSON_THREADS_ENABLED -ffast-math")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 endif()
 
@@ -16,11 +16,12 @@ include(cmake/CompilerWarnings.cmake)
 set_project_warnings(project_warnings)
 
 set(NN_HEADERS
-        ../../include/c++/third_party/json/json.hpp
+        ../../include/c++/third_party/json/simdjson.h
         ../../include/c++/Matrix.hpp
         ../../include/c++/nn.hpp)
 
 set(NN_SOURCES
+        ../../include/c++/third_party/json/simdjson.cpp
         Matrix.cpp
         nn.cpp)
 
