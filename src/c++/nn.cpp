@@ -153,25 +153,28 @@ void NeuralNetwork::train(const float_t* const& input_array, const float_t* cons
 // Serialize to JSON
 // TODO: Refactor
 //
-auto NeuralNetwork::serialize() const noexcept -> const std::string_view {
-    const auto& _str = "{\"activation_function\":"
-        + std::to_string(convert_ActivationFunction(this->activation_function))
-        + ",\"bias_h\":" + std::string(this->bias_h.serialize())
-        + ",\"bias_o\":" + std::string(this->bias_o.serialize())
+auto NeuralNetwork::serialize() const noexcept -> const std::string {
+    auto _str = "{\"activation_function\":"
+        + std::to_string(convert_ActivationFunction(this->activation_function));
+
+    _str.reserve(500);
+
+    _str += ",\"bias_h\":" + this->bias_h.serialize()
+        + ",\"bias_o\":" + this->bias_o.serialize()
         + ",\"input_nodes\":" + std::to_string(this->input_nodes)
         + ",\"hidden_nodes\":" + std::to_string(this->hidden_nodes)
         + ",\"output_nodes\":" + std::to_string(this->output_nodes)
-        + ",\"weights_ih\":" + std::string(this->weights_ih.serialize())
-        + ",\"weights_ho\":" + std::string(this->weights_ho.serialize())
+        + ",\"weights_ih\":" + this->weights_ih.serialize()
+        + ",\"weights_ho\":" + this->weights_ho.serialize()
         + ",\"learning_rate\":" + std::to_string(this->learning_rate)
         + '}';
 
 
     const int& len = _str.size();
-    auto res = new char[len];
-    std::copy(_str.cbegin(), _str.cend() + 1, &res[0]);
+    std::unique_ptr<char[]> tmp{new char[len]};
+    std::copy(_str.cbegin(), _str.cend() + 1, tmp.get());
 
-    return std::move(res);
+    return tmp.get();
 }
 
 

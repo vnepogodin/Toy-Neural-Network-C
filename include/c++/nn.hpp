@@ -34,7 +34,7 @@ class NeuralNetwork {
     void setLearningRate(const float&);
     void setActivationFunction(const uint8_t&);
     void train(const float* const&, const float* const&);
-    auto serialize() const noexcept -> const std::string_view;
+    auto serialize() const noexcept -> const std::string;
 
     // Static function
     static auto deserialize(const simdjson::dom::object&) -> NeuralNetwork;

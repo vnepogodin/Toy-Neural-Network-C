@@ -41,7 +41,7 @@ class Matrix {
     auto toArray() const noexcept -> float*;
     void randomize();
     void map(float (*const &)(float));
-    auto serialize() const noexcept -> const std::string_view;
+    auto serialize() const noexcept -> const std::string;
 
     // Static functions
     static auto fromArray(const float* const&, const int&) -> Matrix;
