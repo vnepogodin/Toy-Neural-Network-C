@@ -4,6 +4,9 @@
 
 #include "third_party/json/simdjson.h"  // simdjson::
 
+using std::to_string;
+using std::string;
+
 class Matrix {
  public:
     // Constructors
@@ -41,7 +44,7 @@ class Matrix {
     auto toArray() const noexcept -> float*;
     void randomize();
     void map(float (*const &)(float));
-    auto serialize() const noexcept -> const std::string;
+    auto serialize() const noexcept -> const string;
 
     // Static functions
     static auto fromArray(const float* const&, const int&) -> Matrix;

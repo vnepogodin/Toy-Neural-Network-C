@@ -153,20 +153,20 @@ void NeuralNetwork::train(const float_t* const& input_array, const float_t* cons
 // Serialize to JSON
 // TODO: Refactor
 //
-auto NeuralNetwork::serialize() const noexcept -> const std::string {
-    auto _str = "{\"activation_function\":"
-        + std::to_string(convert_ActivationFunction(this->activation_function));
+auto NeuralNetwork::serialize() const noexcept -> const string {
+    auto _str = string("{\"activation_function\":")
+        + to_string(convert_ActivationFunction(this->activation_function));
 
     _str.reserve(500);
 
-    _str += ",\"bias_h\":" + this->bias_h.serialize()
-        + ",\"bias_o\":" + this->bias_o.serialize()
-        + ",\"input_nodes\":" + std::to_string(this->input_nodes)
-        + ",\"hidden_nodes\":" + std::to_string(this->hidden_nodes)
-        + ",\"output_nodes\":" + std::to_string(this->output_nodes)
-        + ",\"weights_ih\":" + this->weights_ih.serialize()
-        + ",\"weights_ho\":" + this->weights_ho.serialize()
-        + ",\"learning_rate\":" + std::to_string(this->learning_rate)
+    _str += string(",\"bias_h\":") + this->bias_h.serialize()
+        + string(",\"bias_o\":") + this->bias_o.serialize()
+        + string(",\"input_nodes\":") + to_string(this->input_nodes)
+        + string(",\"hidden_nodes\":") + to_string(this->hidden_nodes)
+        + string(",\"output_nodes\":") + to_string(this->output_nodes)
+        + string(",\"weights_ih\":") + this->weights_ih.serialize()
+        + string(",\"weights_ho\":") + this->weights_ho.serialize()
+        + string(",\"learning_rate\":") + to_string(this->learning_rate)
         + '}';
 
 

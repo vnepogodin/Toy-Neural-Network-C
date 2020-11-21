@@ -34,20 +34,25 @@ class NeuralNetwork {
     void setLearningRate(const float&);
     void setActivationFunction(const uint8_t&);
     void train(const float* const&, const float* const&);
-    auto serialize() const noexcept -> const std::string;
+    auto serialize() const noexcept -> const string;
 
     // Static function
     static auto deserialize(const simdjson::dom::object&) -> NeuralNetwork;
 
  private:
     // Variables
-    int32_t input_nodes, hidden_nodes, output_nodes;
+    int32_t input_nodes;
+    int32_t hidden_nodes;
+    int32_t output_nodes;
 
     float learning_rate;
 
     float (*activation_function)(float);
 
-    Matrix weights_ih, weights_ho, bias_h, bias_o;
+    Matrix weights_ih;
+    Matrix weights_ho;
+    Matrix bias_h;
+    Matrix bias_o;
 };
 
 #endif  // __NN_HPP__

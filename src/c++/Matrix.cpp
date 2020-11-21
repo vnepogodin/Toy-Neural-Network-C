@@ -206,18 +206,18 @@ void Matrix::map(matrix_function &func) {
 
 // TODO: Refactor
 //
-auto Matrix::serialize() const noexcept -> const std::string {
-    auto _str =   "{\"rows\":"    + std::to_string(this->rows)
-                + ",\"columns\":" + std::to_string(this->columns)
-                + ",\"data\":[";
-    std::string temp_arr = "[";
+auto Matrix::serialize() const noexcept -> const string {
+    auto _str =   string("{\"rows\":") + to_string(this->rows)
+                + string(",\"columns\":") + to_string(this->columns)
+                + string(",\"data\":[");
+    string temp_arr = "[";
 
     _str.reserve(120);
     temp_arr.reserve(3 + this->columns);
 
     int32_t counter = 0;
     for (const auto& i : *this) {
-        temp_arr += std::to_string(i);
+        temp_arr += to_string(i);
 
         ++counter;
         if (counter != this->columns) {

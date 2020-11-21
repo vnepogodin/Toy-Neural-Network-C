@@ -17,7 +17,8 @@ struct _Matrix {
     /* Variables */
     int len;
 
-    int rows, columns;
+    int rows;
+    int columns;
 
     float* data;
 };
