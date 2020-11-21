@@ -16,12 +16,12 @@ include(cmake/CompilerWarnings.cmake)
 set_project_warnings(project_warnings)
 
 set(NN_HEADERS
-    #        ../../include/c++/third_party/json/simdjson.h
+        ../../include/c++/third_party/json/simdjson.h
         ../../include/c++/Matrix.hpp
         ../../include/c++/nn.hpp)
 
 set(NN_SOURCES
-    #   ../../include/c++/third_party/json/simdjson.cpp
+        ../../include/c++/third_party/json/simdjson.cpp
         Matrix.cpp
         nn.cpp)
 

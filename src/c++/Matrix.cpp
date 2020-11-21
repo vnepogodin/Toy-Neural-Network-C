@@ -234,10 +234,10 @@ auto Matrix::serialize() const noexcept -> const string {
     _str += "]}";
 
     const int len = _str.size();
-    std::unique_ptr<char[]> tmp{new char[len]};
-    std::copy(_str.cbegin(), _str.cend() + 1, tmp.get());
+    std::unique_ptr<char[]> res{new char[len]};
+    std::copy(_str.cbegin(), _str.cend() + 1, res.get());
 
-    return tmp.get();
+    return res.get();
 }
 
 

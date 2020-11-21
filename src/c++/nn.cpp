@@ -16,8 +16,8 @@ static inline auto dsigmoid(float_t y) -> float_t {
     return y * (1.F - y);
 }
 
-static inline int32_t convert_ActivationFunction(nn_function &func) {
-    return (*(func) == dsigmoid) ? 2 : 1;
+static inline uint8_t convert_ActivationFunction(nn_function &func) {
+    return (*(func) == dsigmoid) ? 2U : 1U;
 }
 
 
@@ -86,9 +86,9 @@ void NeuralNetwork::setLearningRate(const float_t &lr) {
 void NeuralNetwork::setActivationFunction(const uint8_t& flag) {
     this->activation_function = nullptr;
 
-    if (flag & FUNC_SIGMOID)
+    if (flag == FUNC_SIGMOID)
         this->activation_function = sigmoid;
-    else if (flag & FUNC_DSIGMOID)
+    else if (flag == FUNC_DSIGMOID)
         this->activation_function = dsigmoid;
 }
 
