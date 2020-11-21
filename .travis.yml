@@ -177,7 +177,7 @@ jobs:
     env:
       - COMPILER_CC=clang-7
       - COMPILER_CXX=clang++-7
-      - CXXFLAGS=-std=gnu++17
+      - CXXFLAGS="-std=gnu++17 -march=fallback"
     addons:
       apt:
         sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-7']
@@ -191,6 +191,7 @@ jobs:
 script:
   - if [[ "${COMPILER_CC}" == "" ]]; then export COMPILER_CC=gcc; fi
   - if [[ "${COMPILER_CXX}" == "" ]]; then export COMPILER_CXX=g++; fi
+  - if [[ "${CXX_FLAGS}" == "" ]]; then export COMPILER_CXX=-march=fallback; fi
 
   # compile and execute unit tests
   - sh configure.sh
