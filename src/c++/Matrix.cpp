@@ -164,7 +164,7 @@ auto operator<<(std::ostream& stream, const Matrix& m) -> std::ostream& {
             counter = 0;
 
             if ((&i + 1) != m.end())
-                stream << '\n';
+                stream << "\n";
         }
     }
 
@@ -234,10 +234,10 @@ auto Matrix::serialize() const noexcept -> const string {
     _str += "]}";
 
     const int len = _str.size();
-    char res[len];
-    std::copy(_str.cbegin(), _str.cend() + 1, &res[0]);
+    std::unique_ptr<char[]> tmp{new char[len]};
+    std::copy(_str.cbegin(), _str.cend() + 1, tmp.get());
 
-    return res;
+    return tmp.get();
 }
 
 
