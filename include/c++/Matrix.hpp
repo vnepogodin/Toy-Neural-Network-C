@@ -12,13 +12,13 @@ class Matrix {
     using iterator = float*;
     using const_iterator = const float*;
 
-    typedef std::reverse_iterator<const_iterator> reverse_iterator;
+    typedef std::reverse_iterator<iterator> reverse_iterator;
     typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
 
     // Constructors
     Matrix(const int32_t&, const int32_t&);
-    constexpr Matrix();
+    inline constexpr Matrix();
     Matrix(const Matrix&);
 
     // Destructor
@@ -37,30 +37,30 @@ class Matrix {
     friend auto operator<<(std::ostream&, const Matrix&) -> std::ostream&;
 
     // Functions
-    constexpr auto begin() const noexcept -> iterator {
-        return &this->data[0];
+    inline constexpr auto begin() const noexcept -> iterator {
+        return iterator(&this->data[0]);
     }
-    constexpr auto end() const noexcept -> iterator {
-        return this->iter;
+    inline constexpr auto end() const noexcept -> iterator {
+        return iterator(this->iter);
     }
-    constexpr auto cbegin() const noexcept -> const_iterator {
-        return static_cast<const_iterator>(&this->data[0]);
+    inline constexpr auto cbegin() const noexcept -> const_iterator {
+        return const_iterator(this->begin());
     }
-    constexpr auto cend() const noexcept -> const_iterator {
-        return static_cast<const_iterator>(this->iter);
+    inline constexpr auto cend() const noexcept -> const_iterator {
+        return const_iterator(this->end());
     }
 
-    constexpr auto rbegin() const noexcept -> const_reverse_iterator {
-        return const_reverse_iterator(this->end());
+    inline constexpr auto rbegin() const noexcept -> reverse_iterator {
+        return reverse_iterator(this->end());
     }
-    constexpr auto rend() const noexcept -> const_reverse_iterator {
-        return const_reverse_iterator(this->begin());
+    inline constexpr auto rend() const noexcept -> reverse_iterator {
+        return reverse_iterator(this->begin());
     }
-    constexpr auto crbegin() const noexcept -> const_reverse_iterator {
-        return rbegin();
+    inline constexpr auto crbegin() const noexcept -> const_reverse_iterator {
+        return this->rbegin();
     }
-    constexpr auto crend() const noexcept -> const_reverse_iterator {
-        return rend();
+    inline constexpr auto crend() const noexcept -> const_reverse_iterator {
+        return this->rend();
     }
 
     auto toArray() const noexcept -> float*;
