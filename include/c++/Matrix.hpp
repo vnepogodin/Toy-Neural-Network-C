@@ -12,9 +12,13 @@ class Matrix {
     using iterator = float*;
     using const_iterator = const float*;
 
+    typedef std::reverse_iterator<const_iterator> reverse_iterator;
+    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+
+
     // Constructors
     Matrix(const int32_t&, const int32_t&);
-    inline Matrix();
+    constexpr Matrix();
     Matrix(const Matrix&);
 
     // Destructor
@@ -28,24 +32,37 @@ class Matrix {
     auto operator*=(const Matrix&) -> Matrix&;
     auto operator*=(const float&) -> Matrix&;
     auto operator[](const size_t& idx) -> iterator;
-    auto operator[](const size_t& idx) const noexcept -> const_iterator;
 
     // Non member operator
     friend auto operator<<(std::ostream&, const Matrix&) -> std::ostream&;
 
     // Functions
-    inline constexpr auto begin() const noexcept -> iterator {
+    constexpr auto begin() const noexcept -> iterator {
         return &this->data[0];
     }
-    inline constexpr auto end() const noexcept -> iterator {
+    constexpr auto end() const noexcept -> iterator {
         return this->iter;
     }
-    inline constexpr auto cbegin() const noexcept -> const_iterator {
+    constexpr auto cbegin() const noexcept -> const_iterator {
         return static_cast<const_iterator>(&this->data[0]);
     }
-    inline auto cend() const noexcept -> const_iterator {
+    constexpr auto cend() const noexcept -> const_iterator {
         return static_cast<const_iterator>(this->iter);
     }
+
+    constexpr auto rbegin() const noexcept -> const_reverse_iterator {
+        return const_reverse_iterator(this->end());
+    }
+    constexpr auto rend() const noexcept -> const_reverse_iterator {
+        return const_reverse_iterator(this->begin());
+    }
+    constexpr auto crbegin() const noexcept -> const_reverse_iterator {
+        return rbegin();
+    }
+    constexpr auto crend() const noexcept -> const_reverse_iterator {
+        return rend();
+    }
+
     auto toArray() const noexcept -> float*;
     void randomize();
     void map(float (*const &)(float));

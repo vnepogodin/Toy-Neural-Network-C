@@ -62,15 +62,11 @@ Matrix::Matrix(const int32_t& r, const int32_t& cols)
 
 // Default constructor
 //
-Matrix::Matrix()
-    : len(1),
-      rows(1), columns(1) {
-    this->data = new float_t[this->len];
-
-    this->data[0] = 0;
-
-    this->iter = &this->data[0] + 1;
-}
+constexpr Matrix::Matrix()
+    : iter(nullptr),
+      len(1),
+      rows(1), columns(1),
+      data(nullptr) {}
 
 // Copy constructor
 //
@@ -159,12 +155,6 @@ auto Matrix::operator[](const size_t& idx) -> iterator {
         return nullptr;
     }
     return this->data + (this->columns * idx);
-}
-auto Matrix::operator[](const size_t& idx) const noexcept -> const_iterator {
-    if ((idx < static_cast<size_t>(0)) || (idx >= this->len)) {
-        return nullptr;
-    }
-    return static_cast<const_iterator>(&this->data[idx] + (this->columns * idx));
 }
 
 // Non member operator
