@@ -37,7 +37,7 @@ class NeuralNetwork {
     auto serialize() const noexcept -> const string;
 
     // Static function
-    static auto deserialize(const simdjson::dom::object&) -> NeuralNetwork;
+    static auto deserialize(const simdjson::dom::element&) -> NeuralNetwork;
 
  private:
     // Variables

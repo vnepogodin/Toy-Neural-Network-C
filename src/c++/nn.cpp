@@ -170,7 +170,7 @@ auto NeuralNetwork::serialize() const noexcept -> const string {
         + '}';
 
 
-    const int& len = _str.size();
+    const auto& len = _str.size();
     std::unique_ptr<char[]> tmp{new char[len]};
     std::copy(_str.cbegin(), _str.cend() + 1, tmp.get());
 
@@ -180,18 +180,12 @@ auto NeuralNetwork::serialize() const noexcept -> const string {
 
 // Deserialize from JSON
 //
-auto NeuralNetwork::deserialize(const simdjson::dom::object& t) -> NeuralNetwork {
-    uint64_t in_nodes = 0;
-    uint64_t h_nodes = 0;
-    uint64_t out_nodes = 0;
-    uint64_t lr = 0;
-    uint64_t func = 0;
-
-    auto error = t["input_nodes"].get(in_nodes);
-    error = t["hidden_nodes"].get(h_nodes);
-    error = t["output_nodes"].get(out_nodes);
-    error = t["learning_rate"].get(lr);
-    error = t["activation_function"].get(func);
+auto NeuralNetwork::deserialize(const simdjson::dom::element& t) -> NeuralNetwork {
+    const uint64_t& in_nodes = t["input_nodes"];
+    const uint64_t& h_nodes = t["hidden_nodes"];
+    const uint64_t& out_nodes = t["output_nodes"];
+    const double& lr = t["learning_rate"];
+    const uint64_t& func = t["activation_function"];
 
     NeuralNetwork nn(in_nodes, h_nodes, out_nodes);
 

@@ -233,7 +233,7 @@ auto Matrix::serialize() const noexcept -> const string {
     }
     _str += "]}";
 
-    const int len = _str.size();
+    const auto& len = _str.size();
     std::unique_ptr<char[]> res{new char[len]};
     std::copy(_str.cbegin(), _str.cend() + 1, res.get());
 
@@ -346,23 +346,20 @@ auto Matrix::map(const Matrix& m, matrix_function &func) -> Matrix {
     return t;
 }
 
-auto Matrix::deserialize(const simdjson::dom::object& t) -> Matrix {
-    uint64_t rows = 0;
-    uint64_t cols = 0;
-
-    auto error = t["rows"].get(rows);
-    error = t["columns"].get(cols);
+auto Matrix::deserialize(const simdjson::dom::element& t) -> Matrix {
+    const uint64_t& rows = t["rows"];
+    const uint64_t& cols = t["columns"];
 
     Matrix m(rows, cols);
     float *ptr = &m.data[0];
 
-    const char* _str = "/data/";
+    constexpr auto& _str = "/data/";
 
     int32_t counter = 0;
     PTR_START(m.rows)
-        std::string_view buf_s = _str + std::to_string(i.load(std::memory_order_consume)) + '/' + std::to_string(counter);
+        const auto& buf_s = _str + to_string(i.load(std::memory_order_consume)) + '/' + to_string(counter);
 
-        *ptr = (float)(double)t.at_pointer(buf_s);
+        *ptr = static_cast<float>(static_cast<double>(t.at_pointer(buf_s)));
         ++ptr;
         counter++;
 

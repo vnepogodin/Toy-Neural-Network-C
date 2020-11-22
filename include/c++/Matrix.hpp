@@ -52,7 +52,7 @@ class Matrix {
     static auto multiply(const Matrix&, const Matrix&) -> Matrix;
     static auto subtract(const Matrix&, const Matrix&) -> Matrix;
     static auto map(const Matrix&, float (*const &)(float)) -> Matrix;
-    static auto deserialize(const simdjson::dom::object&) -> Matrix;
+    static auto deserialize(const simdjson::dom::element&) -> Matrix;
 
  public:
     float *iterator;
