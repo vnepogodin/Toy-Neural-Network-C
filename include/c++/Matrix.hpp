@@ -9,6 +9,9 @@ using std::string;
 
 class Matrix {
  public:
+    using iterator = float*;
+    using const_iterator = const float*;
+
     // Constructors
     Matrix(const int32_t&, const int32_t&);
     inline Matrix();
@@ -24,22 +27,24 @@ class Matrix {
     auto operator+=(const float&) -> Matrix&;
     auto operator*=(const Matrix&) -> Matrix&;
     auto operator*=(const float&) -> Matrix&;
+    auto operator[](const size_t& idx) -> iterator;
+    auto operator[](const size_t& idx) const noexcept -> const_iterator;
 
     // Non member operator
     friend auto operator<<(std::ostream&, const Matrix&) -> std::ostream&;
 
     // Functions
-    inline constexpr auto begin() const noexcept -> float * {
+    inline constexpr auto begin() const noexcept -> iterator {
         return &this->data[0];
     }
-    inline constexpr auto end() const noexcept -> float * {
-        return this->iterator;
+    inline constexpr auto end() const noexcept -> iterator {
+        return this->iter;
     }
-    inline constexpr auto cbegin() const noexcept -> const float * {
-        return static_cast<const float*>(&this->data[0]);
+    inline constexpr auto cbegin() const noexcept -> const_iterator {
+        return static_cast<const_iterator>(&this->data[0]);
     }
-    inline auto cend() const noexcept -> const float * {
-        return static_cast<const float*>(this->iterator);
+    inline auto cend() const noexcept -> const_iterator {
+        return static_cast<const_iterator>(this->iter);
     }
     auto toArray() const noexcept -> float*;
     void randomize();
@@ -54,8 +59,8 @@ class Matrix {
     static auto map(const Matrix&, float (*const &)(float)) -> Matrix;
     static auto deserialize(const simdjson::dom::element&) -> Matrix;
 
- public:
-    float *iterator;
+ private:
+    iterator iter;
     // Variables
     int32_t len;
 

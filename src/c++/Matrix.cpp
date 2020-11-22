@@ -55,7 +55,7 @@ Matrix::Matrix(const int32_t& r, const int32_t& cols)
         *ptr = 0;
     PTR_END
 
-    this->iterator = ptr;
+    this->iter = ptr;
 
     this->len = i.load(std::memory_order_consume);
 }
@@ -69,7 +69,7 @@ Matrix::Matrix()
 
     this->data[0] = 0;
 
-    this->iterator = &this->data[0] + 1;
+    this->iter = &this->data[0] + 1;
 }
 
 // Copy constructor
@@ -87,7 +87,7 @@ Matrix::Matrix(const Matrix& m)
         ++ref_ptr;
     PTR_END
 
-    this->iterator = ptr;
+    this->iter = ptr;
 
     this->len = i.load(std::memory_order_consume);
 }
@@ -151,6 +151,21 @@ auto Matrix::operator*=(const float_t& num) -> Matrix& {
     PTR_END
 
     return *this;
+}
+
+auto Matrix::operator[](const size_t& idx) -> iterator {
+    if ((idx < 0) || (idx >= this->len)) {
+        throw std::overflow_error("idx overload");
+        return nullptr;
+    }
+    return this->data + (this->columns * idx);
+}
+auto Matrix::operator[](const size_t& idx) const noexcept -> const_iterator {
+    if ((idx < 0) || (idx >= this->len)) {
+        throw std::overflow_error("idx overload");
+        return nullptr;
+    }
+    return static_cast<const_iterator>(&this->data[idx] + (this->columns * idx));
 }
 
 // Non member operator
