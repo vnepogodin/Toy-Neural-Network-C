@@ -12,8 +12,8 @@ class Matrix {
     using iterator = float*;
     using const_iterator = const float*;
 
-    typedef std::reverse_iterator<iterator> reverse_iterator;
-    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+    using reverse_iterator = typename std::reverse_iterator<iterator>;
+    using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
 
 
     // Constructors
@@ -50,17 +50,17 @@ class Matrix {
         return const_iterator(this->end());
     }
 
-    inline constexpr auto rbegin() const noexcept -> reverse_iterator {
+    inline auto rbegin() const noexcept -> reverse_iterator {
         return reverse_iterator(this->end());
     }
-    inline constexpr auto rend() const noexcept -> reverse_iterator {
+    inline auto rend() const noexcept -> reverse_iterator {
         return reverse_iterator(this->begin());
     }
-    inline constexpr auto crbegin() const noexcept -> const_reverse_iterator {
-        return this->rbegin();
+    inline auto crbegin() const noexcept -> const_reverse_iterator {
+        return const_reverse_iterator(this->rbegin());
     }
-    inline constexpr auto crend() const noexcept -> const_reverse_iterator {
-        return this->rend();
+    inline auto crend() const noexcept -> const_reverse_iterator {
+        return const_reverse_iterator(this->rend());
     }
 
     auto toArray() const noexcept -> float*;
