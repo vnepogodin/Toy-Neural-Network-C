@@ -154,14 +154,14 @@ auto Matrix::operator*=(const float_t& num) -> Matrix& {
 }
 
 auto Matrix::operator[](const size_t& idx) -> iterator {
-    if ((idx < 0) || (idx >= this->len)) {
+    if ((idx < static_cast<size_t>(0)) || (idx >= this->len)) {
         throw std::overflow_error("idx overload");
         return nullptr;
     }
     return this->data + (this->columns * idx);
 }
 auto Matrix::operator[](const size_t& idx) const noexcept -> const_iterator {
-    if ((idx < 0) || (idx >= this->len)) {
+    if ((idx < static_cast<size_t>(0)) || (idx >= this->len)) {
         return nullptr;
     }
     return static_cast<const_iterator>(&this->data[idx] + (this->columns * idx));
