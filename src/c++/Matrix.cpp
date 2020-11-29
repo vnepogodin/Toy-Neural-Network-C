@@ -3,7 +3,7 @@
 #include "../../include/c++/Matrix.hpp"  // class Matrix
 
 #include <random>  // std::mt19937, std::uniform_real_distribution, std::random_device
-#include <atomic>  // std::atomic<int32_t>, std::memory_order_release
+#include <atomic>  // std::atomic<uint32_t>, std::memory_order_release
 #include <iostream>  // std::cerr
 
 /**
@@ -12,7 +12,7 @@
  * Used within multi-statement macros so that they can be used in places
  * where only one statement is expected by the compiler.
  */
-#define PTR_START(end) std::atomic<int32_t> i(0); while (i < (end)) {
+#define PTR_START(end) std::atomic<uint32_t> i(0); while (i < (end)) {
 
 /**
  * PTR_END:
@@ -23,7 +23,7 @@
 #define PTR_END ++ptr; i.fetch_add(1, std::memory_order_release); }
 
 
-using matrix_function = float_t (*const)(float_t);  // Function alias
+using matrix_function = float (*const)(float);  // Function alias
 
 
 class random_in_range {
@@ -35,62 +35,36 @@ class random_in_range {
 
     virtual ~random_in_range() = default;
 
-    auto get() -> float_t {
-        std::uniform_real_distribution<float_t> _realDistribution(0.0, 2.0);
+    auto get() -> float {
+        std::uniform_real_distribution<float> _realDistribution(0.0, 2.0);
 
         return _realDistribution(rng);
     }
 };
 
 // Constructors
-Matrix::Matrix(const int32_t& r, const int32_t& cols)
-    : rows(r), columns(cols) {
-    this->allocSpace();
-
-    float_t *ptr = &this->data[0];
-
-    int32_t end = this->rows * this->columns;
-
-    PTR_START(end)
-        *ptr = 0;
-    PTR_END
-
-    this->iter = ptr;
-
-    this->len = i.load(std::memory_order_consume);
+Matrix::Matrix(const uint32_t& r, const uint32_t& cols)
+    : len(r * cols),
+      rows(r), columns(cols),
+      elem(static_cast<float*>(::operator new(r * cols * sizeof(float))))
+{
+    std::memset(begin(), 0, len);
 }
 
-// Default constructor
-//
-constexpr Matrix::Matrix()
-    : iter(nullptr),
-      len(1),
-      rows(1), columns(1),
-      data(nullptr) {}
 
 // Copy constructor
 //
 Matrix::Matrix(const Matrix& m)
-    : rows(m.rows), columns(m.columns) {
-    this->allocSpace();
-
-    float_t *ptr           = &this->data[0];
-    const float_t *ref_ptr = &m.data[0];
-
-    PTR_START(m.len)
-        *ptr = *ref_ptr;
-
-        ++ref_ptr;
-    PTR_END
-
-    this->iter = ptr;
-
-    this->len = i.load(std::memory_order_consume);
+    : len(m.len),
+      rows(m.rows), columns(m.columns),
+      elem(static_cast<float*>(::operator new(rows * columns * sizeof(float))))
+{
+    std::copy(m.cbegin(), m.cend(), begin());
 }
 
 // Operators
-auto Matrix::operator+=(const float_t& num) -> Matrix& {
-    float_t *ptr = &this->data[0];
+auto Matrix::operator+=(const float& num) -> Matrix& {
+    float *ptr = this->begin();
 
     PTR_START(this->len)
         *ptr += num;
@@ -105,8 +79,8 @@ auto Matrix::operator+=(const Matrix& a) -> Matrix& {
         return *this;
     }
 
-    float_t *ptr           = &this->data[0];
-    const float_t *ref_ptr = &a.data[0];
+    float *ptr           = this->begin();
+    const float *ref_ptr = a.begin();
 
     PTR_START(this->len)
         *ptr += *ref_ptr;
@@ -123,8 +97,8 @@ auto Matrix::operator*=(const Matrix& m) -> Matrix& {
         return *this;
     }
 
-    float_t *ptr         = &this->data[0];
-    const float_t *m_ptr = &m.data[0];
+    auto *ptr         = this->begin();
+    const auto *m_ptr = m.cbegin();
 
     // hadamard product
     // @see https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
@@ -138,9 +112,9 @@ auto Matrix::operator*=(const Matrix& m) -> Matrix& {
     return *this;
 }
 
-auto Matrix::operator*=(const float_t& num) -> Matrix& {
+auto Matrix::operator*=(const float& num) -> Matrix& {
     // Scalar product
-    float_t *ptr = &this->data[0];
+    auto *ptr = this->begin();
 
     PTR_START(this->len)
         *ptr *= num;
@@ -149,17 +123,10 @@ auto Matrix::operator*=(const float_t& num) -> Matrix& {
     return *this;
 }
 
-auto Matrix::operator[](const size_t& idx) -> iterator {
-    if ((idx < static_cast<size_t>(0)) || (idx >= this->len)) {
-        throw std::overflow_error("idx overload");
-        return nullptr;
-    }
-    return this->data + (this->columns * idx);
-}
 
 // Non member operator
 auto operator<<(std::ostream& stream, const Matrix& m) -> std::ostream& {
-    int32_t counter = 0;
+    uint32_t counter = 0;
     for (const auto& i : m) {
         stream << i << ' ';
 
@@ -176,11 +143,11 @@ auto operator<<(std::ostream& stream, const Matrix& m) -> std::ostream& {
 }
 
 // Functions
-auto Matrix::toArray() const noexcept -> float_t* {
-    auto arr = new float_t[this->len];
+auto Matrix::toArray() const noexcept -> float* {
+    auto arr = new float[this->len];
 
-    // pointer to Matrix.data
-    const float_t *ptr = &this->data[0];
+    // pointer to Matrix.elem
+    const auto *ptr = this->cbegin();
 
     PTR_START(this->len)
         arr[i] = *ptr;
@@ -190,7 +157,7 @@ auto Matrix::toArray() const noexcept -> float_t* {
 }
 
 void Matrix::randomize() {
-    float_t *ptr = &this->data[0];
+    auto *ptr = this->begin();
 
     random_in_range r;
 
@@ -201,7 +168,7 @@ void Matrix::randomize() {
 
 void Matrix::map(matrix_function &func) {
     // Apply a function to every element of matrix
-    float_t *ptr = &this->data[0];
+    auto *ptr = this->begin();
 
     PTR_START(this->len)
         *ptr = (*func)(*ptr);
@@ -210,7 +177,7 @@ void Matrix::map(matrix_function &func) {
 
 // TODO: Refactor
 //
-auto Matrix::serialize() const noexcept -> const string {
+auto Matrix::serialize() const noexcept -> string {
     auto _str =   string("{\"rows\":") + to_string(this->rows)
                 + string(",\"columns\":") + to_string(this->columns)
                 + string(",\"data\":[");
@@ -219,7 +186,7 @@ auto Matrix::serialize() const noexcept -> const string {
     _str.reserve(120);
     temp_arr.reserve(3 + this->columns);
 
-    int32_t counter = 0;
+    uint32_t counter = 0;
     for (const auto& i : *this) {
         temp_arr += to_string(i);
 
@@ -246,10 +213,10 @@ auto Matrix::serialize() const noexcept -> const string {
 
 
 // Static functions
-auto Matrix::fromArray(const float_t* const& arr, const int& len) -> Matrix {
+auto Matrix::fromArray(const float* const& arr, const uint32_t& len) -> Matrix {
     Matrix t(len, 1);
 
-    float_t *ptr = &t.data[0];
+    auto *ptr = t.begin();
 
     PTR_START(len)
         *ptr = arr[i];
@@ -262,12 +229,12 @@ auto Matrix::fromArray(const float_t* const& arr, const int& len) -> Matrix {
 auto Matrix::transpose(const Matrix& m) -> Matrix {
     Matrix t(m.columns, m.rows);
 
-    float_t *ptr         = &t.data[0];
-    const float_t *m_ptr = &m.data[0];
+    auto *ptr         = t.begin();
+    const auto *m_ptr = m.cbegin();
 
-    int32_t counter = 0;
+    uint32_t counter = 0;
     PTR_START(t.rows)
-        std::atomic<int32_t> j(0);
+        std::atomic<uint32_t> j(0);
         while(j < t.columns) {
             ptr[counter] = m_ptr[j.load(std::memory_order_consume) * t.rows + i.load(std::memory_order_consume)];
 
@@ -290,16 +257,16 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) -> Matrix {
     // Dot product of values in column
     Matrix t(a.rows, b.columns);
 
-    float_t *ptr          = &t.data[0];
-    const float_t *a_ptr  = &a.data[0];
-    const float_t *b_ptr  = &b.data[0];
+    auto *ptr         = t.begin();
+    const auto *a_ptr = a.cbegin();
+    const auto *b_ptr = b.cbegin();
 
-    std::atomic<int32_t> counter(0);
+    std::atomic<uint32_t> counter(0);
     PTR_START(t.rows)
-        std::atomic<int32_t> j(0);
+        std::atomic<uint32_t> j(0);
         while (j < t.columns) {
-            std::atomic<int32_t> k(0);
-            float_t sum = 0;
+            std::atomic<uint32_t> k(0);
+            float sum = 0;
             while (k < a.columns) {
                 sum += a_ptr[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)] * b_ptr[k.load(std::memory_order_consume) * t.rows + j.load(std::memory_order_consume)];
 
@@ -324,9 +291,9 @@ auto Matrix::subtract(const Matrix& a, const Matrix& b) -> Matrix {
 
     Matrix t(a.rows, b.columns);
 
-    float_t *ptr          = &t.data[0];
-    const float_t *a_ptr  = &a.data[0];
-    const float_t *b_ptr  = &b.data[0];
+    auto *ptr         = t.begin();
+    const auto *a_ptr  = a.cbegin();
+    const auto *b_ptr  = b.cbegin();
 
     PTR_START(t.len)
         *ptr = *a_ptr - *b_ptr;
@@ -341,7 +308,7 @@ auto Matrix::subtract(const Matrix& a, const Matrix& b) -> Matrix {
 auto Matrix::map(const Matrix& m, matrix_function &func) -> Matrix {
     Matrix t(m);
 
-    float_t *ptr = &t.data[0];
+    auto *ptr = t.begin();
 
     PTR_START(t.len)
         *ptr = (*func)(*ptr);
@@ -355,11 +322,11 @@ auto Matrix::deserialize(const simdjson::dom::element& t) -> Matrix {
     const uint64_t& cols = t["columns"];
 
     Matrix m(rows, cols);
-    float *ptr = &m.data[0];
+    auto *ptr = m.begin();
 
     constexpr auto& _str = "/data/";
 
-    int32_t counter = 0;
+    uint32_t counter = 0;
     PTR_START(m.rows)
         const auto& buf_s = _str + to_string(i.load(std::memory_order_consume)) + '/' + to_string(counter);
 
@@ -380,5 +347,5 @@ auto Matrix::deserialize(const simdjson::dom::element& t) -> Matrix {
 
 // Private function
 void Matrix::allocSpace() {
-    this->data = static_cast<float_t *>(::operator new(this->rows * this->columns * sizeof(float_t)));
+    this->elem = static_cast<float *>(::operator new(this->rows * this->columns * sizeof(float)));
 }

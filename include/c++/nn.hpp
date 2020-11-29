@@ -1,58 +1,57 @@
 // Other techniques for learning
-#ifndef __NN_HPP__
-#define __NN_HPP__
+#ifndef NN_HPP_
+#define NN_HPP_
 
 #include "Matrix.hpp"
 
-/**
- * FUNC_SIGMOID:
- * @see nn.cpp 10-12.
- *
- * Flag to sigmoid float_t function.
- */
-#define FUNC_SIGMOID 0x01U
-
-/**
- * FUNC_DSIGMOID:
- * @see nn.cpp 14-17.
- *
- * Flag to dsigmoid float_t function.
- */
-#define FUNC_DSIGMOID 0x02U
+namespace TNN {
+    enum class Function: uint8_t {
+        sigmoid = 1,
+        dsigmoid = 2,
+    };
+};
 
 class NeuralNetwork {
  public:
     // Constructors
-    NeuralNetwork(const NeuralNetwork &);
-    NeuralNetwork(const int32_t &input_nodes, const int32_t &hidden_nodes, const int32_t &output_nodes);
+    inline NeuralNetwork() = default;
+    inline NeuralNetwork(const NeuralNetwork &) = default;
+    NeuralNetwork(const uint32_t&, const uint32_t&, const uint32_t&);
 
     // Destructor
     virtual ~NeuralNetwork() = default;
 
+    // Operator.
+    auto operator=(NeuralNetwork&&) -> NeuralNetwork& = default;
+
     // Functions
     auto predict(const float* const &) const noexcept -> float*;
     void setLearningRate(const float&);
-    void setActivationFunction(const uint8_t&);
+    void setActivationFunction(const TNN::Function&);
     void train(const float* const&, const float* const&);
-    auto serialize() const noexcept -> const string;
+    auto serialize() noexcept -> string;
 
     // Static function
     static auto deserialize(const simdjson::dom::element&) -> NeuralNetwork;
 
+    // Delete.
+    NeuralNetwork(NeuralNetwork&&) = delete;
+    auto operator=(const NeuralNetwork&) -> NeuralNetwork& = delete;
+
  private:
     // Variables
-    int32_t input_nodes;
-    int32_t hidden_nodes;
-    int32_t output_nodes;
+    uint32_t input_nodes{};
+    uint32_t hidden_nodes{};
+    uint32_t output_nodes{};
 
-    float learning_rate;
+    float learning_rate{};
 
-    float (*activation_function)(float);
+    float (*activation_function)(float){};
 
-    Matrix weights_ih;
-    Matrix weights_ho;
-    Matrix bias_h;
-    Matrix bias_o;
+    Matrix weights_ih{};
+    Matrix weights_ho{};
+    Matrix bias_h{};
+    Matrix bias_o{};
 };
 
-#endif  // __NN_HPP__
+#endif  // NN_HPP_

@@ -1,6 +1,6 @@
 // Matrix lib
-#ifndef __MATRIX_HPP__
-#define __MATRIX_HPP__
+#ifndef MATRIX_HPP_
+#define MATRIX_HPP_
 
 #include "third_party/json/simdjson.h"  // simdjson::
 
@@ -8,85 +8,143 @@ using std::to_string;
 using std::string;
 
 class Matrix {
+ protected:
+     using S_iter = std::iterator_traits<float*>;
+     using const_S_iter = std::iterator_traits<const float*>;
+
  public:
-    using iterator = float*;
-    using const_iterator = const float*;
+    using value_type = S_iter::value_type;
+    using pointer = S_iter::pointer;
+    using const_pointer = const_S_iter::pointer;
+    using reference = S_iter::reference;
+    using const_reference = const_S_iter::reference;
+    using iterator = pointer;
+    using const_iterator = const_pointer;
+    using reverse_iterator = typename std::reverse_iterator<pointer>;
+    using const_reverse_iterator = typename std::reverse_iterator<const_pointer>;
 
-    using reverse_iterator = typename std::reverse_iterator<iterator>;
-    using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
-
-
-    // Constructors
-    Matrix(const int32_t&, const int32_t&);
-    inline constexpr Matrix();
+    // Constructors.
+    inline constexpr Matrix() = default;
+    Matrix(Matrix&&) = default;
+    Matrix(const uint32_t&, const uint32_t&);
     Matrix(const Matrix&);
 
-    // Destructor
+    // Destructor.
     inline ~Matrix() = default;
 
-    // Operators
+    // Operators.
     auto operator=(Matrix&&) -> Matrix& = default;
-    auto operator=(const Matrix&) -> Matrix& = delete;
     auto operator+=(const Matrix&) -> Matrix&;
     auto operator+=(const float&) -> Matrix&;
     auto operator*=(const Matrix&) -> Matrix&;
     auto operator*=(const float&) -> Matrix&;
-    auto operator[](const size_t& idx) -> iterator;
 
-    // Non member operator
+
+    // Non member operator.
     friend auto operator<<(std::ostream&, const Matrix&) -> std::ostream&;
 
-    // Functions
-    inline constexpr auto begin() const noexcept -> iterator {
-        return iterator(&this->data[0]);
-    }
-    inline constexpr auto end() const noexcept -> iterator {
-        return iterator(this->iter);
-    }
-    inline constexpr auto cbegin() const noexcept -> const_iterator {
-        return const_iterator(this->begin());
-    }
-    inline constexpr auto cend() const noexcept -> const_iterator {
-        return const_iterator(this->end());
-    }
+    // Iterators.
+    constexpr auto begin() noexcept -> iterator
+    { return iterator(data()); }
 
-    inline auto rbegin() const noexcept -> reverse_iterator {
-        return reverse_iterator(this->end());
-    }
-    inline auto rend() const noexcept -> reverse_iterator {
-        return reverse_iterator(this->begin());
-    }
-    inline auto crbegin() const noexcept -> const_reverse_iterator {
-        return const_reverse_iterator(this->rbegin());
-    }
-    inline auto crend() const noexcept -> const_reverse_iterator {
-        return const_reverse_iterator(this->rend());
-    }
+    constexpr auto begin() const noexcept -> const_iterator
+    { return const_iterator(data()); }
 
+    constexpr auto end() noexcept -> iterator
+    { return iterator(data() + len); }
+
+    constexpr auto end() const noexcept -> const_iterator
+    { return const_iterator(data() + len); }
+
+    auto rbegin() noexcept -> reverse_iterator
+    { return reverse_iterator(end()); }
+
+    auto rbegin() const noexcept -> const_reverse_iterator
+    { return const_reverse_iterator(end()); }
+
+    auto rend() noexcept -> reverse_iterator
+    { return reverse_iterator(begin()); }
+
+    auto rend() const noexcept -> const_reverse_iterator
+    { return const_reverse_iterator(begin()); }
+
+    constexpr auto cbegin() const noexcept -> const_iterator
+    { return const_iterator(begin()); }
+
+    constexpr auto cend() const noexcept -> const_iterator
+    { return const_iterator(end()); }
+
+    auto crbegin() const noexcept -> const_reverse_iterator
+    { return const_reverse_iterator(end()); }
+
+    auto crend() const noexcept -> const_reverse_iterator
+    { return const_reverse_iterator(begin()); }
+
+    // Element access.
+    constexpr auto data() noexcept -> pointer
+    { return Matrix::S_ptr(elem); }
+    constexpr auto data() const noexcept -> const_pointer
+    { return Matrix::S_ptr(elem); }
+   
+    constexpr auto
+    operator()(const size_t& x, const size_t& y) noexcept -> reference
+    { return Matrix::S_ref(elem, this->pos(x, y)); }
+
+    constexpr auto
+    operator()(const size_t& x, const size_t& y) const noexcept -> const_reference
+    { return Matrix::S_ref(elem, this->pos(x, y)); }
+
+
+    // Functions.
     auto toArray() const noexcept -> float*;
     void randomize();
     void map(float (*const &)(float));
-    auto serialize() const noexcept -> const string;
+    auto serialize() const noexcept -> string;
 
-    // Static functions
-    static auto fromArray(const float* const&, const int&) -> Matrix;
+    // Static functions.
+    static auto fromArray(const float* const&, const uint32_t&) -> Matrix;
     static auto transpose(const Matrix&) -> Matrix;
     static auto multiply(const Matrix&, const Matrix&) -> Matrix;
     static auto subtract(const Matrix&, const Matrix&) -> Matrix;
     static auto map(const Matrix&, float (*const &)(float)) -> Matrix;
     static auto deserialize(const simdjson::dom::element&) -> Matrix;
 
+    // Delete.
+    auto operator=(const Matrix&) -> Matrix& = delete;
+
  private:
-    iterator iter;
-    // Variables
-    int32_t len;
+    // Variables.
+    uint32_t len {};
+    uint32_t rows {};
+    uint32_t columns {};
 
-    int32_t rows, columns;
+    float* elem {nullptr};
 
-    float* data;
+    constexpr auto
+    operator[](const size_t& idx) noexcept -> reference
+    { return Matrix::S_ref(elem, idx); }
 
-    // Function
+    constexpr auto
+    operator[](const size_t& idx) const noexcept -> const_reference
+    { return Matrix::S_ref(elem, idx); }
+
+
+    // Function.
     void allocSpace();
+
+    constexpr auto
+    pos(const uint32_t& x, const uint32_t& y) const -> uint32_t {
+        return ((x < rows) && (y < columns)) ? ((columns * x) + y)
+            : (throw std::overflow_error("out of bounds"), 0);
+    }
+
+    static constexpr auto
+    S_ref(const pointer& _t, const size_t& _n) noexcept -> reference
+    { return const_cast<reference>(_t[_n]); }
+
+    static constexpr auto
+    S_ptr(const pointer& _t) noexcept -> pointer
+    { return const_cast<pointer>(_t); }
 };
 
-#endif  // __MATRIX_HPP__
+#endif  // MATRIX_HPP_
