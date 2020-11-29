@@ -4,7 +4,6 @@
 
 #include <random>  // std::mt19937, std::uniform_real_distribution, std::random_device
 #include <atomic>  // std::atomic<uint32_t>, std::memory_order_release
-#include <execution>
 #include <iostream>  // std::cerr
 
 /**
@@ -73,10 +72,8 @@ Matrix::Matrix(const Matrix& m)
 
 // Operators
 auto Matrix::operator+=(const float& num) -> Matrix& {
-    std::for_each(std::execution::par_unseq,
-            begin(), end(), [&](float& el) {
-                el += num;
-            });
+    for (auto& iter : *this)
+        iter += num;
 
     return *this;
 }
@@ -113,10 +110,8 @@ auto Matrix::operator*=(const Matrix& m) -> Matrix& {
 
 auto Matrix::operator*=(const float& num) -> Matrix& {
     // Scalar product
-    std::for_each(std::execution::par_unseq,
-            begin(), end(), [&](float& el) {
-                el *= num;
-            });
+    for(auto& iter : *this)
+        iter *= num;
 
     return *this;
 }
@@ -155,19 +150,14 @@ auto Matrix::toArray() const noexcept -> float* {
 
 void Matrix::randomize() {
     random_in_range r;
-
-    std::for_each(std::execution::par_unseq,
-            begin(), end(), [&](float& el) {
-                el = r.get() - 1;
-            });
+    for(auto& el : *this)
+        el = r.get() - 1;
 }
 
 void Matrix::map(matrix_function &func) {
     // Apply a function to every element of matrix
-    std::for_each(std::execution::par_unseq,
-            begin(), end(), [&](float& el) {
-                el = (*func)(el);
-            });
+    for(auto& el : *this)
+        el = (*func)(el);
 }
 
 // TODO: Refactor
