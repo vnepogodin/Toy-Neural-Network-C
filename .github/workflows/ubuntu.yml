@@ -25,7 +25,7 @@ jobs:
     - name: Build C
       working-directory: ${{runner.workspace}}/build
       shell: bash
-      run: make
+      run: cmake --build . --parallel 10
     
     - name: Test C
       working-directory: ${{runner.workspace}}/build
@@ -41,7 +41,7 @@ jobs:
     - name: Build CPP
       working-directory: ${{runner.workspace}}/build
       shell: bash
-      run: make
+      run: cmake --build . --parallel 10
 
     - name: Test CPP
       working-directory: ${{runner.workspace}}/build
