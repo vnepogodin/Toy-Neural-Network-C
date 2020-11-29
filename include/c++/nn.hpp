@@ -13,12 +13,13 @@ namespace TNN {
 
 class NeuralNetwork {
  public:
-    // Constructors
+    // Constructors.
     inline NeuralNetwork() = default;
     inline NeuralNetwork(const NeuralNetwork &) = default;
+    inline NeuralNetwork(NeuralNetwork&&) = default;
     NeuralNetwork(const uint32_t&, const uint32_t&, const uint32_t&);
 
-    // Destructor
+    // Destructor.
     virtual ~NeuralNetwork() = default;
 
     // Operator.
@@ -26,7 +27,8 @@ class NeuralNetwork {
 
     // Functions
     auto predict(const float* const &) const noexcept -> float*;
-    void setLearningRate(const float&);
+    constexpr void setLearningRate(const float &lr)
+    { this->learning_rate = lr; }
     void setActivationFunction(const TNN::Function&);
     void train(const float* const&, const float* const&);
     auto serialize() noexcept -> string;
@@ -35,7 +37,6 @@ class NeuralNetwork {
     static auto deserialize(const simdjson::dom::element&) -> NeuralNetwork;
 
     // Delete.
-    NeuralNetwork(NeuralNetwork&&) = delete;
     auto operator=(const NeuralNetwork&) -> NeuralNetwork& = delete;
 
  private:

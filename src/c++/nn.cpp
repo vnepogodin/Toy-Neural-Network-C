@@ -69,12 +69,6 @@ auto NeuralNetwork::predict(const float* const &input_array) const noexcept -> f
 }
 
 
-// Setting learning rate
-//
-void NeuralNetwork::setLearningRate(const float &lr) {
-    this->learning_rate = lr;
-}
-
 // Setting function
 //
 void NeuralNetwork::setActivationFunction(const TNN::Function& flag) {
