@@ -8,16 +8,12 @@ using std::to_string;
 using std::string;
 
 class Matrix {
- protected:
-     using S_iter = std::iterator_traits<float*>;
-     using const_S_iter = std::iterator_traits<const float*>;
-
  public:
-    using value_type = S_iter::value_type;
-    using pointer = S_iter::pointer;
-    using const_pointer = const_S_iter::pointer;
-    using reference = S_iter::reference;
-    using const_reference = const_S_iter::reference;
+    using value_type = float;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using reference = value_type&;
+    using const_reference = const value_type&;
     using iterator = pointer;
     using const_iterator = const_pointer;
     using reverse_iterator = typename std::reverse_iterator<pointer>;
@@ -85,7 +81,7 @@ class Matrix {
     { return Matrix::S_ptr(elem); }
     constexpr auto data() const noexcept -> const_pointer
     { return Matrix::S_ptr(elem); }
-   
+
     constexpr auto
     operator()(const size_t& x, const size_t& y) noexcept -> reference
     { return Matrix::S_ref(elem, this->pos(x, y)); }
@@ -140,11 +136,11 @@ class Matrix {
 
     static constexpr auto
     S_ref(const pointer& _t, const size_t& _n) noexcept -> reference
-    { return const_cast<reference>(_t[_n]); }
+    { return static_cast<reference>(_t[_n]); }
 
     static constexpr auto
     S_ptr(const pointer& _t) noexcept -> pointer
-    { return const_cast<pointer>(_t); }
+    { return static_cast<pointer>(_t); }
 };
 
 #endif  // MATRIX_HPP_

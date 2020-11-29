@@ -33,4 +33,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION 0.0.5
         SOVERSION 0)
 
+target_link_libraries(${PROJECT_NAME} PUBLIC tbb)
+
 list(APPEND CMAKE_TARGETS ${PROJECT_NAME})
