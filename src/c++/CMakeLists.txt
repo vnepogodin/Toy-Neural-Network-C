@@ -3,10 +3,17 @@ project(Neural-Network-CPP CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+
 if(NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMDJSON_THREADS_ENABLED -ffast-math -march=haswell")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -O3")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -Og")
+
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=haswell")
+    elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=fallback")
+    endif()
 endif()
 
 add_subdirectory(tests)
