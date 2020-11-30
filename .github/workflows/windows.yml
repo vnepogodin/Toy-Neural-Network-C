@@ -1,4 +1,4 @@
-game: Windows
+name: Windows
 
 on: [push]
 
