@@ -159,12 +159,8 @@ auto NeuralNetwork::serialize() noexcept -> string {
         + string(",\"learning_rate\":") + to_string(this->learning_rate)
         + '}';
 
-
-    const auto& len = _str.size();
-    std::unique_ptr<char[]> tmp{new char[len]};
-    std::copy(_str.cbegin(), _str.cend() + 1, tmp.get());
-
-    return tmp.get();
+    _str.shrink_to_fit();
+    return _str;
 }
 
 

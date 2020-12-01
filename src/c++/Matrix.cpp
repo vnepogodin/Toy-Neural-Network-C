@@ -169,7 +169,7 @@ auto Matrix::serialize() const noexcept -> string {
     string temp_arr = "[";
 
     _str.reserve(120);
-    temp_arr.reserve(3 + this->columns);
+    temp_arr.reserve(3 + (this->columns * 11));
 
     uint32_t counter = 0;
     for (const auto& i : *this) {
@@ -189,11 +189,8 @@ auto Matrix::serialize() const noexcept -> string {
     }
     _str += "]}";
 
-    const auto &len = _str.size();
-    std::unique_ptr<char[]> res{new char[len]};
-    std::copy(_str.cbegin(), _str.cend() + 1, res.get());
-
-    return res.get();
+    _str.shrink_to_fit();
+    return _str;
 }
 
 
