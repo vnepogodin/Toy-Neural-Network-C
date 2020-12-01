@@ -39,13 +39,13 @@ jobs:
         run: curl -fsSL -o LLVM9.exe https://releases.llvm.org/9.0.0/LLVM-9.0.0-win64.exe ; 7z x LLVM9.exe -y -o"C:/Program Files/LLVM"
 
       - name: Configure CMake C
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang.exe"
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang.exe"
 
       - name: Build C
         run: cmake --build build --parallel 10
 
       - name: Configure CMake CPP
-        run: cmake-S . -B build -DLANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe"
+        run: cmake-S . -B build -DLANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe"
 
       - name: Build CPP
         run: cmake --build build --parallel 10
@@ -60,13 +60,13 @@ jobs:
         run: curl -fsSL -o LLVM10.exe https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/LLVM-10.0.0-win64.exe ; 7z x LLVM10.exe -y -o"C:/Program Files/LLVM"
 
       - name: Configure CMake C
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang.exe"
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang.exe"
 
       - name: Build C
         run: cmake --build build --parallel 10
 
       - name: Configure CMake CPP
-        run: cmake -S . -B build -DLANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe"
+        run: cmake -S . -B build -DLANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe"
 
       - name: Build CPP
         run: cmake --build build --parallel 10
@@ -78,7 +78,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Configure CMake C
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64 -T ClangCL
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64
 
       - name: Build C
         run: cmake --build build --parallel 10
