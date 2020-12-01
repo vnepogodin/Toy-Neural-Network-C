@@ -45,7 +45,7 @@ jobs:
         run: cmake --build build --parallel 10
 
       - name: Configure CMake CPP
-        run: cmake-S . -B build -DLANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe"
+        run: cmake -S . -B build -DLANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe"
 
       - name: Build CPP
         run: cmake --build build --parallel 10
