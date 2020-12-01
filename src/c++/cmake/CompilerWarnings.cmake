@@ -23,6 +23,8 @@ function(set_project_warnings project_name)
 
         /w14826 # Conversion from one tipe to another is sign-extended cause unexpected runtime behavior.
         /w14928 # illegal copy-initialization; more than user-defined.
+        /X
+        /constexpr
     )
 
     set(CLANG_WARNINGS
