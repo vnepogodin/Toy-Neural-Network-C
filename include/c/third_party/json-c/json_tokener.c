@@ -16,11 +16,11 @@
 #include "json_object.h"
 #include "printbuf.h"
 
-#include <stdlib.h>
 #include <ctype.h>
-#include <math.h>
-#include <string.h>
 #include <limits.h> /* LLONG_MAX, INT_MAX.. */
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 enum json_tokener_state {
     json_tokener_state_eatws,
@@ -64,7 +64,7 @@ struct json_tokener_srec {
 
     char* obj_field_name;
 
-    json_object *current;
+    json_object* current;
 };
 
 /**
@@ -85,28 +85,26 @@ struct json_tokener {
 
     int max_depth, depth, st_pos;
 
-    printbuf *pb;
-    struct json_tokener_srec *stack;
+    printbuf* pb;
+    struct json_tokener_srec* stack;
 };
 
-
 #ifdef _WIN32
-#  define strdup _strdup
-#  define strncasecmp _strnicmp
+# define strdup _strdup
+# define strncasecmp _strnicmp
 #endif
 
-#define json_min(a, b) ((a) < (b) ? (a) : (b))
-
+#define json_min(a, b) (((a) < (b)) ? (a) : (b))
 
 /* PARSING */
-static int json_parse_uint64(const char* buf, unsigned long long *return_value) {
+static int json_parse_uint64(const char* buf, unsigned long long* return_value) {
     while (*buf == ' ')
         buf++;
 
     if (*buf == '-')
         return 1; /* error: uint cannot be negative */
 
-    char *end = NULL;
+    char* end = NULL;
     register const unsigned long long val = strtoull(buf, &end, 10);
     if (end != buf)
         *return_value = val;
@@ -114,8 +112,8 @@ static int json_parse_uint64(const char* buf, unsigned long long *return_value) 
     return ((val == 0) || (end == buf)) ? 1 : 0;
 }
 
-static unsigned char json_tokener_parse_double(const char* buf, const int len, double *return_value) {
-    char *end = NULL;
+static unsigned char json_tokener_parse_double(const char* buf, const int len, double* return_value) {
+    char* end = NULL;
     *return_value = strtod(buf, &end);
 
     register const char* _expr = buf + len;
@@ -127,7 +125,7 @@ static unsigned char json_tokener_parse_double(const char* buf, const int len, d
 }
 
 /* RESETTING */
-static inline void json_tokener_reset_level(struct json_tokener *tok, const int depth) {
+static inline void json_tokener_reset_level(struct json_tokener* tok, const int depth) {
     tok->stack[depth].state = json_tokener_state_eatws;
     tok->stack[depth].saved_state = json_tokener_state_start;
 
@@ -142,7 +140,7 @@ static inline void json_tokener_reset_level(struct json_tokener *tok, const int 
  * Reset the state of a json_tokener, to prepare
  * to parse a brand new JSON object.
  */
-static inline void json_tokener_reset(struct json_tokener *tok) {
+static inline void json_tokener_reset(struct json_tokener* tok) {
     if (tok != NULL) {
         while (tok->depth >= 0) {
             json_tokener_reset_level(tok, tok->depth);
@@ -155,7 +153,7 @@ static inline void json_tokener_reset(struct json_tokener *tok) {
 }
 
 /* FREEING */
-static inline void json_tokener_free(struct json_tokener *tok) {
+static inline void json_tokener_free(struct json_tokener* tok) {
     json_tokener_reset(tok);
     if (tok->pb != NULL)
         printbuf_free(tok->pb);
@@ -170,26 +168,11 @@ static inline void json_tokener_free(struct json_tokener *tok) {
  * @see JSON_TOKENER_DEFAULT_DEPTH
  */
 static struct json_tokener* json_tokener_new_ex(const int depth) {
-#ifdef DEBUG
-    struct json_tokener *tok = NULL;
-
-    /* assumed 0.004MB page sizes */
-    posix_memalign((void **)&tok, 4096UL, 4096UL);
-#else
-    struct json_tokener *tok = (struct json_tokener *)calloc(1UL, sizeof(struct json_tokener));
-#endif
+    struct json_tokener* tok = (struct json_tokener*)calloc(1UL, sizeof(struct json_tokener));
     if (tok == NULL)
         return NULL;
 
-#ifdef DEBUG
-    tok->stack = NULL;
-
-    /* assumed 0.001MB page sizes */
-    posix_memalign((void **)&tok->stack, 1024UL, 1024UL);
-#else
-    tok->stack = (struct json_tokener_srec *)calloc((unsigned long)depth, sizeof(struct json_tokener_srec));
-#endif
-
+    tok->stack = (struct json_tokener_srec*)calloc((unsigned long)depth, sizeof(struct json_tokener_srec));
     if (tok->stack == NULL) {
         free(tok);
         return NULL;
@@ -207,7 +190,7 @@ static struct json_tokener* json_tokener_new_ex(const int depth) {
     return tok;
 }
 
-static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* str, const int len) {
+static json_object* json_tokener_parse_ex(struct json_tokener* tok, const char* str, const int len) {
     tok->char_offset = 0;
     tok->err = json_tokener_success;
 
@@ -222,13 +205,13 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
         return NULL;
     }
 
-    json_object *obj = NULL;
+    json_object* obj = NULL;
     char c = 1;
 
     while (1) {
         c = *str;
 
-        redo_char:
+redo_char:
         switch (tok->stack[tok->depth].state) {
             case json_tokener_state_eatws:
                 /* Advance until we change state */
@@ -329,8 +312,7 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
                     goto out;
                 }
                 tok->st_pos++;
-            }
-                break;
+            } break;
 
             case json_tokener_state_comment_start:
                 if (c == '*')
@@ -354,12 +336,11 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
                 }
                 printbuf_memappend_fast(tok->pb, case_start, 1 + str - case_start);
                 tok->stack[tok->depth].state = json_tokener_state_comment_end;
-            }
-                break;
+            } break;
 
             case json_tokener_state_comment_eol: {
                 /* Advance until we change state */
-                const char *case_start = str;
+                const char* case_start = str;
                 while (c != '\n') {
                     ++str;
                     tok->char_offset++;
@@ -367,8 +348,7 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
                 }
                 printbuf_memappend_fast(tok->pb, case_start, str - case_start);
                 tok->stack[tok->depth].state = json_tokener_state_eatws;
-            }
-                break;
+            } break;
 
             case json_tokener_state_comment_end:
                 printbuf_memappend_fast(tok->pb, &c, 1);
@@ -382,7 +362,7 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
 
             case json_tokener_state_number: {
                 /* Advance until we change state */
-                const char *case_start = str;
+                const char* case_start = str;
                 register int case_len = 0;
                 register unsigned char neg_sign_ok = 1U;
                 register unsigned char pos_sign_ok = 0U;
@@ -391,7 +371,7 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
                     /* We don't save all state from the previous incremental parse
                      * so we need to re-generate it based on the saved string so far.
                      */
-                    char *e_loc = strchr(printbuf_getBuf(tok->pb), 'e');
+                    char* e_loc = strchr(printbuf_getBuf(tok->pb), 'e');
                     if (e_loc == NULL)
                         e_loc = strchr(printbuf_getBuf(tok->pb), 'E');
 
@@ -489,8 +469,7 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
                             if (tok->stack[tok->depth].current == NULL)
                                 return NULL;
                         }
-                    }
-                    else if ((tok->is_double) && (json_tokener_parse_double(printbuf_getBuf(tok->pb), printbuf_getPos(tok->pb), &numd) == 0)) {
+                    } else if ((tok->is_double) && (json_tokener_parse_double(printbuf_getBuf(tok->pb), printbuf_getPos(tok->pb), &numd) == 0)) {
                         tok->stack[tok->depth].current = json_object_new_double_s(numd, printbuf_getBuf(tok->pb));
                         if (tok->stack[tok->depth].current == NULL)
                             return NULL;
@@ -565,11 +544,10 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
 
             case json_tokener_state_object_field: {
                 /* Advance until we change state */
-                const char *case_start = str;
+                const char* case_start = str;
                 while (1) {
                     if (c == tok->quote_char) {
-                        printbuf_memappend_fast(tok->pb, case_start,
-                                                str - case_start);
+                        printbuf_memappend_fast(tok->pb, case_start, str - case_start);
 
                         tok->stack[tok->depth].obj_field_name = strdup(printbuf_getBuf(tok->pb));
                         tok->stack[tok->depth].saved_state = json_tokener_state_object_field_end;
@@ -581,8 +559,7 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
                     tok->char_offset++;
                     c = *str;
                 }
-            }
-                break;
+            } break;
 
             case json_tokener_state_object_field_end:
                 if (c == ':') {
@@ -633,9 +610,9 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
         tok->char_offset++;
     } /* while(1) */
 
-    out:
+out:
     if (tok->err == json_tokener_success) {
-        json_object *ret = json_object_get(tok->stack[tok->depth].current);
+        json_object* ret = json_object_get(tok->stack[tok->depth].current);
 
         /* Partially reset, so we parse additional objects on subsequent calls. */
         register int ii = tok->depth;
@@ -649,13 +626,12 @@ static json_object* json_tokener_parse_ex(struct json_tokener *tok, const char* 
     return NULL;
 }
 
-
 json_object* json_tokener_parse(const char* str) {
-    register json_object *result = NULL;
-    struct json_tokener *tok = json_tokener_new_ex(32);
+    register json_object* result = NULL;
+    struct json_tokener* tok = json_tokener_new_ex(32);
 
     if (tok != NULL) {
-        register json_object *obj = json_tokener_parse_ex(tok, str, -1);
+        register json_object* obj = json_tokener_parse_ex(tok, str, -1);
 
         if (tok->err != json_tokener_success) {
             if (obj != NULL)

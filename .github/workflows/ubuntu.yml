@@ -26,18 +26,18 @@ jobs:
       working-directory: ${{runner.workspace}}/build
       shell: bash
       run: cmake --build . --parallel 10
-    
+
     - name: Test C
       working-directory: ${{runner.workspace}}/build
       shell: bash
       run: make run
 
-    
+
     - name: Configure CMake CPP
       shell: bash
       working-directory: ${{runner.workspace}}/build
       run: cmake $GITHUB_WORKSPACE -DLANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-    
+
     - name: Build CPP
       working-directory: ${{runner.workspace}}/build
       shell: bash

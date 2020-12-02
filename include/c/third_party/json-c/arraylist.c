@@ -10,8 +10,8 @@
  */
 #include "arraylist.h"
 
+#include <limits.h> /* ULONG_MAX */
 #include <stdlib.h> /* malloc, calloc */
-#include <limits.h>
 
 struct _Array_List {
     unsigned long length;
@@ -19,11 +19,10 @@ struct _Array_List {
 
     void (*free_fn)(void*);
 
-    void **array;
+    void** array;
 };
 
-
-static int array_list_expand_internal(array_list *arr, const unsigned long max) {
+static int array_list_expand_internal(array_list* arr, const unsigned long max) {
     register int result = 0;
 
     if (max >= arr->size) {
@@ -37,10 +36,10 @@ static int array_list_expand_internal(array_list *arr, const unsigned long max) 
                 new_size = max;
         }
         result = -1;
-        if (new_size <= (~((unsigned long) 0)) / sizeof(void *)) {
-            register void *t = realloc(arr->array, new_size * sizeof(void *));
+        if (new_size <= (~((unsigned long)0)) / sizeof(void*)) {
+            register void* t = realloc(arr->array, new_size * sizeof(void*));
             if (t != NULL) {
-                arr->array = (void **)t;
+                arr->array = (void**)t;
                 arr->size = new_size;
                 result = 0;
             }
@@ -50,25 +49,17 @@ static int array_list_expand_internal(array_list *arr, const unsigned long max) 
     return result;
 }
 
+array_list* array_list_new(void (*free_fn)(void*), const int initial_size) {
+    array_list* result = NULL;
 
-array_list* array_list_new(void(*free_fn)(void*), const int initial_size) {
-    array_list *result = NULL;
-
-    if (!((initial_size < 0) || ((unsigned long)initial_size >= (ULONG_MAX / sizeof(void *))))) {
-#ifdef DEBUG
-        array_list *arr = NULL;
-
-        /* assumed 0.002MB page sizes */
-        posix_memalign((void **)&arr, 2048UL, 2048UL);
-#else
-        array_list *arr = (array_list *)malloc(sizeof(array_list));
-#endif
+    if (!((initial_size < 0) || ((unsigned long)initial_size >= (ULONG_MAX / sizeof(void*))))) {
+        array_list* arr = (array_list*)malloc(sizeof(array_list));
 
         if (arr != NULL) {
             arr->size = (unsigned long)initial_size;
             arr->length = 0;
             arr->free_fn = free_fn;
-            arr->array = (void **)calloc((unsigned long)initial_size, 8UL);
+            arr->array = (void**)calloc((unsigned long)initial_size, 8UL);
 
             if (arr->array != NULL)
                 result = arr;
@@ -80,7 +71,7 @@ array_list* array_list_new(void(*free_fn)(void*), const int initial_size) {
     return result;
 }
 
-void array_list_free(array_list *arr) {
+void array_list_free(array_list* arr) {
     register unsigned long i = 0UL;
     while (i < arr->length) {
         if (arr->array[i] != NULL)
@@ -92,7 +83,7 @@ void array_list_free(array_list *arr) {
     free(arr);
 }
 
-void* array_list_get_idx(array_list *arr, const unsigned long i) {
+void* array_list_get_idx(array_list* arr, const unsigned long i) {
     register void* result = NULL;
     if (i < arr->length)
         result = arr->array[i];
@@ -100,8 +91,8 @@ void* array_list_get_idx(array_list *arr, const unsigned long i) {
     return result;
 }
 
-int array_list_shrink(array_list *arr, const unsigned long empty_slots) {
-    if (empty_slots >= (ULONG_MAX / (sizeof(void *) - arr->length)))
+int array_list_shrink(array_list* arr, const unsigned long empty_slots) {
+    if (empty_slots >= (ULONG_MAX / (sizeof(void*) - arr->length)))
         return -1;
 
     register unsigned long new_size = arr->length + empty_slots;
@@ -114,11 +105,11 @@ int array_list_shrink(array_list *arr, const unsigned long empty_slots) {
     if (new_size == 0)
         new_size = 1;
 
-    register void* t = realloc(arr->array, new_size * sizeof(void *));
+    register void* t = realloc(arr->array, new_size * sizeof(void*));
     if (t == NULL)
         return -1;
 
-    arr->array = (void **)t;
+    arr->array = (void**)t;
     arr->size = new_size;
     return 0;
 }
@@ -126,12 +117,12 @@ int array_list_shrink(array_list *arr, const unsigned long empty_slots) {
 /* Repeat some of array_list_put_idx() so we can skip several
  * checks that we know are unnecessary when appending at the end
  */
-int array_list_add(array_list *arr, const void* const data) {
+int array_list_add(array_list* arr, const void* const data) {
     register unsigned long idx = arr->length;
     register int result = -1;
 
     if ((idx <= (ULONG_MAX - 1)) && (array_list_expand_internal(arr, idx + 1) != 1)) {
-        arr->array[idx] = (void *)data;
+        arr->array[idx] = (void*)data;
         arr->length++;
 
         result = 0;
@@ -139,6 +130,6 @@ int array_list_add(array_list *arr, const void* const data) {
     return result;
 }
 
-inline unsigned long array_list_length(const array_list *arr) {
+inline unsigned long array_list_length(const array_list* arr) {
     return arr->length;
 }

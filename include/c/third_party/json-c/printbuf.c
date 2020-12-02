@@ -14,9 +14,9 @@
  */
 #include "printbuf.h"
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 #include <string.h>
 
 struct _Printbuf {
@@ -26,31 +26,31 @@ struct _Printbuf {
     char* buf;
 };
 
-void printbuf_memcpy(printbuf *__pb_param, const void* __src_param, const unsigned long __size_param) {
+void printbuf_memcpy(printbuf* __pb_param, const void* __src_param, const unsigned long __size_param) {
     memcpy(__pb_param->buf + __pb_param->bpos, __src_param, __size_param);
 }
 
-inline int printbuf_getSize(printbuf *__pb_param) {
+inline int printbuf_getSize(printbuf* __pb_param) {
     return __pb_param->size;
 }
-inline int printbuf_getPos(printbuf *__pb_param) {
+inline int printbuf_getPos(printbuf* __pb_param) {
     return __pb_param->bpos;
 }
-inline char* printbuf_getBuf(printbuf *__pb_param) {
+inline char* printbuf_getBuf(printbuf* __pb_param) {
     return __pb_param->buf;
 }
-inline char* printbuf_get_posBufInPos(printbuf *__pb_param, const int __pos_param) {
+inline char* printbuf_get_posBufInPos(printbuf* __pb_param, const int __pos_param) {
     return &__pb_param->buf[__pos_param];
 }
 
-inline void printbuf_addPos(printbuf *__pb_param, const int __value_param) {
+inline void printbuf_addPos(printbuf* __pb_param, const int __value_param) {
     __pb_param->bpos += __value_param;
 }
-inline void printbuf_subPos(printbuf *__pb_param, const int __value_param) {
+inline void printbuf_subPos(printbuf* __pb_param, const int __value_param) {
     __pb_param->bpos -= __value_param;
 }
 
-inline void printbuf_setBufInPos(printbuf *__pb_param, const int __pos_param, const char __value_param) {
+inline void printbuf_setBufInPos(printbuf* __pb_param, const int __pos_param, const char __value_param) {
     __pb_param->buf[__pos_param] = __value_param;
 }
 
@@ -62,7 +62,7 @@ inline void printbuf_setBufInPos(printbuf *__pb_param, const int __pos_param, co
  * Note: this does not check the available space!  The caller
  *  is responsible for performing those calculations.
  */
-static int printbuf_extend(printbuf *p, const int min_size) {
+static int printbuf_extend(printbuf* p, const int min_size) {
     if (p->size >= min_size)
         return 0;
 
@@ -80,31 +80,23 @@ static int printbuf_extend(printbuf *p, const int min_size) {
             new_size = min_size + 8;
     }
 
-    const char* t = (char *)realloc(p->buf, (unsigned long)new_size);
+    const char* t = (char*)realloc(p->buf, (unsigned long)new_size);
     if (t == NULL)
         return -1;
 
     p->size = new_size;
-    p->buf = (char *)t;
+    p->buf = (char*)t;
     return 0;
 }
 
 printbuf* printbuf_new(void) {
-#ifdef DEBUG
-    printbuf *p = NULL;
-
-    /* assumed 0.0005MB page sizes */
-    posix_memalign((void **)&p, 512UL, 512UL);
-#else
-    printbuf *p = (printbuf *)calloc(1UL, sizeof(printbuf));
-#endif
-
+    printbuf* p = (printbuf*)calloc(1UL, sizeof(printbuf));
     if (p == NULL)
         return NULL;
 
     p->size = 32;
     p->bpos = 0;
-    p->buf = (char *)malloc((unsigned long)p->size);
+    p->buf = (char*)malloc((unsigned long)p->size);
     if (p->buf == NULL) {
         free(p);
         return NULL;
@@ -114,7 +106,7 @@ printbuf* printbuf_new(void) {
     return p;
 }
 
-inline int printbuf_memappend(printbuf *p, const char* buf, const unsigned long size) {
+inline int printbuf_memappend(printbuf* p, const char* buf, const unsigned long size) {
     /* Prevent signed integer overflows with large buffers. */
     if ((int)size > (INT_MAX - p->bpos - 1))
         return -1;
@@ -130,7 +122,7 @@ inline int printbuf_memappend(printbuf *p, const char* buf, const unsigned long 
     return (int)size;
 }
 
-int printbuf_memset(printbuf *pb, int offset, const int value, const int len) {
+int printbuf_memset(printbuf* pb, int offset, const int value, const int len) {
     if (offset == -1)
         offset = pb->bpos;
 
@@ -151,12 +143,12 @@ int printbuf_memset(printbuf *pb, int offset, const int value, const int len) {
     return 0;
 }
 
-inline void printbuf_reset(printbuf *p) {
+inline void printbuf_reset(printbuf* p) {
     p->buf[0] = '\0';
     p->bpos = 0;
 }
 
-inline void printbuf_free(printbuf *p) {
+inline void printbuf_free(printbuf* p) {
     if (p != NULL) {
         free(p->buf);
         free(p);

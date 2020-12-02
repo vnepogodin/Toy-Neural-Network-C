@@ -26,68 +26,67 @@
 #endif
 
 /* hash functions */
-static inline unsigned long lh_char_hash(const void *k);
+static inline unsigned long lh_char_hash(const void* k);
 static inline unsigned long lh_perllike_str_hash(const void* k) {
-  const char* rkey = (const char *)k;
-  unsigned hashval = 1U;
+    const char* rkey = (const char*)k;
+    unsigned hashval = 1U;
 
-  while (*rkey)
-    hashval = hashval * 33U + (unsigned)*rkey++;
+    while (*rkey)
+        hashval = hashval * 33U + (unsigned)*rkey++;
 
-  return hashval;
+    return hashval;
 }
-static lh_hash_fn *char_hash_fn = lh_char_hash;
+static lh_hash_fn* char_hash_fn = lh_char_hash;
 
 /* comparison functions */
-static inline int lh_char_equal(const void *k1, const void *k2) {
-  return (strcmp((const char *)k1, (const char *)k2) == 0);
+static inline int lh_char_equal(const void* k1, const void* k2) {
+    return (strcmp((const char*)k1, (const char*)k2) == 0);
 }
 
-static inline int lh_ptr_equal(const void *k1, const void *k2) {
-  return (k1 == k2);
+static inline int lh_ptr_equal(const void* k1, const void* k2) {
+    return (k1 == k2);
 }
 
 int json_global_set_string_hash(const int h) {
-  switch (h) {
-  case JSON_C_STR_HASH_DFLT:
-    char_hash_fn = lh_char_hash;
-    break;
-  case JSON_C_STR_HASH_PERLLIKE:
-    char_hash_fn = lh_perllike_str_hash;
-    break;
-  default:
-    return -1;
-  }
-  return 0;
+    switch (h) {
+        case JSON_C_STR_HASH_DFLT:
+            char_hash_fn = lh_char_hash;
+            break;
+        case JSON_C_STR_HASH_PERLLIKE:
+            char_hash_fn = lh_perllike_str_hash;
+            break;
+        default:
+            return -1;
+    }
+    return 0;
 }
 
-static inline unsigned long lh_ptr_hash(const void *k) {
-  /* CAW: refactored to be 64bit nice */
-  return (unsigned long)((((ptrdiff_t)k * (ptrdiff_t)LH_PRIME) >> 4UL) & (ptrdiff_t)ULONG_MAX);
+static inline unsigned long lh_ptr_hash(const void* k) {
+    /* CAW: refactored to be 64bit nice */
+    return (unsigned long)((((ptrdiff_t)k * (ptrdiff_t)LH_PRIME) >> 4UL) & (ptrdiff_t)ULONG_MAX);
 }
 
 static int get_random_seed(void) {
 #ifdef __linux__
-  register int fd = openat(0, "/dev/urandom", O_RDONLY, 0);
-  unsigned char buf[1] = {0U};
+    register int fd = openat(0, "/dev/urandom", O_RDONLY, 0);
+    unsigned char buf[1] = {0U};
 
-  if (fd != -1) {
-    pread(fd, buf, 1, 0);
-    close(fd);
-  }
+    if (fd != -1) {
+        pread(fd, buf, 1, 0);
+        close(fd);
+    }
 
-  unsigned __random = buf[0];
+    unsigned __random = buf[0];
 
-  return rand_r(&__random);
+    return rand_r(&__random);
 #elif _WIN32
-  UINT __random = 0U;
+    UINT __random = 0U;
 
-  BCryptGenRandom(NULL, (BYTE *)&__random, sizeof(UINT),
-                  BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+    BCryptGenRandom(NULL, (BYTE*)&__random, sizeof(UINT), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
 
-  return (int)__random;
+    return (int)__random;
 #else
-  return (int)arc4random();
+    return (int)arc4random();
 #endif
 }
 
@@ -138,21 +137,21 @@ on 1 byte), but shoehorning those bytes into integers efficiently is messy.
  * My best guess at if you are big-endian or little-endian.  This may
  * need adjustment.
  */
-#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) &&                      \
-     __BYTE_ORDER == __LITTLE_ENDIAN) ||                                       \
-    (defined(i386) || defined(__i386__) || defined(__i486__) ||                \
-     defined(__i586__) || defined(__i686__) || defined(vax) ||                 \
+#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) &&       \
+     __BYTE_ORDER == __LITTLE_ENDIAN) ||                        \
+    (defined(i386) || defined(__i386__) || defined(__i486__) || \
+     defined(__i586__) || defined(__i686__) || defined(vax) ||  \
      defined(MIPSEL))
-#define HASH_LITTLE_ENDIAN 1
-#define HASH_BIG_ENDIAN 0
-#elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) &&                       \
-       __BYTE_ORDER == __BIG_ENDIAN) ||                                        \
+    #define HASH_LITTLE_ENDIAN 1
+    #define HASH_BIG_ENDIAN 0
+#elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && \
+       __BYTE_ORDER == __BIG_ENDIAN) ||                  \
     (defined(sparc) || defined(POWERPC) || defined(mc68000) || defined(sel))
-#define HASH_LITTLE_ENDIAN 0
-#define HASH_BIG_ENDIAN 1
+    #define HASH_LITTLE_ENDIAN 0
+    #define HASH_BIG_ENDIAN 1
 #else
-#define HASH_LITTLE_ENDIAN 0
-#define HASH_BIG_ENDIAN 0
+    #define HASH_LITTLE_ENDIAN 0
+    #define HASH_BIG_ENDIAN 0
 #endif
 
 #define hashsize(n) (1U << (n))
@@ -303,25 +302,25 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
 			k += 3;
 		}
 
-		/*----------------------------- handle the last (probably partial) block */
+        /*----------------------------- handle the last (probably partial) block */
 		/*
-		 * "k[2]&0xffffff" actually reads beyond the end of the string, but
-		 * then masks off the part it's not allowed to read.  Because the
-		 * string is aligned, the masked-off tail is in the same word as the
-		 * rest of the string.  Every machine with memory protection I've seen
-		 * does it on word boundaries, so is OK with this.  But VALGRIND will
-		 * still catch it and complain.  The masking trick does make the hash
-		 * noticably faster for short strings (like English words).
-		 * AddressSanitizer is similarly picky about overrunning
-		 * the buffer. (http://clang.llvm.org/docs/AddressSanitizer.html
-		 */
+         * "k[2]&0xffffff" actually reads beyond the end of the string, but
+         * then masks off the part it's not allowed to read.  Because the
+         * string is aligned, the masked-off tail is in the same word as the
+         * rest of the string.  Every machine with memory protection I've seen
+         * does it on word boundaries, so is OK with this.  But VALGRIND will
+         * still catch it and complain.  The masking trick does make the hash
+         * noticably faster for short strings (like English words).
+         * AddressSanitizer is similarly picky about overrunning
+         * the buffer. (http://clang.llvm.org/docs/AddressSanitizer.html
+         */
 #ifdef VALGRIND
-#define PRECISE_MEMORY_ACCESS 1
+# define PRECISE_MEMORY_ACCESS 1
 #elif defined(__SANITIZE_ADDRESS__) /* GCC's ASAN */
-#define PRECISE_MEMORY_ACCESS 1
+# define PRECISE_MEMORY_ACCESS 1
 #elif defined(__has_feature)
 #if __has_feature(address_sanitizer) /* Clang's ASAN */
-#define PRECISE_MEMORY_ACCESS 1
+# define PRECISE_MEMORY_ACCESS 1
 #endif
 #endif
 #ifndef PRECISE_MEMORY_ACCESS
@@ -380,39 +379,45 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
 		/*----------------------------- handle the last (probably partial) block */
         const unsigned char* k8 = (const unsigned char *)k;
 		switch(length) {
-		case 12: c += k[4] + (((unsigned)k[5]) << 16U);
-			 b += k[2] + (((unsigned)k[3]) << 16U);
-			 a += k[0] + (((unsigned)k[1]) << 16U);
-			 break;
+		case 12:
+            c += k[4] + (((unsigned)k[5]) << 16U);
+            b += k[2] + (((unsigned)k[3]) << 16U);
+            a += k[0] + (((unsigned)k[1]) << 16U);
+			break;
 		case 11: c += ((unsigned)k8[10]) << 16U;     /* fall through */
-		case 10: c += k[4];
-			 b += k[2] + (((unsigned)k[3]) << 16U);
-			 a += k[0] + (((unsigned)k[1]) << 16U);
-			 break;
-		case 9 : c+=k8[8];                      /* fall through */
-		case 8 : b+=k[2]+(((unsigned)k[3])<<16U);
-			 a+=k[0]+(((unsigned)k[1])<<16U);
-			 break;
-		case 7 : b+=((unsigned)k8[6])<<16U;      /* fall through */
-		case 6 : b+=k[2];
-			 a+=k[0]+(((unsigned)k[1])<<16U);
-			 break;
-		case 5 : b+=k8[4];                      /* fall through */
-		case 4 : a+=k[0]+(((unsigned)k[1])<<16U);
-			 break;
-		case 3 : a+=((unsigned)k8[2])<<16;      /* fall through */
-		case 2 : a+=k[0];
-			 break;
-		case 1 : a+=k8[0];
-			 break;
-		case 0 : return c;                     /* zero length requires no mixing */
-		}
+		case 10:
+            c += k[4];
+            b += k[2] + (((unsigned)k[3]) << 16U);
+            a += k[0] + (((unsigned)k[1]) << 16U);
+			break;
+		case 9 : c += k8[8];                      /* fall through */
+		case 8 :
+            b += k[2] + (((unsigned)k[3]) << 16U);
+            a += k[0] + (((unsigned)k[1]) << 16U);
+            break;
+		case 7 : b += ((unsigned)k8[6]) << 16U;      /* fall through */
+		case 6 :
+            b += k[2];
+            a += k[0] + (((unsigned)k[1]) << 16U);
+            break;
+        case 5 : b += k8[4];                      /* fall through */
+        case 4 : a += k[0] + (((unsigned)k[1]) << 16U);
+			break;
+        case 3 : a += ((unsigned)k8[2]) << 16U;      /* fall through */
+        case 2 :
+            a += k[0];
+			break;
+        case 1 :
+            a += k8[0];
+            break;
+        case 0 : return c;                     /* zero length requires no mixing */
+        }
 
-	} else {
-		/* need to read the key one byte at a time */
-		const unsigned char *k = (const unsigned char *)key;
+    } else {
+        /* need to read the key one byte at a time */
+        const unsigned char *k = (const unsigned char *)key;
 
-		/*--------------- all but the last block: affect some 32 bits of (a,b,c) */
+        /*--------------- all but the last block: affect some 32 bits of (a,b,c) */
 		while (length > 12) {
 			a += k[0];
 			a += ((unsigned)k[1])<<8;
@@ -445,7 +450,7 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
 		case 3 : a+=((unsigned)k[2])<<16; /* FALLTHRU */
 		case 2 : a+=((unsigned)k[1])<<8; /* FALLTHRU */
 		case 1 : a+=k[0];
-			 break;
+                 break;
 		case 0 : return c;
 		}
 	}
@@ -455,205 +460,204 @@ static unsigned hashlittle(const void *key, unsigned long length, unsigned initv
 }
 /* clang-format on */
 
-static unsigned long lh_char_hash(const void *k) {
+static unsigned long lh_char_hash(const void* k) {
 #ifdef _WIN32
-#define RANDOM_SEED_TYPE LONG
+    #define RANDOM_SEED_TYPE LONG
 #else
-#define RANDOM_SEED_TYPE int
+    #define RANDOM_SEED_TYPE int
 #endif
-  static volatile RANDOM_SEED_TYPE random_seed = -1;
+    static volatile RANDOM_SEED_TYPE random_seed = -1;
 
-  if (random_seed == -1) {
-    RANDOM_SEED_TYPE seed = get_random_seed();
+    if (random_seed == -1) {
+        RANDOM_SEED_TYPE seed = get_random_seed();
 
 #ifdef _WIN32
-    InterlockedCompareExchange(&random_seed, seed, -1);
+        InterlockedCompareExchange(&random_seed, seed, -1);
 #else
-    (void)__sync_val_compare_and_swap(&random_seed, -1, seed);
+        (void)__sync_val_compare_and_swap(&random_seed, -1, seed);
 #endif
-  }
-
-  return hashlittle((const char *)k, strlen((const char *)k), (unsigned)random_seed);
-}
-
-lh_table *lh_table_new(int size, lh_entry_free_fn *free_fn,
-                              lh_hash_fn *hash_fn, lh_equal_fn *equal_fn) {
-  lh_table *t = (lh_table *)calloc(1UL, sizeof(lh_table));
-  if (t == NULL)
-    return NULL;
-
-  t->count = 0;
-  t->size = size;
-  t->table = (lh_entry *)calloc((size_t)size, sizeof(lh_entry));
-  if (t->table == NULL) {
-    free(t);
-    return NULL;
-  }
-
-  t->free_fn = free_fn;
-  t->hash_fn = hash_fn;
-  t->equal_fn = equal_fn;
-
-  for (int i = 0; i < size; i++)
-    t->table[i].k = LH_EMPTY;
-  return t;
-}
-
-inline lh_table *lh_kchar_table_new(int size,
-                                           lh_entry_free_fn *free_fn) {
-  return lh_table_new(size, free_fn, char_hash_fn, lh_char_equal);
-}
-
-inline lh_table *lh_kptr_table_new(int size, lh_entry_free_fn *free_fn) {
-  return lh_table_new(size, free_fn, lh_ptr_hash, lh_ptr_equal);
-}
-
-int lh_table_resize(lh_table *t, int new_size) {
-  lh_table *new_t = lh_table_new(new_size, NULL, t->hash_fn, t->equal_fn);
-  if (new_t == NULL)
-    return -1;
-  
-  lh_entry *ent = t->head;
-  for (; ent != NULL; ent = ent->next) {
-    unsigned long h = lh_get_hash(new_t, ent->k);
-    unsigned opts = 0U;
-    if (ent->k_is_constant)
-      opts = JSON_C_OBJECT_KEY_IS_CONSTANT;
-
-    if (lh_table_insert_w_hash(new_t, ent->k, ent->v, h, opts) != 0) {
-      lh_table_free(new_t);
-      return -1;
     }
-  }
-  free(t->table);
-  t->table = new_t->table;
-  t->size = new_size;
-  t->head = new_t->head;
-  t->tail = new_t->tail;
-  free(new_t);
 
-  return 0;
+    return hashlittle((const char*)k, strlen((const char*)k), (unsigned)random_seed);
 }
 
-void lh_table_free(lh_table *t) {
-  if (t->free_fn) {
-      register lh_entry *c = t->head;
-      for (; c != NULL; c = c->next)
-          t->free_fn(c);
-  }
-  free(t->table);
-  free(t);
+lh_table* lh_table_new(int size, lh_entry_free_fn* free_fn, lh_hash_fn* hash_fn, lh_equal_fn* equal_fn) {
+    lh_table* t = (lh_table*)calloc(1UL, sizeof(lh_table));
+    if (t == NULL)
+        return NULL;
+
+    t->count = 0;
+    t->size = size;
+    t->table = (lh_entry*)calloc((size_t)size, sizeof(lh_entry));
+    if (t->table == NULL) {
+        free(t);
+        return NULL;
+    }
+
+    t->free_fn = free_fn;
+    t->hash_fn = hash_fn;
+    t->equal_fn = equal_fn;
+
+    for (int i = 0; i < size; i++)
+        t->table[i].k = LH_EMPTY;
+    return t;
 }
 
-int lh_table_insert_w_hash(lh_table *t, const void *k, const void *v,
-                           const unsigned long h, const unsigned opts) {
-  if (t->count >= t->size * LH_LOAD_FACTOR) {
-    /* Avoid signed integer overflow with large tables. */
-    int new_size = (t->size > INT_MAX / 2) ? INT_MAX : (t->size * 2);
-    if (t->size == INT_MAX || lh_table_resize(t, new_size) != 0)
-      return -1;
-  }
-  size_t n = h % (size_t)t->size;
-
-  while (1) {
-    if (t->table[n].k == LH_EMPTY || t->table[n].k == LH_FREED)
-      break;
-    if ((int)++n == t->size)
-      n = 0;
-  }
-
-  t->table[n].k = k;
-  t->table[n].k_is_constant = (opts & JSON_C_OBJECT_KEY_IS_CONSTANT);
-  t->table[n].v = v;
-  t->count++;
-
-  if (t->head == NULL) {
-    t->head = t->tail = &t->table[n];
-    t->table[n].next = t->table[n].prev = NULL;
-  } else {
-    t->tail->next = &t->table[n];
-    t->table[n].prev = t->tail;
-    t->table[n].next = NULL;
-    t->tail = &t->table[n];
-  }
-
-  return 0;
-}
-int lh_table_insert(lh_table *t, const void *k, const void *v) {
-  return lh_table_insert_w_hash(t, k, v, lh_get_hash(t, k), 0);
+inline lh_table* lh_kchar_table_new(int size,
+                                    lh_entry_free_fn* free_fn) {
+    return lh_table_new(size, free_fn, char_hash_fn, lh_char_equal);
 }
 
-lh_entry *lh_table_lookup_entry_w_hash(lh_table *t, const void *k,
-                                              const unsigned long h) {
-  size_t n = h % (size_t)t->size;
-
-  register int count = 0;
-  while (count < t->size) {
-    if (t->table[n].k == LH_EMPTY)
-      return NULL;
-    if (t->table[n].k != LH_FREED && t->equal_fn(t->table[n].k, k))
-      return &t->table[n];
-    if ((int)++n == t->size)
-      n = 0;
-    count++;
-  }
-  return NULL;
+inline lh_table* lh_kptr_table_new(int size, lh_entry_free_fn* free_fn) {
+    return lh_table_new(size, free_fn, lh_ptr_hash, lh_ptr_equal);
 }
 
-lh_entry* lh_table_lookup_entry(lh_table *t, const void *k) {
-  return lh_table_lookup_entry_w_hash(t, k, lh_get_hash(t, k));
+int lh_table_resize(lh_table* t, int new_size) {
+    lh_table* new_t = lh_table_new(new_size, NULL, t->hash_fn, t->equal_fn);
+    if (new_t == NULL)
+        return -1;
+
+    lh_entry* ent = t->head;
+    for (; ent != NULL; ent = ent->next) {
+        unsigned long h = lh_get_hash(new_t, ent->k);
+        unsigned opts = 0U;
+        if (ent->k_is_constant)
+            opts = JSON_C_OBJECT_KEY_IS_CONSTANT;
+
+        if (lh_table_insert_w_hash(new_t, ent->k, ent->v, h, opts) != 0) {
+            lh_table_free(new_t);
+            return -1;
+        }
+    }
+    free(t->table);
+    t->table = new_t->table;
+    t->size = new_size;
+    t->head = new_t->head;
+    t->tail = new_t->tail;
+    free(new_t);
+
+    return 0;
 }
 
-unsigned char lh_table_lookup_ex(lh_table *t, const void *k, void **v) {
-  lh_entry *e = lh_table_lookup_entry(t, k);
-  if (e != NULL) {
+void lh_table_free(lh_table* t) {
+    if (t->free_fn) {
+        register lh_entry* c = t->head;
+        for (; c != NULL; c = c->next)
+            t->free_fn(c);
+    }
+    free(t->table);
+    free(t);
+}
+
+int lh_table_insert_w_hash(lh_table* t, const void* k, const void* v, const unsigned long h, const unsigned opts) {
+    if (t->count >= t->size * LH_LOAD_FACTOR) {
+        /* Avoid signed integer overflow with large tables. */
+        int new_size = (t->size > INT_MAX / 2) ? INT_MAX : (t->size * 2);
+        if (t->size == INT_MAX || lh_table_resize(t, new_size) != 0)
+            return -1;
+    }
+    size_t n = h % (size_t)t->size;
+
+    while (1) {
+        if (t->table[n].k == LH_EMPTY || t->table[n].k == LH_FREED)
+            break;
+        if ((int)++n == t->size)
+            n = 0;
+    }
+
+    t->table[n].k = k;
+    t->table[n].k_is_constant = (opts & JSON_C_OBJECT_KEY_IS_CONSTANT);
+    t->table[n].v = v;
+    t->count++;
+
+    if (t->head == NULL) {
+        t->head = t->tail = &t->table[n];
+        t->table[n].next = t->table[n].prev = NULL;
+    } else {
+        t->tail->next = &t->table[n];
+        t->table[n].prev = t->tail;
+        t->table[n].next = NULL;
+        t->tail = &t->table[n];
+    }
+
+    return 0;
+}
+int lh_table_insert(lh_table* t, const void* k, const void* v) {
+    return lh_table_insert_w_hash(t, k, v, lh_get_hash(t, k), 0);
+}
+
+lh_entry* lh_table_lookup_entry_w_hash(lh_table* t, const void* k, const unsigned long h) {
+    size_t n = h % (size_t)t->size;
+
+    register int count = 0;
+    while (count < t->size) {
+        if (t->table[n].k == LH_EMPTY)
+            return NULL;
+        if (t->table[n].k != LH_FREED && t->equal_fn(t->table[n].k, k))
+            return &t->table[n];
+        if ((int)++n == t->size)
+            n = 0;
+        count++;
+    }
+    return NULL;
+}
+
+lh_entry* lh_table_lookup_entry(lh_table* t, const void* k) {
+    return lh_table_lookup_entry_w_hash(t, k, lh_get_hash(t, k));
+}
+
+unsigned char lh_table_lookup_ex(lh_table* t, const void* k, void** v) {
+    lh_entry* e = lh_table_lookup_entry(t, k);
+    if (e != NULL) {
+        if (v != NULL)
+            *v = lh_entry_v(e);
+        return 1; /* key found */
+    }
     if (v != NULL)
-      *v = lh_entry_v(e);
-    return 1; /* key found */
-  }
-  if (v != NULL)
-    *v = NULL;
-  return 0; /* key not found */
+        *v = NULL;
+    return 0; /* key not found */
 }
 
-int lh_table_delete_entry(lh_table *t, lh_entry *e) {
-  /* CAW: fixed to be 64bit nice, still need the crazy negative case... */
-  ptrdiff_t n = (ptrdiff_t)(e - t->table);
+int lh_table_delete_entry(lh_table* t, lh_entry* e) {
+    /* CAW: fixed to be 64bit nice, still need the crazy negative case... */
+    ptrdiff_t n = (ptrdiff_t)(e - t->table);
 
-  /* CAW: this is bad, really bad, maybe stack goes other direction on this
+    /* CAW: this is bad, really bad, maybe stack goes other direction on this
    * machine... */
-  if (n < 0) {
-    return -2;
-  }
+    if (n < 0) {
+        return -2;
+    }
 
-  if (t->table[n].k == LH_EMPTY || t->table[n].k == LH_FREED)
-    return -1;
-  t->count--;
-  if (t->free_fn)
-    t->free_fn(e);
-  t->table[n].v = NULL;
-  t->table[n].k = LH_FREED;
-  if (t->tail == &t->table[n] && t->head == &t->table[n]) {
-    t->head = t->tail = NULL;
-  } else if (t->head == &t->table[n]) {
-    t->head->next->prev = NULL;
-    t->head = t->head->next;
-  } else if (t->tail == &t->table[n]) {
-    t->tail->prev->next = NULL;
-    t->tail = t->tail->prev;
-  } else {
-    t->table[n].prev->next = t->table[n].next;
-    t->table[n].next->prev = t->table[n].prev;
-  }
-  t->table[n].next = t->table[n].prev = NULL;
-  return 0;
+    if (t->table[n].k == LH_EMPTY || t->table[n].k == LH_FREED)
+        return -1;
+    t->count--;
+    if (t->free_fn)
+        t->free_fn(e);
+    t->table[n].v = NULL;
+    t->table[n].k = LH_FREED;
+    if (t->tail == &t->table[n] && t->head == &t->table[n]) {
+        t->head = t->tail = NULL;
+    } else if (t->head == &t->table[n]) {
+        t->head->next->prev = NULL;
+        t->head = t->head->next;
+    } else if (t->tail == &t->table[n]) {
+        t->tail->prev->next = NULL;
+        t->tail = t->tail->prev;
+    } else {
+        t->table[n].prev->next = t->table[n].next;
+        t->table[n].next->prev = t->table[n].prev;
+    }
+    t->table[n].next = t->table[n].prev = NULL;
+    return 0;
 }
 
-int lh_table_delete(lh_table *t, const void *k) {
-  lh_entry *e = lh_table_lookup_entry(t, k);
-  if (e == NULL)
-    return -1;
-  return lh_table_delete_entry(t, e);
+int lh_table_delete(lh_table* t, const void* k) {
+    lh_entry* e = lh_table_lookup_entry(t, k);
+    if (e == NULL)
+        return -1;
+    return lh_table_delete_entry(t, e);
 }
 
-int lh_table_length(lh_table *t) { return t->count; }
+int lh_table_length(lh_table* t) {
+    return t->count;
+}

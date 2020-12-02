@@ -83,11 +83,11 @@ class Matrix {
     { return Matrix::S_ptr(elem); }
 
     constexpr auto
-    operator()(const size_t& x, const size_t& y) noexcept -> reference
+    operator()(const size_t& x, const size_t& y) -> reference
     { return Matrix::S_ref(elem, this->pos(x, y)); }
 
     constexpr auto
-    operator()(const size_t& x, const size_t& y) const noexcept -> const_reference
+    operator()(const size_t& x, const size_t& y) const -> const_reference
     { return Matrix::S_ref(elem, this->pos(x, y)); }
 
 
