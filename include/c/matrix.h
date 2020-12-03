@@ -13,7 +13,6 @@ extern "C" {
 /* Constructors */
 
 Matrix* matrix_new_with_args(const int, const int);
-Matrix* matrix_new(void);
 Matrix* matrix_new_with_matrix(const Matrix *const);
 
 /* Destructor */

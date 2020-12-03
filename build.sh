@@ -1,5 +1,4 @@
 #!/bin/bash
 
-cd build
-make
-make run
+cmake --build build --parallel 10
+cmake --build build --target run --parallel 10
