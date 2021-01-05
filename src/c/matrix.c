@@ -1,6 +1,6 @@
 /* Matrix lib */
 
-#include "../../include/c/matrix.h"
+#include <vnepogodin/matrix.h>
 
 #include <stdio.h>  /* printf */
 #include <stdlib.h> /* malloc, posix_memalign, arc4random */
@@ -113,14 +113,6 @@ static void json_strsplit(register float* result, const char* _str, const int co
     }
 
     free(tmp);
-}
-
-static json_object* json_find(const json_object* __restrict const j, const char* __restrict key) {
-    json_object* temp_json = NULL;
-
-    json_object_object_get_ex(j, key, &temp_json);
-
-    return temp_json;
 }
 
 /**

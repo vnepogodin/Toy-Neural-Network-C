@@ -1,5 +1,4 @@
-#include "../../../include/c/nn.h"  /* NeuralNetwork */
-#include "../../../include/c/third_party/json-c/json_object.h"  /* json_object */
+#include <vnepogodin/nn.h>  /* NeuralNetwork */
 
 #include <stdio.h>  /* printf */
 

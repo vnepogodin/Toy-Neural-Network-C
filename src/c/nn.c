@@ -1,7 +1,7 @@
 /* Other techniques for learning */
 
-#include "../../include/c/nn.h"
-#include "../../include/c/matrix.h"
+#include <vnepogodin/nn.h>
+#include <vnepogodin/matrix.h>
 
 #include <math.h>   /* expf */
 #include <stdlib.h> /* malloc */
@@ -30,14 +30,6 @@ static inline float sigmoid(float x) {
 static inline float dsigmoid(float y) {
     /* return sigmoid(x) * (1 - sigmoid(x)); */
     return y * (1.F - y);
-}
-
-static json_object* json_find(const json_object* __restrict const j,
-                              const char* __restrict key) {
-    json_object* temp_json = NULL;
-    json_object_object_get_ex(j, key, &temp_json);
-
-    return temp_json;
 }
 
 #define convert_ActivationFunction(func) \

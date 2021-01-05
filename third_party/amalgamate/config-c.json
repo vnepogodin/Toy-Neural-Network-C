@@ -1,0 +1,17 @@
+{
+    "project": "Neural Network C library",
+    "target": "../../single_include/c/vnepogodin/nn.h",
+    "sources": [
+        "../../src/c/third_party/json-c/json_tokener.c",
+        "../../src/c/third_party/json-c/arraylist.c",
+        "../../src/c/third_party/json-c/json_object.c",
+        "../../src/c/third_party/json-c/linkhash.c",
+        "../../src/c/third_party/json-c/printbuf.c",
+        
+        "../../src/c/matrix.c",
+        "../../src/c/nn.c"
+    ],
+    "include_paths": [
+        "../../include/c"
+    ]
+}

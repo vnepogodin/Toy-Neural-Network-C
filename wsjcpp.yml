@@ -1,0 +1,23 @@
+wsjcpp_version: "v0.1.1"
+cmake_minimum_required: "3.8"
+cmake_cxx_standard: "17"
+name: "vnepogodin/Toy-Neural-Network-C"
+version: "v0.5.0"
+description: "Neural Network C/C++ library"
+issues: "https://github.com/vnepogodin/Toy-Neural-Network-C/issues"
+keywords:
+  - "c++"
+  - "neural-network"
+
+repositories:
+  - type: main
+    url: "https://github.com/vnepogodin/Toy-Neural-Network-C"
+
+authors:
+  - name: "Vladislav Nepogodin"
+    email: "nepogodin.vlad@gmail.com"
+
+distribution:
+  - source-file: "single_include/c++/vnepogodin/nn.hpp"
+    target-file: "nn.hpp"
+    type: "source-code"

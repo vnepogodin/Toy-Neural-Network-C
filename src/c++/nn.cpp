@@ -1,36 +1,34 @@
 // Other techniques for learning
-#include "../../include/c++/Matrix.hpp"  // class Matrix
-#include "../../include/c++/nn.hpp"  // class NeuralNetwork
+#include <vnepogodin/nn.hpp>  // class NeuralNetwork
 
 #include <cmath>  // std::exp
 
-using nn_function = float(*const)(float);  // Function alias
-
+namespace {
 // Non member functions
-static inline
-auto sigmoid(float x) -> float {
+static inline auto sigmoid(double x) -> double {
     return 1.F / (1.F + std::exp(-x));
 }
 
-static inline
-auto dsigmoid(float y) -> float {
+static inline auto dsigmoid(double y) -> double {
     // return sigmoid(x) * (1 - sigmoid(x));
     return y * (1.F - y);
 }
 
-static constexpr
-auto convert_ActivationFunction(nn_function& func) -> uint8_t {
+static constexpr auto convert_ActivationFunction(const vnepogodin::Matrix::function_t& func) -> std::uint8_t {
     return (*func == dsigmoid) ? 2U : 1U;
 }
 
-static constexpr auto default_lr = 0.1F;
+static constexpr auto default_lr = 0.1;
+};
 
-
+namespace vnepogodin {
 // Constructor
-NeuralNetwork::NeuralNetwork(const uint32_t &input,
-                             const uint32_t &hidden,
-                             const uint32_t &output)
-    : input_nodes(input), hidden_nodes(hidden), output_nodes(output),
+NeuralNetwork::NeuralNetwork(const std::uint32_t& input,
+                             const std::uint32_t& hidden,
+                             const std::uint32_t& output)
+    : input_nodes(input),
+      hidden_nodes(hidden),
+      output_nodes(output),
       // Rate
       learning_rate(default_lr),
       // Function
@@ -48,9 +46,8 @@ NeuralNetwork::NeuralNetwork(const uint32_t &input,
     this->bias_o.randomize();
 }
 
-
 // Functions
-auto NeuralNetwork::predict(const float* const &input_array) const noexcept -> float* {
+auto NeuralNetwork::predict(Matrix::const_pointer const& input_array) const noexcept -> Matrix::pointer {
     // Generating the Hidden Outputs
     const Matrix inputs = Matrix::fromArray(input_array, this->input_nodes);
     Matrix hidden = Matrix::multiply(this->weights_ih, inputs);
@@ -68,23 +65,22 @@ auto NeuralNetwork::predict(const float* const &input_array) const noexcept -> f
     return output.toArray();
 }
 
-
 // Setting function
 //
-void NeuralNetwork::setActivationFunction(const TNN::Function& flag) {
+void NeuralNetwork::setActivationFunction(const Function& flag) {
     this->activation_function = nullptr;
 
-    if (flag == TNN::Function::sigmoid) {
+    if (flag == Function::sigmoid) {
         this->activation_function = sigmoid;
-    } else if (flag == TNN::Function::dsigmoid) {
+    } else if (flag == Function::dsigmoid) {
         this->activation_function = dsigmoid;
     }
 }
 
-
 // Training neural network
 //
-void NeuralNetwork::train(const float* const& input_array, const float* const& target_array) {
+void NeuralNetwork::train(Matrix::const_pointer const& input_array,
+                          Matrix::const_pointer const& target_array) {
     // Generating the Hidden Outputs
     const Matrix inputs = Matrix::fromArray(input_array, this->input_nodes);
     Matrix hidden = Matrix::multiply(this->weights_ih, inputs);
@@ -109,7 +105,6 @@ void NeuralNetwork::train(const float* const& input_array, const float* const& t
     Matrix gradients = Matrix::map(outputs, dsigmoid);
     gradients *= output_errors;
     gradients *= this->learning_rate;
-
 
     // Calculate deltas
     const Matrix hidden_T = Matrix::transpose(hidden);
@@ -138,40 +133,38 @@ void NeuralNetwork::train(const float* const& input_array, const float* const& t
     this->bias_h += hidden_gradient;
 }
 
-
 // Serialize to JSON
 // TODO: Refactor
 //
-auto NeuralNetwork::serialize() noexcept -> string {
+auto NeuralNetwork::serialize() const noexcept -> string {
     constexpr auto resLen = 500;
     auto _str = string("{\"activation_function\":")
-        + to_string(convert_ActivationFunction(this->activation_function));
+              + to_string(convert_ActivationFunction(this->activation_function));
 
     _str.reserve(resLen);
 
     _str += string(",\"bias_h\":") + this->bias_h.serialize()
-        + string(",\"bias_o\":") + this->bias_o.serialize()
-        + string(",\"input_nodes\":") + to_string(this->input_nodes)
-        + string(",\"hidden_nodes\":") + to_string(this->hidden_nodes)
-        + string(",\"output_nodes\":") + to_string(this->output_nodes)
-        + string(",\"weights_ih\":") + this->weights_ih.serialize()
-        + string(",\"weights_ho\":") + this->weights_ho.serialize()
-        + string(",\"learning_rate\":") + to_string(this->learning_rate)
-        + '}';
+         + string(",\"bias_o\":") + this->bias_o.serialize()
+         + string(",\"input_nodes\":") + to_string(this->input_nodes)
+         + string(",\"hidden_nodes\":") + to_string(this->hidden_nodes)
+         + string(",\"output_nodes\":") + to_string(this->output_nodes)
+         + string(",\"weights_ih\":") + this->weights_ih.serialize()
+         + string(",\"weights_ho\":") + this->weights_ho.serialize()
+         + string(",\"learning_rate\":") + to_string(this->learning_rate)
+         + '}';
 
     _str.shrink_to_fit();
     return _str;
 }
 
-
 // Deserialize from JSON
 //
 auto NeuralNetwork::deserialize(const simdjson::dom::element& t) -> NeuralNetwork {
-    const uint32_t& in_nodes = static_cast<uint64_t>( t["input_nodes"]);
-    const uint32_t& h_nodes = static_cast<uint64_t>(t["hidden_nodes"]);
-    const uint32_t& out_nodes = static_cast<uint64_t>(t["output_nodes"]);
-    const float& lr = static_cast<float>(static_cast<double>(t["learning_rate"]));
-    const TNN::Function& func = static_cast<TNN::Function>(static_cast<uint64_t>(t["activation_function"]));
+    const std::uint32_t& in_nodes = static_cast<std::uint64_t>(t["input_nodes"]);
+    const std::uint32_t& h_nodes = static_cast<std::uint64_t>(t["hidden_nodes"]);
+    const std::uint32_t& out_nodes = static_cast<std::uint64_t>(t["output_nodes"]);
+
+    const auto& func = static_cast<Function>(static_cast<std::uint64_t>(t["activation_function"]));
 
     NeuralNetwork nn(in_nodes, h_nodes, out_nodes);
 
@@ -180,8 +173,9 @@ auto NeuralNetwork::deserialize(const simdjson::dom::element& t) -> NeuralNetwor
     nn.bias_h = Matrix::deserialize(t["bias_h"]);
     nn.bias_o = Matrix::deserialize(t["bias_o"]);
 
-    nn.setLearningRate(lr);
+    nn.learning_rate = t["learning_rate"];
     nn.setActivationFunction(func);
 
     return nn;
 }
+};  // namespace vnepogodin

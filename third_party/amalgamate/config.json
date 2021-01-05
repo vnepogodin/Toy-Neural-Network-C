@@ -1,0 +1,13 @@
+{
+    "project": "Neural Network C++ library",
+    "target": "../../single_include/c++/vnepogodin/nn.hpp",
+    "sources": [
+        "../../src/c++/third_party/json/simdjson.cpp",
+
+        "../../src/c++/Matrix.cpp",
+        "../../src/c++/nn.cpp"
+    ],
+    "include_paths": [
+        "../../include/c++"
+    ]
+}

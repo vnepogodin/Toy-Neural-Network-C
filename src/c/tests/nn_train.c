@@ -1,4 +1,4 @@
-#include "../../../include/c/nn.h"  /* NeuralNetwork */
+#include <vnepogodin/nn.h>  /* NeuralNetwork */
 
 #include <stdlib.h>  /* free */
 

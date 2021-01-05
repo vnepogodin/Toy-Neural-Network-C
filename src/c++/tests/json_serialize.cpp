@@ -1,4 +1,6 @@
-#include "../../../include/c++/nn.hpp"  // class NeuralNetwork
+#include <vnepogodin/nn.hpp>  // class NeuralNetwork
+
+using vnepogodin::NeuralNetwork;
 
 #include <iostream>  // std::cout
 

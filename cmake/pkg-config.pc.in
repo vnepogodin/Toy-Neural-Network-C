@@ -1,0 +1,5 @@
+Name: ${PROJECT_NAME}
+Description: Neural Network C++ library
+Version: ${PROJECT_VERSION}
+Cflags: -I${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}
+Libs: -L${CMAKE_INSTALL_LIBDIR} -l${PROJECT_NAME}

@@ -1,7 +1,7 @@
-#include "../../../include/c++/nn.hpp"  // class NeuralNetwork
+#include <vnepogodin/nn.hpp>  // class NeuralNetwork
+
+using vnepogodin::NeuralNetwork;
 
 auto main() -> int {
     NeuralNetwork nn(2, 4, 1);
-
-    return 0;
 }
