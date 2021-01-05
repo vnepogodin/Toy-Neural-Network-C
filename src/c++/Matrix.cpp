@@ -142,7 +142,6 @@ auto operator<<(std::ostream& stream, const Matrix& mat) -> std::ostream& {
 
 // Functions
 auto Matrix::toArray() const noexcept -> pointer {
-
     auto *tmp = new double[len];
 
     std::atomic<std::uint32_t> i(0);
