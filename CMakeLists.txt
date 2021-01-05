@@ -135,6 +135,11 @@ if (NOT NN_MultipleHeaders)
         $<BUILD_INTERFACE:${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}>
         $<INSTALL_INTERFACE:include>
     )
+    if (NN_LANG)
+        target_compile_features(${VNEPOGODIN_NN_TARGET_NAME} INTERFACE cxx_std_17)
+    else()
+        target_compile_features(${VNEPOGODIN_NN_TARGET_NAME} INTERFACE c_std_99)
+    endif()
 else()
     add_library(${VNEPOGODIN_NN_TARGET_NAME}
         ${VNEPOGODIN_NN_SOURCES}
@@ -172,6 +177,12 @@ else()
 
     if (UNIX OR MINGW OR CYGWIN)
         list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
+    endif()
+
+    if (NN_LANG)
+        target_compile_features(${VNEPOGODIN_NN_TARGET_NAME} PUBLIC cxx_std_17)
+    else()
+        target_compile_features(${VNEPOGODIN_NN_TARGET_NAME} PUBLIC c_std_99)
     endif()
 endif()
 add_library(${PROJECT_NAME}::${VNEPOGODIN_NN_TARGET_NAME} ALIAS ${VNEPOGODIN_NN_TARGET_NAME})
