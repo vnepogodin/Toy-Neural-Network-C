@@ -35,7 +35,7 @@ jobs:
 
     - name: single_include Build CPP
       working-directory: ${{runner.workspace}}/build
-      run: cmake --build . --parallel 10 -- CMAKE_CXX_FLAGS="-ffast-math -march=fallback"
+      run: cmake --build . --parallel 10 -- CMAKE_CXX_FLAGS="-std=c++17 -ffast-math -march=fallback"
 
     - name: single_include Test CPP
       working-directory: ${{runner.workspace}}/build
@@ -61,7 +61,7 @@ jobs:
 
     - name: Build CPP
       working-directory: ${{runner.workspace}}/build
-      run: cmake --build . --parallel 10 -- CMAKE_CXX_FLAGS="-ffast-math -march=fallback"
+      run: cmake --build . --parallel 10 -- CMAKE_CXX_FLAGS="-std=c++17 -ffast-math -march=fallback"
 
     - name: Test CPP
       working-directory: ${{runner.workspace}}/build

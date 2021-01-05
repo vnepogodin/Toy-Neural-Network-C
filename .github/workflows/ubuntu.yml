@@ -73,7 +73,7 @@ jobs:
     - name: Build CPP
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake --build . --parallel 10 -- CMAKE_CXX_FLAGS="-ffast-math -march=fallback"
+      run: cmake --build . --parallel 10
 
     - name: Test CPP
       shell: bash
