@@ -12,8 +12,6 @@
 #ifndef __JSON_OBJECT_H__
 #define __JSON_OBJECT_H__
 
-#include <vnepogodin/third_party/json-c/json_tokener.h>
-
 typedef struct _Json_Object json_object;
 
 #define JSON_OBJECT_DEF_HASH_ENTRIES 16

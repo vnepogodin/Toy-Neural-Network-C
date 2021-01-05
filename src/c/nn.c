@@ -1,7 +1,6 @@
 /* Other techniques for learning */
 
 #include <vnepogodin/nn.h>
-#include <vnepogodin/matrix.h>
 
 #include <math.h>   /* expf */
 #include <stdlib.h> /* malloc */

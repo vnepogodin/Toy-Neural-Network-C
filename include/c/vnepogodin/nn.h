@@ -2,7 +2,7 @@
 #ifndef __NN_H__
 #define __NN_H__
 
-#include <vnepogodin/third_party/json-c/json_object.h>  /* json_object */
+#include <vnepogodin/matrix.h>  /* Matrix */
 
 typedef struct _NeuralNetwork NeuralNetwork;
 

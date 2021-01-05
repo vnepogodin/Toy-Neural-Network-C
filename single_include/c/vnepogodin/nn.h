@@ -41,9 +41,6 @@
 #ifndef __JSON_OBJECT_H__
 #define __JSON_OBJECT_H__
 
-// #include <vnepogodin/third_party/json-c/json_tokener.h>
-
-
 typedef struct _Json_Object json_object;
 
 #define JSON_OBJECT_DEF_HASH_ENTRIES 16
@@ -3324,7 +3321,16 @@ inline void printbuf_free(printbuf* p) {
 #ifndef __MATRIX_H__
 #define __MATRIX_H__
 
+// #include <vnepogodin/third_party/json-c/json.h>
+#ifndef __JSON_H__
+#define __JSON_H__
+
 // #include <vnepogodin/third_party/json-c/json_object.h>
+
+// #include <vnepogodin/third_party/json-c/json_tokener.h>
+
+
+#endif /* __JSON_H__ */
  /* json_object */
 
 typedef struct _Matrix Matrix;
@@ -4009,8 +4015,8 @@ Matrix* matrix_deserialize(const json_object* __restrict const t_param) {
 #ifndef __NN_H__
 #define __NN_H__
 
-// #include <vnepogodin/third_party/json-c/json_object.h>
-  /* json_object */
+// #include <vnepogodin/matrix.h>
+  /* Matrix */
 
 typedef struct _NeuralNetwork NeuralNetwork;
 
@@ -4058,8 +4064,6 @@ NeuralNetwork* neural_network_deserialize(const json_object *__restrict const);
 #endif
 
 #endif /* __NN_H__ */
-
-// #include <vnepogodin/matrix.h>
 
 
 #include <math.h>   /* expf */
