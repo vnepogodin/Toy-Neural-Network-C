@@ -243,7 +243,7 @@ CONFIGURE_FILE(
 ##
 if (NN_BuildTests)
     set(NN_BUILD_TEST_FOLDER ${PROJECT_BINARY_DIR}/src/${NN_BUILD_LANG}/tests)
-    add_subdirectory(${NN_BUILD_TEST_FOLDER})
+    add_subdirectory(src/${NN_BUILD_LANG}/tests)
 
     if (NOT MSVC)
     add_custom_target(run
