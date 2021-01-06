@@ -57,8 +57,22 @@ set(VNEPOGODIN_NN_PKGCONFIG_INSTALL_DIR      "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 
 if (NN_LANG)
     set(NN_BUILD_LANG c++)
+    if(NOT MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMDJSON_THREADS_ENABLED -ffast-math -flto")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -O3")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -Og")
+
+        if ((${CMAKE_SYSTEM_NAME} MATCHES "Linux") OR (${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+        endif()
+    endif()
 else()
     set(NN_BUILD_LANG c)
+    if(NOT MSVC)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffast-math -flto")
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
+        set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG}   -Og")
+    endif()
 endif()
 set(NN_BUILD_LANG_SOURCES_DIR ${PROJECT_SOURCE_DIR}/src/${NN_BUILD_LANG})
 
@@ -81,7 +95,7 @@ if (NN_MultipleHeaders)
     else()
         set(VNEPOGODIN_NN_HEADERS
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/arraylist.h
-            ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/json_object.h 
+            ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/json_object.h
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/linkhash.h
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/printbuf.h
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/json_tokener.h
@@ -121,8 +135,6 @@ else()
     message(STATUS "Using the single-header code from ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}")
 endif()
 
-add_subdirectory(src/${NN_BUILD_LANG})
-
 ##
 ## TARGET
 ## create target and add include path
@@ -137,9 +149,22 @@ if (NOT NN_MultipleHeaders)
     )
     if (NN_LANG)
         target_compile_features(${VNEPOGODIN_NN_TARGET_NAME} INTERFACE cxx_std_17)
+
+        ## add debug view definition file for msvc (natvis)
+        if (MSVC)
+            set(VNEPOGODIN_ADD_NATVIS TRUE)
+            set(VNEPOGODIN_NATVIS_FILE "vnepogodin_nn.natvis")
+            target_sources(
+                ${VNEPOGODIN_NN_TARGET_NAME}
+                INTERFACE
+                $<INSTALL_INTERFACE:${VNEPOGODIN_NATVIS_FILE}>
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${VNEPOGODIN_NATVIS_FILE}>
+            )
+        endif()
     else()
         target_compile_features(${VNEPOGODIN_NN_TARGET_NAME} INTERFACE c_std_99)
     endif()
+
 else()
     add_library(${VNEPOGODIN_NN_TARGET_NAME}
         ${VNEPOGODIN_NN_SOURCES}
@@ -181,10 +206,28 @@ else()
 
     if (NN_LANG)
         target_compile_features(${VNEPOGODIN_NN_TARGET_NAME} PUBLIC cxx_std_17)
+
+        ## add debug view definition file for msvc (natvis)
+        if (MSVC)
+            set(VNEPOGODIN_ADD_NATVIS TRUE)
+            set(VNEPOGODIN_NATVIS_FILE "vnepogodin_nn.natvis")
+            target_sources(
+                ${VNEPOGODIN_NN_TARGET_NAME}
+                PUBLIC
+                $<INSTALL_INTERFACE:${VNEPOGODIN_NATVIS_FILE}>
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${VNEPOGODIN_NATVIS_FILE}>
+            )
+        endif()
     else()
         target_compile_features(${VNEPOGODIN_NN_TARGET_NAME} PUBLIC c_std_99)
     endif()
 endif()
+
+add_library(project_warnings INTERFACE)
+
+include(${NN_BUILD_LANG_SOURCES_DIR}/cmake/CompilerWarnings.cmake)
+set_project_warnings(project_warnings)
+
 add_library(${PROJECT_NAME}::${VNEPOGODIN_NN_TARGET_NAME} ALIAS ${VNEPOGODIN_NN_TARGET_NAME})
 
 
@@ -200,6 +243,7 @@ CONFIGURE_FILE(
 ##
 if (NN_BuildTests)
     set(NN_BUILD_TEST_FOLDER ${PROJECT_BINARY_DIR}/src/${NN_BUILD_LANG}/tests)
+    add_subdirectory(${NN_BUILD_TEST_FOLDER})
 
     if (NOT MSVC)
     add_custom_target(run
@@ -237,6 +281,12 @@ if (NN_Install)
         DESTINATION ${VNEPOGODIN_NN_CONFIG_INSTALL_DIR}
     )
 
+    if (VNEPOGODIN_ADD_NATVIS)
+        install(
+            FILES ${VNEPOGODIN_NATVIS_FILE}
+            DESTINATION .
+        )
+    endif()
     export(
         TARGETS ${VNEPOGODIN_NN_TARGET_NAME}
         NAMESPACE ${PROJECT_NAME}::
