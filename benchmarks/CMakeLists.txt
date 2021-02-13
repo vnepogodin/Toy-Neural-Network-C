@@ -6,7 +6,7 @@ set(CMAKE_BUILD_TYPE release)
 
 # set compiler flags
 if((CMAKE_CXX_COMPILER_ID MATCHES GNU) OR (CMAKE_CXX_COMPILER_ID MATCHES Clang))
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMDJSON_THREADS_ENABLED -ffast-math -flto -O3")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMDJSON_THREADS_ENABLED -O3 -ffast-math -flto")
 endif()
 
 # configure Google Benchmarks

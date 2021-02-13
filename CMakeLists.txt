@@ -4,7 +4,9 @@ cmake_minimum_required(VERSION 3.8)
 ## PROJECT
 ## name and version
 ##
-project(vnepogodin_nn VERSION 0.5.0)
+project(vnepogodin_nn
+        VERSION 0.5.0
+        LANGUAGES CXX C)
 
 ##
 ## MAIN_PROJECT CHECK
@@ -16,7 +18,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE release)
+    set(CMAKE_BUILD_TYPE debug)
 endif()
 
 
@@ -24,6 +26,9 @@ endif()
 ## INCLUDE
 ##
 include(ExternalProject)
+include(FindThreads)
+
+find_package(Threads REQUIRED)
 
 ##
 ## OPTIONS
@@ -55,26 +60,27 @@ set(VNEPOGODIN_NN_CMAKE_PROJECT_CONFIG_FILE  "${VNEPOGODIN_NN_CMAKE_CONFIG_DIR}/
 set(VNEPOGODIN_NN_CMAKE_PROJECT_TARGETS_FILE "${VNEPOGODIN_NN_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Targets.cmake")
 set(VNEPOGODIN_NN_PKGCONFIG_INSTALL_DIR      "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
+
+if(MSVC)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /arch:AVX2 /fp:precise /LTCG:INCREMENTAL")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DEBUG /Od")
+else()
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -flto")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Og")
+endif()
+
 if (NN_LANG)
     set(NN_BUILD_LANG c++)
-    if(NOT MSVC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMDJSON_THREADS_ENABLED -ffast-math -flto")
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -O3")
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -Og")
-
-        if ((${CMAKE_SYSTEM_NAME} MATCHES "Linux") OR (${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
-        endif()
+    if((NOT MSVC) AND ((${CMAKE_SYSTEM_NAME} MATCHES "Linux") OR (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")))
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx2")
     endif()
+
+    set(VNEPOGODIN_NN_DEFS SIMDJSON_THREADS_ENABLED)
 else()
     set(NN_BUILD_LANG c)
-    if(NOT MSVC)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffast-math -flto")
-        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
-        set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG}   -Og")
-    endif()
+    set(VNEPOGODIN_NN_DEFS)
 endif()
-set(NN_BUILD_LANG_SOURCES_DIR ${PROJECT_SOURCE_DIR}/src/${NN_BUILD_LANG})
+set(NN_BUILD_LANG_SOURCES_DIR "${PROJECT_SOURCE_DIR}/src/${NN_BUILD_LANG}")
 
 if (NN_MultipleHeaders)
     set(VNEPOGODIN_NN_INCLUDE_BUILD_DIR "${PROJECT_SOURCE_DIR}/include/${NN_BUILD_LANG}")
@@ -230,6 +236,14 @@ set_project_warnings(project_warnings)
 
 add_library(${PROJECT_NAME}::${VNEPOGODIN_NN_TARGET_NAME} ALIAS ${VNEPOGODIN_NN_TARGET_NAME})
 
+add_compile_definitions(${VNEPOGODIN_NN_DEFS} ${CMAKE_THREAD_DEFS_INIT})
+add_compile_options(${CMAKE_CXX_FLAGS} ${CMAKE_THREAD_DEFS_INIT})
+
+if (NOT NN_MultipleHeaders)
+    target_link_libraries(${PROJECT_NAME} INTERFACE ${CMAKE_THREAD_LIBS_INIT})
+else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+endif()
 
 # Install a pkg-config file, so other tools can find this.
 CONFIGURE_FILE(
@@ -242,14 +256,9 @@ CONFIGURE_FILE(
 ## create and configure the unit test target
 ##
 if (NN_BuildTests)
-    set(NN_BUILD_TEST_FOLDER ${PROJECT_BINARY_DIR}/src/${NN_BUILD_LANG}/tests)
+    include(CTest)
+    enable_testing()
     add_subdirectory(src/${NN_BUILD_LANG}/tests)
-
-    if (NOT MSVC)
-    add_custom_target(run
-        COMMAND echo "init" && ./init && echo "nn_copy" && ./nn_copy && echo "nn_predict" && ./nn_predict && echo "nn_train" && ./nn_train && echo "json_serialize" && ./json_serialize && echo "json_deserialize" && ./json_deserialize
-        WORKING_DIRECTORY ${NN_BUILD_TEST_FOLDER})
-    endif()
 endif()
 
 ##

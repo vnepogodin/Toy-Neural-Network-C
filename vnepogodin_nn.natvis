@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  <Type Name="vnepogodin::Matrix&lt;*&gt;">
-    <DisplayString Condition="len == 0">empty</DisplayString>
-    <DisplayString>{{ size={len} }}</DisplayString>
-    <Expand>
-      <Item Name="[size]" ExcludeView="simple">len</Item>
-      <ArrayItems>
-        <Size>len</Size>
-        <ValuePointer>elem</ValuePointer>
-      </ArrayItems>
-    </Expand>
-  </Type>
+    <Type Name="vnepogodin::Matrix&lt;*&gt;">
+        <DisplayString Condition="len == 0">empty</DisplayString>
+        <DisplayString>{{ size={len} }}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">len</Item>
+            <ArrayItems>
+                <Size>len</Size>
+                <ValuePointer>elem</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
   <!--
-      <Type Name="vnepogodin::Matrix&lt;*&gt;">
+    <Type Name="vnepogodin::Matrix&lt;*&gt;">
       <DisplayString>{{ Matrix {rows}x{columns} }}</DisplayString>
       <StringView>elem,[rows]</StringView>
       <Expand>
@@ -24,6 +24,6 @@
           <ValuePointer>elem</ValuePointer>
         </ArrayItems>
        </Expand>
-       </Type>
+     </Type>
    -->
 </AutoVisualizer>

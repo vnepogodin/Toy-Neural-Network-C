@@ -29,12 +29,12 @@ namespace {
 
 class random_in_range {
  public:
-    random_in_range()
+    tnn_really_inline random_in_range()
         : rng(std::random_device()()) {}
 
     virtual ~random_in_range() = default;
 
-    auto get() -> double {
+    tnn_really_inline auto get() noexcept -> double {
         std::uniform_real_distribution<double> _realDistribution(start, end);
 
         return _realDistribution(rng);
@@ -54,35 +54,9 @@ class random_in_range {
 };
 
 namespace vnepogodin {
-// Constructors
-Matrix::Matrix(const std::uint32_t& _r, const std::uint32_t& _c)
-    : len(_r * _c),
-      rows(_r), columns(_c),
-      elem(static_cast<pointer>(::operator new(_r * _c * sizeof(value_type))))
-{
-    std::fill(begin(), end(), 0);
-}
-
-
-// Copy constructor
-//
-Matrix::Matrix(const Matrix& mat)
-    : len(mat.len),
-      rows(mat.rows), columns(mat.columns),
-      elem(static_cast<pointer>(::operator new(rows * columns * sizeof(value_type))))
-{
-    std::copy(mat.cbegin(), mat.cend(), begin());
-}
 
 // Operators
-auto Matrix::operator+=(const_reference num) -> Matrix& {
-    for (auto& el : *this)
-        el += num;
-
-    return *this;
-}
-
-auto Matrix::operator+=(const Matrix& mat_a) -> Matrix& {
+auto Matrix::operator+=(const Matrix& mat_a) noexcept -> Matrix& {
     if ((this->rows != mat_a.rows) || (this->columns != mat_a.columns)) {
         std::cerr << "Columns and Rows of A must match Columns and Rows of B.\n";
         return *this;
@@ -96,8 +70,8 @@ auto Matrix::operator+=(const Matrix& mat_a) -> Matrix& {
     return *this;
 }
 
-auto Matrix::operator*=(const Matrix& mat) -> Matrix& {
-    if ((this->rows != mat.rows) || (this->columns != mat.columns)) {
+auto Matrix::operator*=(const Matrix& mat) noexcept -> Matrix& {
+    if (tnn_unlikely((this->rows != mat.rows) || (this->columns != mat.columns))) {
         std::cerr << "Columns and Rows of A must match Columns and Rows of B.\n";
         return *this;
     }
@@ -113,17 +87,8 @@ auto Matrix::operator*=(const Matrix& mat) -> Matrix& {
     return *this;
 }
 
-auto Matrix::operator*=(const double& num) -> Matrix& {
-    // Scalar product
-    for(auto& iter : *this)
-        iter *= num;
-
-    return *this;
-}
-
-
 // Non member operator
-auto operator<<(std::ostream& stream, const Matrix& mat) -> std::ostream& {
+auto operator<<(std::ostream& stream, const Matrix& mat) noexcept -> std::ostream& {
     std::atomic<std::uint32_t> counter(0);
     for (const auto& i : mat) {
         stream << i << ' ';
@@ -152,37 +117,37 @@ auto Matrix::toArray() const noexcept -> pointer {
     return tmp;
 }
 
-void Matrix::randomize() {
+void Matrix::randomize() noexcept {
     random_in_range r;
-    for (auto& el : *this)
-        el = r.get() - 1;
+    std::generate(begin(), end(), [&](){ return r.get() - 1; });
 }
 
 // Serialize to JSON
 // TODO: Refactor
 //
-auto Matrix::serialize() const noexcept -> string {
-    auto _str = string("{\"rows\":") + to_string(rows)
-              + string(",\"columns\":") + to_string(columns)
-              + string(",\"data\":[");
-    string temp_arr = "[";
+auto Matrix::dumps() const noexcept -> std::string {
+    constexpr int resLen = 125;
+    std::string _str = std::string("{") +  std::string("\"rows\":") + std::to_string(rows)
+                     + std::string(",\"columns\":") + std::to_string(columns)
+                     + std::string(",\"data\":[");
+    _str.reserve(resLen);
 
-    _str.reserve(120);
+    std::string temp_arr = "[";
     temp_arr.reserve(3 + (this->columns * 11));
 
     std::uint32_t counter = 0;
     for (const auto& i : *this) {
-        temp_arr += to_string(i);
+        temp_arr += std::to_string(i);
 
         ++counter;
-        if (counter != this->columns) {
+        if (tnn_likely(counter != this->columns)) {
             temp_arr += ',';
         } else {
             counter = 0;
             _str += temp_arr + ']';
 
             temp_arr = '[';
-            if ((&i + 1) != this->end())
+            if (tnn_likely((&i + 1) != this->end()))
                 _str += ',';
         }
     }
@@ -194,7 +159,7 @@ auto Matrix::serialize() const noexcept -> string {
 
 
 // Static functions
-auto Matrix::fromArray(const_pointer const& arr, const std::uint32_t& len) -> Matrix {
+auto Matrix::fromArray(const_pointer arr, const std::uint32_t& len) noexcept -> Matrix {
     Matrix t(len, 1);
 
     std::atomic<std::uint32_t> i(0);
@@ -206,7 +171,7 @@ auto Matrix::fromArray(const_pointer const& arr, const std::uint32_t& len) -> Ma
 }
 
 // @see https://en.wikipedia.org/wiki/Transpose
-auto Matrix::transpose(const Matrix& m) -> Matrix {
+auto Matrix::transpose(const Matrix& m) noexcept -> Matrix {
     Matrix t(m.columns, m.rows);
 
     std::atomic<std::uint32_t> counter(0);
@@ -224,9 +189,9 @@ auto Matrix::transpose(const Matrix& m) -> Matrix {
     return t;
 }
 
-auto Matrix::multiply(const Matrix& a, const Matrix& b) -> Matrix {
+auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
     // Matrix product
-    if (a.columns != b.rows) {
+    if (tnn_unlikely(a.columns != b.rows)) {
         std::cerr << "Columns of A must match rows of B.\n";
         return Matrix();
     }
@@ -257,8 +222,8 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) -> Matrix {
     return t;
 }
 
-auto Matrix::subtract(const Matrix& a, const Matrix& b) -> Matrix {
-    if ((a.rows != b.rows) || (a.columns != b.columns)) {
+auto Matrix::subtract(const Matrix& a, const Matrix& b) noexcept -> Matrix {
+    if (tnn_unlikely((a.rows != b.rows) || (a.columns != b.columns))) {
         std::cerr << "Columns and Rows of A must match Columns and Rows of B.\n";
         return Matrix();
     }
@@ -273,8 +238,8 @@ auto Matrix::subtract(const Matrix& a, const Matrix& b) -> Matrix {
     return t;
 }
 
-auto Matrix::map(const Matrix& m, const function_t& func) -> Matrix {
-    Matrix t(m);
+auto Matrix::map(const Matrix& m, const function_t& func) noexcept -> Matrix {
+    Matrix t = Matrix::copy(m);
 
     t.map(func);
     return t;
@@ -282,24 +247,23 @@ auto Matrix::map(const Matrix& m, const function_t& func) -> Matrix {
 
 // Deserialize from JSON
 //
-auto Matrix::deserialize(const simdjson::dom::element& t) -> Matrix {
-    const std::uint64_t& rows = t["rows"];
-    const std::uint64_t& cols = t["columns"];
+auto Matrix::parse(const simdjson::dom::object& obj) noexcept -> Matrix {
+    const std::uint64_t& rows = obj["rows"];
+    const std::uint64_t& cols = obj["columns"];
 
     Matrix m(rows, cols);
     auto *ptr = m.begin();
 
-    constexpr const auto& _str = "/data/";
+    const auto& data = obj["data"];
 
     std::uint32_t counter = 0;
     PTR_START(m.rows)
-        const auto& buf_s = _str + to_string(i.load(std::memory_order_consume)) + '/' + to_string(counter);
-
-        *ptr = t.at_pointer(buf_s);
+        const auto& buf_s = '/' + std::to_string(i.load(std::memory_order_consume)) + '/' + std::to_string(counter);
+        *ptr = data.at_pointer(buf_s);
         ++ptr;
         counter++;
 
-        if (counter == m.columns) {
+        if (tnn_unlikely(counter == m.columns)) {
             counter = 0;
 
             i.fetch_add(1, std::memory_order_release);
