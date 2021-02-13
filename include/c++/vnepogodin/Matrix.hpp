@@ -274,7 +274,7 @@ class Matrix {
     std::uint32_t rows{};
     std::uint32_t columns{};
 
-    pointer elem{};
+    pointer elem{nullptr};
 
     tnn_really_inline void clear(double** ptr) noexcept {
         if (*ptr != nullptr) {
