@@ -6,7 +6,7 @@ set(NN_TEST_DIR "\"${PROJECT_SOURCE_DIR}/src/c++/tests/src/\"")
 if(NN_Sanitizer)
     message(STATUS "Building test suite with sanitizer")
     if(NOT MSVC)
-        set(CMAKE_CXX_FLAGS "-g -O0 -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
+        set(CMAKE_CXX_FLAGS "-g -Og -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
     endif()
 endif()
 

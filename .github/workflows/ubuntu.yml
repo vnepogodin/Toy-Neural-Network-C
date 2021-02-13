@@ -30,7 +30,7 @@ jobs:
     - name: single_include Test C
       working-directory: ${{runner.workspace}}/build
       shell: bash
-      run: make run
+      run: ctest
 
 
     - name: single_include Configure CMake CPP
@@ -46,7 +46,7 @@ jobs:
     - name: single_include Test CPP
       working-directory: ${{runner.workspace}}/build
       shell: bash
-      run: make run
+      run: ctest
 
 
     # Multiple headers
@@ -63,7 +63,7 @@ jobs:
     - name: Test C
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: make run
+      run: ctest
 
     - name: Configure CMake CPP
       shell: bash
@@ -78,4 +78,4 @@ jobs:
     - name: Test CPP
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: make run
+      run: ctest
