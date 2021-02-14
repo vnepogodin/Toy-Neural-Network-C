@@ -4,6 +4,8 @@
 
 #include <vnepogodin/Matrix.hpp>  // class Matrix
 
+#include <array>
+
 namespace vnepogodin {
 enum class Function : std::uint8_t {
     sigmoid = 1,

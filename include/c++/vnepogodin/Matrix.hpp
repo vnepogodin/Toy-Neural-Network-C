@@ -11,7 +11,7 @@
 #include <memory_resource>  // std::pmr::vector
 
 namespace vnepogodin {
-#ifdef MSC_VER
+#ifdef _MSC_VER
     #define tnn_really_inline __forceinline
 
     #ifndef tnn_likely
