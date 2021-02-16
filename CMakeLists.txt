@@ -70,6 +70,7 @@ else()
 endif()
 
 if (NN_LANG)
+    set(CMAKE_CXX_STANDARD 17)
     set(NN_BUILD_LANG c++)
     if((NOT MSVC) AND ((${CMAKE_SYSTEM_NAME} MATCHES "Linux") OR (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")))
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx2")
