@@ -16,36 +16,9 @@ jobs:
       # We'll use this as our working directory for all subsequent commands
       run: cmake -E make_directory ${{runner.workspace}}/build
 
-    - name: single_include Configure CMake C
-      working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DNN_LANG=OFF -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-
-    - name: single_include Build C
-      working-directory: ${{runner.workspace}}/build
-      run: cmake --build . --parallel 10
-
-    - name: single_include Test C
-      working-directory: ${{runner.workspace}}/build
-      run: ctest
-
-
-    - name: single_include Configure CMake CPP
-      working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-
-    - name: single_include Build CPP
-      working-directory: ${{runner.workspace}}/build
-      run: cmake --build . --parallel 10
-
-    - name: single_include Test CPP
-      working-directory: ${{runner.workspace}}/build
-      run: ctest
-
-
-    # Multiple headers
     - name: Configure CMake C
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DNN_LANG=OFF -DNN_MultipleHeaders=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      run: cmake $GITHUB_WORKSPACE -DNN_LANG=OFF -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_BuildTests=ON
 
     - name: Build C
       working-directory: ${{runner.workspace}}/build
@@ -53,11 +26,12 @@ jobs:
 
     - name: Test C
       working-directory: ${{runner.workspace}}/build
-      run: ctest
+      run: ctest -j 10 --output-on-failure
+
 
     - name: Configure CMake CPP
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DNN_LANG=ON -DNN_MultipleHeaders=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      run: cmake $GITHUB_WORKSPACE -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_BuildTests=ON
 
     - name: Build CPP
       working-directory: ${{runner.workspace}}/build
@@ -65,4 +39,4 @@ jobs:
 
     - name: Test CPP
       working-directory: ${{runner.workspace}}/build
-      run: ctest
+      run: ctest -j 10 --output-on-failure

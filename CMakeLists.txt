@@ -18,7 +18,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE debug)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 
