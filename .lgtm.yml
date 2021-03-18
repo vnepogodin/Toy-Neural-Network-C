@@ -1,0 +1,21 @@
+path_classifiers:
+  test:
+    - "*/*/unit-*.cpp"
+queries:
+  - include:
+      tags:
+        - "security"
+        - "correctness"
+      severity: "warning"
+extraction:
+  cpp:
+    prepare:
+      packages:
+        - g++-10
+        - cmake
+    configure:
+     command:
+       - cmake -S . -B build -DNN_MultipleHeaders=ON
+    index:
+      build_command:
+        - ./build.sh
