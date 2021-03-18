@@ -1,0 +1,5 @@
+# Neural Network C/C++ library has been originally written by Vladislav Nepogodin.
+# This CODEOWNERS file is only to make sure that @vnepogodin is requested
+# for a code review in case of a pull request.
+
+* @vnepogodin
