@@ -6,14 +6,27 @@ set(NN_TEST_DIR "\"${PROJECT_SOURCE_DIR}/src/c/tests/src/\"")
 if(NN_Sanitizer)
     message(STATUS "Building test suite with sanitizer")
     if(NOT MSVC)
-        set(CMAKE_CXX_FLAGS "-g -Og -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
+        set(CMAKE_C_FLAGS "-g -Og -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
+
+        # Clang only
+        if (CMAKE_C_COMPILER_ID MATCHES "Clang")
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=integer -fsanitize=nullability -fno-sanitize-recover=all -fsanitize-recover=unsigned-integer-overflow")
+        endif()
+    endif()
+endif()
+
+if(NN_Analyzer)
+    message(STATUS "Enable static analyzer")
+    # GCC only
+    if (CMAKE_C_COMPILER_ID MATCHES "GCC")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mindirect-branch=thunk -fstack-clash-protection -fstack-protector-strong -fanalyzer")
     endif()
 endif()
 
 if(NN_Valgrind)
     find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
     message(STATUS "Executing test suite with Valgrind (${CMAKE_MEMORYCHECK_COMMAND})")
-    set(memcheck_command "${CMAKE_MEMORYCHECK_COMMAND} ${CMAKE_MEMORYCHECK_COMMAND_OPTIONS} --error-exitcode=1 --leak-check=full")
+    set(memcheck_command "${CMAKE_MEMORYCHECK_COMMAND} ${CMAKE_MEMORYCHECK_COMMAND_OPTIONS} --quiet --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1")
     separate_arguments(memcheck_command)
 endif()
 
@@ -38,13 +51,9 @@ foreach(file ${files})
         $<$<CXX_COMPILER_ID:MSVC>:/EHsc;$<$<CONFIG:Release>:/Od>>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-float-equal>
     )
+
     target_include_directories(${testcase} PRIVATE ${CMAKE_BINARY_DIR}/include)
     target_link_libraries(${testcase} PRIVATE ${VNEPOGODIN_NN_TARGET_NAME} m)
-
-    if (JSON_Coverage)
-        target_compile_options(${testcase} PRIVATE --coverage)
-        target_link_libraries(${testcase} PRIVATE --coverage)
-    endif()
 
     add_test(NAME "${testcase}"
             COMMAND ${testcase} --no-skip
@@ -52,7 +61,7 @@ foreach(file ${files})
             )
     set_tests_properties("${testcase}" PROPERTIES LABELS "all")
 
-    if(JSON_Valgrind)
+    if(NN_Valgrind)
         add_test(NAME "${testcase}_valgrind"
                 COMMAND ${memcheck_command} ${CMAKE_CURRENT_BINARY_DIR}/${testcase}
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

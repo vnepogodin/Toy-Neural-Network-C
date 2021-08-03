@@ -174,7 +174,7 @@ BENCHMARK_MAIN();
 ```
 
 To run the benchmark, compile and link against the `benchmark` library
-(libbenchmark.a/.so). If you followed the build steps above, this library will 
+(libbenchmark.a/.so). If you followed the build steps above, this library will
 be under the build directory you created.
 
 ```bash

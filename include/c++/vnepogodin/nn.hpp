@@ -16,16 +16,14 @@ class NeuralNetwork {
   public:
     // Constructors.
     constexpr NeuralNetwork() noexcept = default;
-    constexpr NeuralNetwork(NeuralNetwork&&) noexcept = default;
+    tnn_really_inline NeuralNetwork(NeuralNetwork&&) noexcept = default;
     NeuralNetwork(const std::uint32_t&, const std::uint32_t&, const std::uint32_t&);
 
     // Destructor.
-    virtual ~NeuralNetwork() noexcept {
-        for (auto& mat : matrices) { delete mat; }
-    }
+    virtual ~NeuralNetwork() noexcept = default;
 
     // Operator.
-    constexpr auto operator=(NeuralNetwork&&) noexcept -> NeuralNetwork& = default;
+    auto operator=(NeuralNetwork&&) noexcept -> NeuralNetwork& = default;
 
     // Functions
     auto predict(Matrix::const_pointer) const noexcept -> Matrix::pointer;
@@ -62,18 +60,17 @@ class NeuralNetwork {
         simdjson::dom::element obj = p.parse(buf, len, realloc_if_needed);
         return parse(obj);
     }
+    /* clang-format off */
     /** @overload parse(const uint8_t *buf, size_t len, bool realloc_if_needed) */
-    tnn_really_inline static auto parse(const char *buf, size_t len, bool realloc_if_needed) noexcept -> NeuralNetwork {
-        return parse((const uint8_t *)buf, len, realloc_if_needed);
-    }
+    tnn_really_inline static auto parse(const char *buf, size_t len, bool realloc_if_needed) noexcept -> NeuralNetwork
+    { return parse((const uint8_t *)buf, len, realloc_if_needed); }
     /** @overload parse(const uint8_t *buf, size_t len, bool realloc_if_needed) */
-    tnn_really_inline static auto parse(const std::string& s) noexcept -> NeuralNetwork {
-        return parse(s.data(), s.length(), s.capacity() - s.length() < simdjson::SIMDJSON_PADDING);
-    }
+    tnn_really_inline static auto parse(const std::string& s) noexcept -> NeuralNetwork
+    { return parse(s.data(), s.length(), s.capacity() - s.length() < simdjson::SIMDJSON_PADDING); }
     /** @overload parse(const uint8_t *buf, size_t len, bool realloc_if_needed) */
-    tnn_really_inline static auto parse(const simdjson::padded_string& s) noexcept -> NeuralNetwork {
-        return parse(s.data(), s.length(), false);
-    }
+    tnn_really_inline static auto parse(const simdjson::padded_string& s) noexcept -> NeuralNetwork
+    { return parse(s.data(), s.length(), false); }
+    /* clang-format on */
 
     tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const uint8_t *buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
         simdjson::dom::parser p;
@@ -83,18 +80,17 @@ class NeuralNetwork {
         }
         return res;
     }
+    /* clang-format off */
     /** @overload parse_many(const uint8_t *buf, std::size_t len, bool realloc_if_needed) */
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const char *buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
-        return parse_many((const uint8_t *)buf, len, batch_size);
-    }
+    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const char *buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    { return parse_many((const uint8_t *)buf, len, batch_size); }
     /** @overload parse_many(const uint8_t *buf, std::size_t len, bool realloc_if_needed) */
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const std::string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
-        return parse_many(s.data(), s.length(), batch_size);
-    }
+    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const std::string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    { return parse_many(s.data(), s.length(), batch_size); }
     /** @overload parse_many(const uint8_t *buf, std::size_t len, bool realloc_if_needed) */
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const simdjson::padded_string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
-        return parse_many(s.data(), s.length(), batch_size);
-    }
+    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const simdjson::padded_string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    { return parse_many(s.data(), s.length(), batch_size); }
+    /* clang-format on */
 
     // Delete.
     constexpr NeuralNetwork(const NeuralNetwork&) = delete;
@@ -124,12 +120,7 @@ class NeuralNetwork {
      * [2] = bias_h
      * [3] = bias_o
      */
-    std::array<Matrix*, 4> matrices{};
-/*
-    Matrix* weights_ih{};
-    Matrix* weights_ho{};
-    Matrix* bias_h{};
-    Matrix* bias_o{};*/
+    std::array<Matrix, 4> matrices{};
 };
 };  // namespace vnepogodin
 

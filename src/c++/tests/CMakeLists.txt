@@ -1,4 +1,5 @@
 option(NN_Sanitizer "Build test suite with sanitizer" OFF)
+option(NN_Analyzer "Enable static analyzer" OFF)
 option(NN_Valgrind "Execute test suite with Valgrind" OFF)
 option(NN_Coverage "Build test suite with coverage information" OFF)
 
@@ -13,6 +14,14 @@ if(NN_Sanitizer)
         if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=integer -fsanitize=nullability -fno-sanitize-recover=all -fsanitize-recover=unsigned-integer-overflow")
         endif()
+    endif()
+endif()
+
+if(NN_Analyzer)
+    message(STATUS "Enable static analyzer")
+    # GCC only
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GCC")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mindirect-branch=thunk -fstack-clash-protection -fstack-protector-strong -fanalyzer")
     endif()
 endif()
 

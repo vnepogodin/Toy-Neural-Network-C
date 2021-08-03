@@ -16,21 +16,21 @@ namespace {
  */
 #define PTR_START(end)               \
     std::atomic<std::uint32_t> i(0); \
-    while (i < (end)) {
+    while (i < (end))
+
 /**
  * PTR_END:
  *
  * Used within multi-statement macros so that they can be used in places
  * where only one statement is expected by the compiler.
  */
-#define PTR_END                                \
-    i.fetch_add(1, std::memory_order_release); \
-    }
+#define PTR_END \
+    i.fetch_add(1, std::memory_order_release);
 
 class random_in_range {
  public:
     tnn_really_inline random_in_range()
-        : rng(std::random_device()()) {}
+      : rng(std::random_device()()) {}
 
     virtual ~random_in_range() = default;
 
@@ -41,7 +41,7 @@ class random_in_range {
     }
 
     // Delete.
-    random_in_range(random_in_range&&) = delete;
+    random_in_range(random_in_range&&)      = delete;
     random_in_range(const random_in_range&) = delete;
     auto operator=(random_in_range&&) -> random_in_range& = delete;
     auto operator=(const random_in_range&) -> random_in_range& = delete;
@@ -49,9 +49,9 @@ class random_in_range {
  private:
     std::mt19937 rng;
     static constexpr double start = 0.0;
-    static constexpr double end = 2.0;
+    static constexpr double end   = 2.0;
 };
-};
+};  // namespace
 
 namespace vnepogodin {
 
@@ -65,7 +65,8 @@ auto Matrix::operator+=(const Matrix& mat_a) noexcept -> Matrix& {
     std::atomic<std::uint32_t> i(0);
     for (auto& iter : *this) {
         iter += mat_a[i.load(std::memory_order_consume)];
-    PTR_END
+        PTR_END
+    }
 
     return *this;
 }
@@ -82,7 +83,8 @@ auto Matrix::operator*=(const Matrix& mat) noexcept -> Matrix& {
     std::atomic<std::uint32_t> i(0);
     for (auto& iter : *this) {
         iter *= mat[i.load(std::memory_order_consume)];
-    PTR_END
+        PTR_END
+    }
 
     return *this;
 }
@@ -112,8 +114,8 @@ auto Matrix::toArray() const noexcept -> pointer {
     std::atomic<std::uint32_t> i(0);
     for (const auto& iter : *this) {
         tmp[i.load(std::memory_order_consume)] = iter;
-    PTR_END
-
+        PTR_END
+    }
     return tmp;
 }
 
@@ -126,10 +128,13 @@ void Matrix::randomize() noexcept {
 // TODO: Refactor
 //
 auto Matrix::dumps() const noexcept -> std::string {
-    constexpr int resLen = 125;
-    std::string _str = std::string("{") +  std::string("\"rows\":") + std::to_string(rows)
+    static constexpr int resLen = 125;
+    /* clang-format off */
+    std::string _str = std::string("{")
+                     + std::string("\"rows\":") + std::to_string(rows)
                      + std::string(",\"columns\":") + std::to_string(columns)
                      + std::string(",\"data\":[");
+    /* clang-format on */
     _str.reserve(resLen);
 
     std::string temp_arr = "[";
@@ -157,7 +162,6 @@ auto Matrix::dumps() const noexcept -> std::string {
     return _str;
 }
 
-
 // Static functions
 auto Matrix::fromArray(const_pointer arr, const std::uint32_t& len) noexcept -> Matrix {
     Matrix t(len, 1);
@@ -165,7 +169,8 @@ auto Matrix::fromArray(const_pointer arr, const std::uint32_t& len) noexcept -> 
     std::atomic<std::uint32_t> i(0);
     for (auto& iter : t) {
         iter = arr[i.load(std::memory_order_consume)];
-    PTR_END
+        PTR_END
+    }
 
     return t;
 }
@@ -175,7 +180,7 @@ auto Matrix::transpose(const Matrix& m) noexcept -> Matrix {
     Matrix t(m.columns, m.rows);
 
     std::atomic<std::uint32_t> counter(0);
-    PTR_START(t.rows)
+    PTR_START(t.rows) {
         std::atomic<std::uint32_t> j(0);
         while (j < t.columns) {
             t[counter.load(std::memory_order_consume)] =
@@ -184,7 +189,8 @@ auto Matrix::transpose(const Matrix& m) noexcept -> Matrix {
             counter.fetch_add(1, std::memory_order_release);
             j.fetch_add(1, std::memory_order_release);
         }
-    PTR_END
+        PTR_END
+    }
 
     return t;
 }
@@ -200,15 +206,14 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
     Matrix t(a.rows, b.columns);
 
     std::atomic<std::uint32_t> counter(0);
-    PTR_START(t.rows)
+    PTR_START(t.rows) {
         std::atomic<std::uint32_t> j(0);
         while (j < t.columns) {
             std::atomic<std::uint32_t> k(0);
             double sum = 0.0;
             while (k < a.columns) {
-                sum +=
-                    a[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)]
-                    * b[k.load(std::memory_order_consume) * t.rows + j.load(std::memory_order_consume)];
+                sum += a[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)]
+                     * b[k.load(std::memory_order_consume) * b.columns + j.load(std::memory_order_consume)];
 
                 k.fetch_add(1, std::memory_order_release);
             }
@@ -217,8 +222,8 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
             counter.fetch_add(1, std::memory_order_release);
             j.fetch_add(1, std::memory_order_release);
         }
-    PTR_END
-
+        PTR_END
+    }
     return t;
 }
 
@@ -232,9 +237,9 @@ auto Matrix::subtract(const Matrix& a, const Matrix& b) noexcept -> Matrix {
     std::atomic<std::uint32_t> i(0);
     for (auto& iter : t) {
         iter = a[i.load(std::memory_order_consume)]
-               - b[i.load(std::memory_order_consume)];
-    PTR_END
-
+             - b[i.load(std::memory_order_consume)];
+        PTR_END
+    }
     return t;
 }
 
@@ -257,7 +262,7 @@ auto Matrix::parse(const simdjson::dom::object& obj) noexcept -> Matrix {
     const auto& data = obj["data"];
 
     std::uint32_t counter = 0;
-    PTR_START(m.rows)
+    PTR_START(m.rows) {
         const auto& buf_s = '/' + std::to_string(i.load(std::memory_order_consume)) + '/' + std::to_string(counter);
         *ptr = data.at_pointer(buf_s);
         ++ptr;
