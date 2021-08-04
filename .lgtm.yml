@@ -11,7 +11,7 @@ extraction:
   cpp:
     prepare:
       packages:
-        - g++-10
+        - g++
         - cmake
     configure:
      command:
