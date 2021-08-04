@@ -9,8 +9,8 @@
 # include <fcntl.h>  /* openat, O_RDONLY */
 # include <unistd.h> /* pread, close */
 #elif _WIN32
-# include <bcrypt.h> /* BCryptGenRandom */
 # include <windows.h>
+# include <bcrypt.h> /* BCryptGenRandom */
 #endif
 
 struct _Matrix {

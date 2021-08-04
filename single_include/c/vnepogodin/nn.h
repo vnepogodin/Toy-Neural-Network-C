@@ -2515,8 +2515,8 @@ inline json_object* json_find(const json_object* __restrict const j, const char*
 # include <unistd.h> /* pread, close */
 #elif _WIN32
 # define WIN32_LEAN_AND_MEAN
-# include <bcrypt.h> /* BCryptGenRandom */
 # include <windows.h>
+# include <bcrypt.h> /* BCryptGenRandom */
 #endif
 
 /* hash functions */
@@ -3386,8 +3386,8 @@ Matrix* matrix_deserialize(const json_object *__restrict const);
 # include <fcntl.h>  /* openat, O_RDONLY */
 # include <unistd.h> /* pread, close */
 #elif _WIN32
-# include <bcrypt.h> /* BCryptGenRandom */
 # include <windows.h>
+# include <bcrypt.h> /* BCryptGenRandom */
 #endif
 
 struct _Matrix {
