@@ -89,6 +89,7 @@ if (NN_MultipleHeaders)
         set(VNEPOGODIN_NN_HEADERS
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json/simdjson.hpp
 
+            ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/helper.hpp
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/Matrix.hpp
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/nn.hpp
         )

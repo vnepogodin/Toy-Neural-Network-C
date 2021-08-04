@@ -2,14 +2,13 @@
 #ifndef MATRIX_HPP_
 #define MATRIX_HPP_
 
-#include <vnepogodin/helper.hpp>                     // tnn_really_inline, tnn_likely, tnn_unlikely
+#include <vnepogodin/helper.hpp>                     // tnn_really_inline, tnn_likely, tnn_unlikely, vector
 #include <vnepogodin/third_party/json/simdjson.hpp>  // simdjson::dom::element
 
-#include <iosfwd>           // std::ostream
-#include <iterator>         // std::reverse_iterator
-#include <memory_resource>  // std::pmr::vector
-#include <stdexcept>        // std::overflow_error
-#include <string>           // std::to_string
+#include <iosfwd>     // std::ostream
+#include <iterator>   // std::reverse_iterator
+#include <stdexcept>  // std::overflow_error
+#include <string>     // std::to_string
 
 namespace vnepogodin {
 class Matrix {
@@ -192,11 +191,11 @@ class Matrix {
         return Matrix::parse(obj);
     }
 
-    tnn_really_inline static std::pmr::vector<Matrix> load_many(const std::string&& path, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
+    tnn_really_inline static vnepogodin::vector<Matrix> load_many(const std::string&& path, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
         simdjson::dom::parser p;
         simdjson::dom::document_stream docs = p.load_many(path, batch_size);
 
-        std::pmr::vector<Matrix> res;
+        vnepogodin::vector<Matrix> res;
         for (simdjson::dom::element doc : docs) {
             res.emplace_back(Matrix::parse(doc));
         }
@@ -225,11 +224,11 @@ class Matrix {
     }
     /* clang-format on */
 
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const uint8_t* buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const uint8_t* buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
         simdjson::dom::parser p;
         simdjson::dom::document_stream docs = p.parse_many(buf, len, batch_size);
 
-        std::pmr::vector<Matrix> res;
+        vnepogodin::vector<Matrix> res;
         for (simdjson::dom::element doc : docs) {
             res.emplace_back(Matrix::parse(doc));
         }
@@ -238,13 +237,13 @@ class Matrix {
 
     /* clang-format off */
     /** @overload parse_many(const uint8_t *buf, size_t len, size_t batch_size) */
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const char* buf, size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const char* buf, size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
     { return parse_many((const uint8_t*)buf, len, batch_size); }
     /** @overload parse_many(const uint8_t *buf, size_t len, size_t batch_size) */
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const std::string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const std::string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
     { return parse_many(s.data(), s.length(), batch_size); }
     /** @overload parse_many(const uint8_t *buf, size_t len, size_t batch_size) */
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const simdjson::padded_string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const simdjson::padded_string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
     { return parse_many(s.data(), s.length(), batch_size); }
     /* clang-format on */
 
@@ -255,10 +254,10 @@ class Matrix {
     /** @private We do not want to allow implicit conversion from C string to std::string. */
     tnn_really_inline static auto parse(const char* buf) noexcept -> Matrix = delete;
 
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const std::string&& s, std::size_t batch_size)             = delete;  // unsafe
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const simdjson::padded_string&& s, std::size_t batch_size) = delete;  // unsafe
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const std::string&& s, std::size_t batch_size)             = delete;  // unsafe
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const simdjson::padded_string&& s, std::size_t batch_size) = delete;  // unsafe
     /** @private We do not want to allow implicit conversion from C string to std::string. */
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const char* buf, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept = delete;
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const char* buf, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept = delete;
 
  private:
     // Variables.

@@ -35866,6 +35866,12 @@ SIMDJSON_POP_DISABLE_WARNINGS
 #ifndef HELPER_HPP_
 #define HELPER_HPP_
 
+#if __has_include(<memory_resource>) && __cplusplus >= 201703L
+#include <memory_resource>  // std::pmr::vector
+#endif
+
+#include <vector>  // std::vector
+
 namespace vnepogodin {
 #ifdef _MSC_VER
 #define tnn_really_inline __forceinline
@@ -35886,18 +35892,25 @@ namespace vnepogodin {
 #define tnn_unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 #endif  // _MSC_VER
+
+#if __has_include(<memory_resource>) && __cplusplus >= 201703L
+template <class T>
+using vector = std::vector<T, std::pmr::polymorphic_allocator<T>>;
+#else
+template <class T>
+using vector = std::vector<T>;
+#endif
 }  // namespace vnepogodin
 
 #endif  // HELPER_HPP_
-                     // tnn_really_inline, tnn_likely, tnn_unlikely
+                     // tnn_really_inline, tnn_likely, tnn_unlikely, vector
 // #include <vnepogodin/third_party/json/simdjson.hpp>
   // simdjson::dom::element
 
-#include <iosfwd>           // std::ostream
-#include <iterator>         // std::reverse_iterator
-#include <memory_resource>  // std::pmr::vector
-#include <stdexcept>        // std::overflow_error
-#include <string>           // std::to_string
+#include <iosfwd>     // std::ostream
+#include <iterator>   // std::reverse_iterator
+#include <stdexcept>  // std::overflow_error
+#include <string>     // std::to_string
 
 namespace vnepogodin {
 class Matrix {
@@ -36080,11 +36093,11 @@ class Matrix {
         return Matrix::parse(obj);
     }
 
-    tnn_really_inline static std::pmr::vector<Matrix> load_many(const std::string&& path, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
+    tnn_really_inline static vnepogodin::vector<Matrix> load_many(const std::string&& path, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
         simdjson::dom::parser p;
         simdjson::dom::document_stream docs = p.load_many(path, batch_size);
 
-        std::pmr::vector<Matrix> res;
+        vnepogodin::vector<Matrix> res;
         for (simdjson::dom::element doc : docs) {
             res.emplace_back(Matrix::parse(doc));
         }
@@ -36113,11 +36126,11 @@ class Matrix {
     }
     /* clang-format on */
 
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const uint8_t* buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const uint8_t* buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
         simdjson::dom::parser p;
         simdjson::dom::document_stream docs = p.parse_many(buf, len, batch_size);
 
-        std::pmr::vector<Matrix> res;
+        vnepogodin::vector<Matrix> res;
         for (simdjson::dom::element doc : docs) {
             res.emplace_back(Matrix::parse(doc));
         }
@@ -36126,13 +36139,13 @@ class Matrix {
 
     /* clang-format off */
     /** @overload parse_many(const uint8_t *buf, size_t len, size_t batch_size) */
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const char* buf, size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const char* buf, size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
     { return parse_many((const uint8_t*)buf, len, batch_size); }
     /** @overload parse_many(const uint8_t *buf, size_t len, size_t batch_size) */
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const std::string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const std::string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
     { return parse_many(s.data(), s.length(), batch_size); }
     /** @overload parse_many(const uint8_t *buf, size_t len, size_t batch_size) */
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const simdjson::padded_string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const simdjson::padded_string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
     { return parse_many(s.data(), s.length(), batch_size); }
     /* clang-format on */
 
@@ -36143,10 +36156,10 @@ class Matrix {
     /** @private We do not want to allow implicit conversion from C string to std::string. */
     tnn_really_inline static auto parse(const char* buf) noexcept -> Matrix = delete;
 
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const std::string&& s, std::size_t batch_size)             = delete;  // unsafe
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const simdjson::padded_string&& s, std::size_t batch_size) = delete;  // unsafe
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const std::string&& s, std::size_t batch_size)             = delete;  // unsafe
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const simdjson::padded_string&& s, std::size_t batch_size) = delete;  // unsafe
     /** @private We do not want to allow implicit conversion from C string to std::string. */
-    tnn_really_inline static std::pmr::vector<Matrix> parse_many(const char* buf, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept = delete;
+    tnn_really_inline static vnepogodin::vector<Matrix> parse_many(const char* buf, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept = delete;
 
  private:
     // Variables.
@@ -36213,7 +36226,7 @@ namespace {
 class random_in_range {
  public:
     tnn_really_inline random_in_range()
-      : rng(std::random_device()()) {}
+      : rng(std::random_device()()) { }
 
     virtual ~random_in_range() = default;
 
@@ -36292,7 +36305,7 @@ auto operator<<(std::ostream& stream, const Matrix& mat) noexcept -> std::ostrea
 
 // Functions
 auto Matrix::toArray() const noexcept -> pointer {
-    auto *tmp = new double[len];
+    auto* tmp = new double[len];
 
     std::atomic<std::uint32_t> i(0);
     for (const auto& iter : *this) {
@@ -36304,7 +36317,7 @@ auto Matrix::toArray() const noexcept -> pointer {
 
 void Matrix::randomize() noexcept {
     random_in_range r;
-    std::generate(begin(), end(), [&](){ return r.get() - 1; });
+    std::generate(begin(), end(), [&]() { return r.get() - 1; });
 }
 
 // Serialize to JSON
@@ -36366,9 +36379,11 @@ auto Matrix::transpose(const Matrix& m) noexcept -> Matrix {
     PTR_START(t.rows) {
         std::atomic<std::uint32_t> j(0);
         while (j < t.columns) {
+            /* clang-format off */
             t[counter.load(std::memory_order_consume)] =
                 m[j.load(std::memory_order_consume) * t.rows + i.load(std::memory_order_consume)];
 
+            /* clang-format on */
             counter.fetch_add(1, std::memory_order_release);
             j.fetch_add(1, std::memory_order_release);
         }
@@ -36395,9 +36410,11 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
             std::atomic<std::uint32_t> k(0);
             double sum = 0.0;
             while (k < a.columns) {
+                /* clang-format off */
                 sum += a[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)]
                      * b[k.load(std::memory_order_consume) * b.columns + j.load(std::memory_order_consume)];
 
+                /* clang-format on */
                 k.fetch_add(1, std::memory_order_release);
             }
             t[counter.load(std::memory_order_consume)] = sum;
@@ -36419,8 +36436,11 @@ auto Matrix::subtract(const Matrix& a, const Matrix& b) noexcept -> Matrix {
     Matrix t(a.rows, b.columns);
     std::atomic<std::uint32_t> i(0);
     for (auto& iter : t) {
+        /* clang-format off */
         iter = a[i.load(std::memory_order_consume)]
              - b[i.load(std::memory_order_consume)];
+
+        /* clang-format on */
         PTR_END
     }
     return t;
@@ -36440,7 +36460,7 @@ auto Matrix::parse(const simdjson::dom::object& obj) noexcept -> Matrix {
     const std::uint64_t& cols = obj["columns"];
 
     Matrix m(rows, cols);
-    auto *ptr = m.begin();
+    auto* ptr = m.begin();
 
     const auto& data = obj["data"];
 
@@ -36474,14 +36494,14 @@ auto Matrix::parse(const simdjson::dom::object& obj) noexcept -> Matrix {
 
 namespace vnepogodin {
 enum class Function : std::uint8_t {
-    sigmoid = 1,
+    sigmoid  = 1,
     dsigmoid = 2,
 };
 
 class NeuralNetwork {
-  public:
+ public:
     // Constructors.
-    constexpr NeuralNetwork() noexcept = default;
+    constexpr NeuralNetwork() noexcept                        = default;
     tnn_really_inline NeuralNetwork(NeuralNetwork&&) noexcept = default;
     NeuralNetwork(const std::uint32_t&, const std::uint32_t&, const std::uint32_t&);
 
@@ -36493,8 +36513,7 @@ class NeuralNetwork {
 
     // Functions
     auto predict(Matrix::const_pointer) const noexcept -> Matrix::pointer;
-    constexpr void setLearningRate(const double& lr) noexcept
-    { this->learning_rate = lr; }
+    constexpr void setLearningRate(const double& lr) noexcept { this->learning_rate = lr; }
     void setActivationFunction(const Function&) noexcept;
     void train(Matrix::const_pointer, Matrix::const_pointer) noexcept;
     auto dumps() const noexcept -> std::string;
@@ -36508,11 +36527,11 @@ class NeuralNetwork {
         return NeuralNetwork::parse(obj);
     }
 
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> load_many(const std::string&& path, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
+    tnn_really_inline static vnepogodin::vector<NeuralNetwork> load_many(const std::string&& path, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
         simdjson::dom::parser p;
         simdjson::dom::document_stream docs = p.load_many(path, batch_size);
 
-        std::pmr::vector<NeuralNetwork> res;
+        vnepogodin::vector<NeuralNetwork> res;
         for (simdjson::dom::element doc : docs) {
             res.emplace_back(NeuralNetwork::parse(doc));
         }
@@ -36521,7 +36540,7 @@ class NeuralNetwork {
 
     static auto parse(const simdjson::dom::object& obj) noexcept -> NeuralNetwork;
     /** @overload parse(const simdjson::dom::element& obj) */
-    tnn_really_inline static auto parse(const uint8_t *buf, size_t len, bool realloc_if_needed) noexcept -> NeuralNetwork {
+    tnn_really_inline static auto parse(const uint8_t* buf, size_t len, bool realloc_if_needed) noexcept -> NeuralNetwork {
         simdjson::dom::parser p;
         simdjson::dom::element obj = p.parse(buf, len, realloc_if_needed);
         return parse(obj);
@@ -36538,9 +36557,9 @@ class NeuralNetwork {
     { return parse(s.data(), s.length(), false); }
     /* clang-format on */
 
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const uint8_t *buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
+    tnn_really_inline static vnepogodin::vector<NeuralNetwork> parse_many(const uint8_t* buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept {
         simdjson::dom::parser p;
-        std::pmr::vector<NeuralNetwork> res;
+        vnepogodin::vector<NeuralNetwork> res;
         for (simdjson::dom::object obj : p.parse_many(buf, len, batch_size)) {
             res.emplace_back(NeuralNetwork::parse(obj));
         }
@@ -36548,13 +36567,13 @@ class NeuralNetwork {
     }
     /* clang-format off */
     /** @overload parse_many(const uint8_t *buf, std::size_t len, bool realloc_if_needed) */
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const char *buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    tnn_really_inline static vnepogodin::vector<NeuralNetwork> parse_many(const char *buf, std::size_t len, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
     { return parse_many((const uint8_t *)buf, len, batch_size); }
     /** @overload parse_many(const uint8_t *buf, std::size_t len, bool realloc_if_needed) */
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const std::string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    tnn_really_inline static vnepogodin::vector<NeuralNetwork> parse_many(const std::string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
     { return parse_many(s.data(), s.length(), batch_size); }
     /** @overload parse_many(const uint8_t *buf, std::size_t len, bool realloc_if_needed) */
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const simdjson::padded_string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
+    tnn_really_inline static vnepogodin::vector<NeuralNetwork> parse_many(const simdjson::padded_string& s, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept
     { return parse_many(s.data(), s.length(), batch_size); }
     /* clang-format on */
 
@@ -36563,14 +36582,14 @@ class NeuralNetwork {
     constexpr auto operator=(const NeuralNetwork&) -> NeuralNetwork& = delete;
 
     /** @private We do not want to allow implicit conversion from C string to std::string. */
-    tnn_really_inline static auto parse(const char *buf) noexcept -> NeuralNetwork = delete;
+    tnn_really_inline static auto parse(const char* buf) noexcept -> NeuralNetwork = delete;
 
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const std::string &&s, std::size_t batch_size) = delete;// unsafe
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const simdjson::padded_string &&s, std::size_t batch_size) = delete;// unsafe
+    tnn_really_inline static vnepogodin::vector<NeuralNetwork> parse_many(const std::string&& s, std::size_t batch_size)             = delete;  // unsafe
+    tnn_really_inline static vnepogodin::vector<NeuralNetwork> parse_many(const simdjson::padded_string&& s, std::size_t batch_size) = delete;  // unsafe
     /** @private We do not want to allow implicit conversion from C string to std::string. */
-    tnn_really_inline static std::pmr::vector<NeuralNetwork> parse_many(const char *buf, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept = delete;
+    tnn_really_inline static vnepogodin::vector<NeuralNetwork> parse_many(const char* buf, std::size_t batch_size = simdjson::dom::DEFAULT_BATCH_SIZE) noexcept = delete;
 
-  private:
+ private:
     // Variables
     std::uint32_t input_nodes{};
     std::uint32_t hidden_nodes{};
@@ -36726,6 +36745,7 @@ void NeuralNetwork::train(Matrix::const_pointer input_array,
 // TODO: Refactor
 //
 auto NeuralNetwork::dumps() const noexcept -> std::string {
+    /* clang-format off */
     constexpr int resLen = 500;
     auto _str = std::string("{\"activation_function\":")
               + std::to_string(convert_ActivationFunction(this->activation_function));
@@ -36742,6 +36762,7 @@ auto NeuralNetwork::dumps() const noexcept -> std::string {
           + std::string(",\"learning_rate\":") + std::to_string(this->learning_rate)
           + '}';
 
+    /* clang-format on */
     _str.shrink_to_fit();
     return _str;
 }

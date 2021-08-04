@@ -134,6 +134,7 @@ void NeuralNetwork::train(Matrix::const_pointer input_array,
 // TODO: Refactor
 //
 auto NeuralNetwork::dumps() const noexcept -> std::string {
+    /* clang-format off */
     constexpr int resLen = 500;
     auto _str = std::string("{\"activation_function\":")
               + std::to_string(convert_ActivationFunction(this->activation_function));
@@ -150,6 +151,7 @@ auto NeuralNetwork::dumps() const noexcept -> std::string {
           + std::string(",\"learning_rate\":") + std::to_string(this->learning_rate)
           + '}';
 
+    /* clang-format on */
     _str.shrink_to_fit();
     return _str;
 }

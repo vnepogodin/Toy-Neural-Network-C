@@ -30,7 +30,7 @@ namespace {
 class random_in_range {
  public:
     tnn_really_inline random_in_range()
-      : rng(std::random_device()()) {}
+      : rng(std::random_device()()) { }
 
     virtual ~random_in_range() = default;
 
@@ -109,7 +109,7 @@ auto operator<<(std::ostream& stream, const Matrix& mat) noexcept -> std::ostrea
 
 // Functions
 auto Matrix::toArray() const noexcept -> pointer {
-    auto *tmp = new double[len];
+    auto* tmp = new double[len];
 
     std::atomic<std::uint32_t> i(0);
     for (const auto& iter : *this) {
@@ -121,7 +121,7 @@ auto Matrix::toArray() const noexcept -> pointer {
 
 void Matrix::randomize() noexcept {
     random_in_range r;
-    std::generate(begin(), end(), [&](){ return r.get() - 1; });
+    std::generate(begin(), end(), [&]() { return r.get() - 1; });
 }
 
 // Serialize to JSON
@@ -183,9 +183,11 @@ auto Matrix::transpose(const Matrix& m) noexcept -> Matrix {
     PTR_START(t.rows) {
         std::atomic<std::uint32_t> j(0);
         while (j < t.columns) {
+            /* clang-format off */
             t[counter.load(std::memory_order_consume)] =
                 m[j.load(std::memory_order_consume) * t.rows + i.load(std::memory_order_consume)];
 
+            /* clang-format on */
             counter.fetch_add(1, std::memory_order_release);
             j.fetch_add(1, std::memory_order_release);
         }
@@ -212,9 +214,11 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
             std::atomic<std::uint32_t> k(0);
             double sum = 0.0;
             while (k < a.columns) {
+                /* clang-format off */
                 sum += a[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)]
                      * b[k.load(std::memory_order_consume) * b.columns + j.load(std::memory_order_consume)];
 
+                /* clang-format on */
                 k.fetch_add(1, std::memory_order_release);
             }
             t[counter.load(std::memory_order_consume)] = sum;
@@ -236,8 +240,11 @@ auto Matrix::subtract(const Matrix& a, const Matrix& b) noexcept -> Matrix {
     Matrix t(a.rows, b.columns);
     std::atomic<std::uint32_t> i(0);
     for (auto& iter : t) {
+        /* clang-format off */
         iter = a[i.load(std::memory_order_consume)]
              - b[i.load(std::memory_order_consume)];
+
+        /* clang-format on */
         PTR_END
     }
     return t;
@@ -257,7 +264,7 @@ auto Matrix::parse(const simdjson::dom::object& obj) noexcept -> Matrix {
     const std::uint64_t& cols = obj["columns"];
 
     Matrix m(rows, cols);
-    auto *ptr = m.begin();
+    auto* ptr = m.begin();
 
     const auto& data = obj["data"];
 
