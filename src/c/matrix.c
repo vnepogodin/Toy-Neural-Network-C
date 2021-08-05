@@ -11,6 +11,7 @@
 #elif _WIN32
 # include <windows.h>
 # include <bcrypt.h> /* BCryptGenRandom */
+# pragma comment(lib, "bcrypt.lib")
 #endif
 
 struct _Matrix {

@@ -24,6 +24,7 @@
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 # include <bcrypt.h> /* BCryptGenRandom */
+# pragma comment(lib, "bcrypt.lib")
 #endif
 
 /* hash functions */
