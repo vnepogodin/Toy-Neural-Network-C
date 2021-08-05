@@ -53,7 +53,11 @@ foreach(file ${files})
     )
 
     target_include_directories(${testcase} PRIVATE ${CMAKE_BINARY_DIR}/include)
-    target_link_libraries(${testcase} PRIVATE ${VNEPOGODIN_NN_TARGET_NAME} m)
+    if(WIN32)
+        target_link_libraries(${testcase} PRIVATE ${VNEPOGODIN_NN_TARGET_NAME})
+    else()
+        target_link_libraries(${testcase} PRIVATE ${VNEPOGODIN_NN_TARGET_NAME} m)
+    endif()
 
     add_test(NAME "${testcase}"
             COMMAND ${testcase} --no-skip
