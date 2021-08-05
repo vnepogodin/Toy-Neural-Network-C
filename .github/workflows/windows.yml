@@ -17,7 +17,7 @@ jobs:
     - name: Build C
       run: cmake --build build --parallel 10
     - name: Test C
-      run: cd build; ctest -j 10 --output-on-failure
+      run: cd build; ctest -j 10 --output-on-failure -C $BUILD_TYPE
 
     - name: Configure CMake CPP
       run: cmake -S . -B build -G "Visual Studio 16 2019" -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_BuildTests=ON
@@ -59,7 +59,7 @@ jobs:
       - name: Build C
         run: cmake --build build --parallel 10
       - name: Test C
-        run: cd build; ctest -j 10 --output-on-failure
+        run: cd build; ctest -j 10 --output-on-failure -C $BUILD_TYPE
 
       - name: Configure CMake CPP
         run: cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -T ClangCL -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_BuildTests=ON
