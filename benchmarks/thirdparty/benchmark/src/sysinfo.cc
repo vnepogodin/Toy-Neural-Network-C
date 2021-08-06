@@ -29,7 +29,8 @@
 #include <sys/types.h>  // this header must be included before 'sys/sysctl.h' to avoid compilation error on FreeBSD
 #include <unistd.h>
 #if defined BENCHMARK_OS_FREEBSD || defined BENCHMARK_OS_MACOSX || \
-    defined BENCHMARK_OS_NETBSD || defined BENCHMARK_OS_OPENBSD
+    defined BENCHMARK_OS_NETBSD || defined BENCHMARK_OS_OPENBSD || \
+    defined BENCHMARK_OS_DRAGONFLY
 #define BENCHMARK_HAS_SYSCTL
 #include <sys/sysctl.h>
 #endif
@@ -134,7 +135,7 @@ struct ValueUnion {
   template <class T, int N>
   std::array<T, N> GetAsArray() {
     const int ArrSize = sizeof(T) * N;
-    CHECK_LE(ArrSize, Size);
+    BM_CHECK_LE(ArrSize, Size);
     std::array<T, N> Arr;
     std::memcpy(Arr.data(), data(), ArrSize);
     return Arr;
@@ -529,7 +530,11 @@ int GetNumCPUs() {
   BENCHMARK_UNREACHABLE();
 }
 
-double GetCPUCyclesPerSecond() {
+double GetCPUCyclesPerSecond(CPUInfo::Scaling scaling) {
+  // Currently, scaling is only used on linux path here,
+  // suppress diagnostics about it being unused on other paths.
+  (void)scaling;
+
 #if defined BENCHMARK_OS_LINUX || defined BENCHMARK_OS_CYGWIN
   long freq;
 
@@ -540,8 +545,15 @@ double GetCPUCyclesPerSecond() {
   // cannot always be relied upon. The same reasons apply to /proc/cpuinfo as
   // well.
   if (ReadFromFile("/sys/devices/system/cpu/cpu0/tsc_freq_khz", &freq)
-      // If CPU scaling is in effect, we want to use the *maximum* frequency,
-      // not whatever CPU speed some random processor happens to be using now.
+      // If CPU scaling is disabled, use the *current* frequency.
+      // Note that we specifically don't want to read cpuinfo_cur_freq,
+      // because it is only readable by root.
+      || (scaling == CPUInfo::Scaling::DISABLED &&
+          ReadFromFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq",
+                       &freq))
+      // Otherwise, if CPU scaling may be in effect, we want to use
+      // the *maximum* frequency, not whatever CPU speed some random processor
+      // happens to be using now.
       || ReadFromFile("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq",
                       &freq)) {
     // The value is in kHz (as the file name suggests).  For example, on a
@@ -607,6 +619,8 @@ double GetCPUCyclesPerSecond() {
       "machdep.tsc_freq";
 #elif defined BENCHMARK_OS_OPENBSD
       "hw.cpuspeed";
+#elif defined BENCHMARK_OS_DRAGONFLY
+      "hw.tsc_frequency";
 #else
       "hw.cpufrequency";
 #endif
@@ -671,9 +685,10 @@ double GetCPUCyclesPerSecond() {
 }
 
 std::vector<double> GetLoadAvg() {
-#if (defined BENCHMARK_OS_FREEBSD || defined(BENCHMARK_OS_LINUX) || \
-    defined BENCHMARK_OS_MACOSX || defined BENCHMARK_OS_NETBSD ||  \
-    defined BENCHMARK_OS_OPENBSD) && !defined(__ANDROID__)
+#if (defined BENCHMARK_OS_FREEBSD || defined(BENCHMARK_OS_LINUX) ||     \
+     defined BENCHMARK_OS_MACOSX || defined BENCHMARK_OS_NETBSD ||      \
+     defined BENCHMARK_OS_OPENBSD || defined BENCHMARK_OS_DRAGONFLY) && \
+    !defined(__ANDROID__)
   constexpr int kMaxSamples = 3;
   std::vector<double> res(kMaxSamples, 0.0);
   const int nelem = getloadavg(res.data(), kMaxSamples);
@@ -697,11 +712,10 @@ const CPUInfo& CPUInfo::Get() {
 
 CPUInfo::CPUInfo()
     : num_cpus(GetNumCPUs()),
-      cycles_per_second(GetCPUCyclesPerSecond()),
-      caches(GetCacheSizes()),
       scaling(CpuScaling(num_cpus)),
+      cycles_per_second(GetCPUCyclesPerSecond(scaling)),
+      caches(GetCacheSizes()),
       load_avg(GetLoadAvg()) {}
-
 
 const SystemInfo& SystemInfo::Get() {
   static const SystemInfo* info = new SystemInfo();

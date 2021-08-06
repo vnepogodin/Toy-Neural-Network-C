@@ -13,7 +13,7 @@ foreach(p
   endif()
 endforeach()
 
-project (benchmark CXX)
+project (benchmark VERSION 1.5.4 LANGUAGES CXX)
 
 option(BENCHMARK_ENABLE_TESTING "Enable testing of the benchmark library." ON)
 option(BENCHMARK_ENABLE_EXCEPTIONS "Enable the use of exceptions in the benchmark library." ON)
@@ -34,7 +34,20 @@ option(BENCHMARK_DOWNLOAD_DEPENDENCIES "Allow the downloading and in-tree buildi
 # in cases where it is not possible to build or find a valid version of gtest.
 option(BENCHMARK_ENABLE_GTEST_TESTS "Enable building the unit tests which depend on gtest" ON)
 
+option(BENCHMARK_ENABLE_LIBPFM "Enable performance counters provided by libpfm" OFF)
+
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+if(MSVC)
+    # As of CMake 3.18, CMAKE_SYSTEM_PROCESSOR is not set properly for MSVC and
+    # cross-compilation (e.g. Host=x86_64, target=aarch64) requires using the
+    # undocumented, but working variable.
+    # See https://gitlab.kitware.com/cmake/cmake/-/issues/15170
+    set(CMAKE_SYSTEM_PROCESSOR ${MSVC_CXX_ARCHITECTURE_ID})
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "ARM")
+      set(CMAKE_CROSSCOMPILING TRUE)
+    endif()
+endif()
+
 set(ENABLE_ASSEMBLY_TESTS_DEFAULT OFF)
 function(should_enable_assembly_tests)
   if(CMAKE_BUILD_TYPE)
@@ -81,8 +94,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(GetGitVersion)
 get_git_version(GIT_VERSION)
 
+# If no git version can be determined, use the version
+# from the project() command
+if ("${GIT_VERSION}" STREQUAL "0.0.0")
+  set(VERSION "${benchmark_VERSION}")
+else()
+  set(VERSION "${GIT_VERSION}")
+endif()
 # Tell the user what versions we are using
-string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" VERSION ${GIT_VERSION})
 message(STATUS "Version: ${VERSION}")
 
 # The version of the libraries
@@ -144,9 +163,12 @@ else()
   add_cxx_compiler_flag(-Werror RELEASE)
   add_cxx_compiler_flag(-Werror RELWITHDEBINFO)
   add_cxx_compiler_flag(-Werror MINSIZEREL)
-  # Disabled until googletest (gmock) stops emitting variadic macro warnings
-  #add_cxx_compiler_flag(-pedantic)
-  #add_cxx_compiler_flag(-pedantic-errors)
+  if (NOT BENCHMARK_ENABLE_TESTING)
+    # Disable warning when compiling tests as gtest does not use 'override'.
+    add_cxx_compiler_flag(-Wsuggest-override)
+  endif()
+  add_cxx_compiler_flag(-pedantic)
+  add_cxx_compiler_flag(-pedantic-errors)
   add_cxx_compiler_flag(-Wshorten-64-to-32)
   add_cxx_compiler_flag(-fstrict-aliasing)
   # Disable warnings regarding deprecated parts of the library while building
@@ -194,6 +216,7 @@ else()
   # Link time optimisation
   if (BENCHMARK_ENABLE_LTO)
     add_cxx_compiler_flag(-flto)
+    add_cxx_compiler_flag(-Wno-lto-type-mismatch)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
       find_program(GCC_AR gcc-ar)
       if (GCC_AR)
@@ -268,6 +291,10 @@ cxx_feature_check(STEADY_CLOCK)
 # Ensure we have pthreads
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+
+if (BENCHMARK_ENABLE_LIBPFM)
+  find_package(PFM)
+endif()
 
 # Set up directories
 include_directories(${PROJECT_SOURCE_DIR}/include)

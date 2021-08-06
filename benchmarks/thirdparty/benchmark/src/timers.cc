@@ -28,7 +28,8 @@
 #include <sys/time.h>
 #include <sys/types.h>  // this header must be included before 'sys/sysctl.h' to avoid compilation error on FreeBSD
 #include <unistd.h>
-#if defined BENCHMARK_OS_FREEBSD || defined BENCHMARK_OS_MACOSX
+#if defined BENCHMARK_OS_FREEBSD || defined BENCHMARK_OS_DRAGONFLY || \
+    defined BENCHMARK_OS_MACOSX
 #include <sys/sysctl.h>
 #endif
 #if defined(BENCHMARK_OS_MACOSX)
@@ -189,8 +190,16 @@ std::string LocalDateTimeString() {
   std::size_t timestamp_len;
   long int offset_minutes;
   char tz_offset_sign = '+';
-  // Long enough buffers to avoid format-overflow warnings
-  char tz_offset[128];
+  // tz_offset is set in one of three ways:
+  // * strftime with %z - This either returns empty or the ISO 8601 time.  The maximum length an
+  //   ISO 8601 string can be is 7 (e.g. -03:30, plus trailing zero).
+  // * snprintf with %c%02li:%02li - The maximum length is 41 (one for %c, up to 19 for %02li,
+  //   one for :, up to 19 %02li, plus trailing zero).
+  // * A fixed string of "-00:00".  The maximum length is 7 (-00:00, plus trailing zero).
+  //
+  // Thus, the maximum size this needs to be is 41.
+  char tz_offset[41];
+  // Long enough buffer to avoid format-overflow warnings
   char storage[128];
 
 #if defined(BENCHMARK_OS_WINDOWS)
@@ -216,7 +225,7 @@ std::string LocalDateTimeString() {
 
     tz_len = ::snprintf(tz_offset, sizeof(tz_offset), "%c%02li:%02li",
         tz_offset_sign, offset_minutes / 100, offset_minutes % 100);
-    CHECK(tz_len == kTzOffsetLen);
+    BM_CHECK(tz_len == kTzOffsetLen);
     ((void)tz_len); // Prevent unused variable warning in optimized build.
   } else {
     // Unknown offset. RFC3339 specifies that unknown local offsets should be
@@ -233,7 +242,7 @@ std::string LocalDateTimeString() {
 
   timestamp_len = std::strftime(storage, sizeof(storage), "%Y-%m-%dT%H:%M:%S",
       timeinfo_p);
-  CHECK(timestamp_len == kTimestampLen);
+  BM_CHECK(timestamp_len == kTimestampLen);
   // Prevent unused variable warning in optimized build.
   ((void)kTimestampLen);
 

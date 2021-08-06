@@ -11,6 +11,7 @@ endif()
 
 # configure Google Benchmarks
 set(BENCHMARK_ENABLE_TESTING OFF CACHE INTERNAL "" FORCE)
+set(BENCHMARK_ENABLE_LTO     ON CACHE INTERNAL "" FORCE)
 add_subdirectory(thirdparty/benchmark)
 
 
