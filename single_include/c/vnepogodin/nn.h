@@ -3457,7 +3457,8 @@ static void json_strsplit(register float* result, const char* _str, const int co
 
     length_str(_str, size);
 
-    register char* tmp = (char*)malloc((unsigned long)size - 1UL);
+    register char* tmp = (char*)malloc((unsigned long)size);
+    memset(tmp, 0, size);
 
     /*   slice_str   */
     register int i = 2;
@@ -3987,7 +3988,7 @@ Matrix* matrix_deserialize(const json_object* __restrict const t_param) {
 
     register float* ptr = &__matrix_m->data[0];
 
-    register float* buf = (float*)malloc((unsigned long)__matrix_m->columns);
+    register float* buf = (float*)malloc(sizeof(float) * (unsigned long)__matrix_m->columns);
     json_strsplit(buf, json_object_to_json_string_ext(json_object_array_get_idx(json_find(t_param, "data"), 0), JSON_C_TO_STRING_SPACED), __matrix_m->columns);
 
     register int i = 0;
