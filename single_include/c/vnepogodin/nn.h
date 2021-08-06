@@ -3578,10 +3578,10 @@ void matrix_free(register Matrix* __matrix_param) {
  * @param matrix The #Matrix.
  * @param num The reference const float number.
  * @example
- *	2 rows, 1 columns
+ *        2 rows, 1 columns
  *
- *		[321]	+		3.3
- *		[74]	+	    3.3
+ *             [321]         +       3.3
+ *             [74]          +       3.3
  *
  */
 void matrix_add_float(register Matrix* a_param, const float num_param) {
@@ -3649,7 +3649,7 @@ void matrix_multiply(register Matrix* a_param, const Matrix* const b_param) {
  * @param matrix The #Matrix.
  * @param num The reference floating-point number.
  * @example
- *	      2 rows, 1 columns
+ *        2 rows, 1 columns
  *
  *             [321]         *        3.3
  *             [74]          *        3.3
@@ -3692,7 +3692,7 @@ float* matrix_toArray(const Matrix* const m_param) {
  * Randomize `matrix`->data (from 0 to 2) - 1.
  * @param matrix The #Matrix.
  * @example
- *	2 rows, 1 columns   2 rows, 1 columns
+ *  2 rows, 1 columns   2 rows, 1 columns
  *
  *       [321]       ->      [0.1]
  *       [74]        ->      [0.78]
@@ -3737,7 +3737,7 @@ void matrix_randomize(register Matrix* m_param) {
  * @param func The float function.
  * @code
  * float func(float num) {
- *	return num * 2;
+ *  return num * 2;
  * }
  * @endcode
  *
@@ -3890,7 +3890,7 @@ Matrix* matrix_multiply_static(const Matrix* __restrict const a_param, const Mat
                 register int k = 0;
                 register float sum = 0.F;
                 while (k < a_param->columns) {
-                    sum += a_ptr[(i * a_param->columns) + k] * b_ptr[(k * t->rows) + j];
+                    sum += a_ptr[(i * a_param->columns) + k] * b_ptr[(k * b_param->columns) + j];
 
                     ++k;
                 }
