@@ -15,7 +15,7 @@ extraction:
         - cmake
     configure:
      command:
-       - cmake -S . -B build -DNN_MultipleHeaders=ON
+       - cmake -S . -B build
     index:
       build_command:
         - ./build.sh
