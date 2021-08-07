@@ -431,6 +431,9 @@ json_object* matrix_serialize(const Matrix* const m_param) {
         }
     }
 
+    /* cleanup */
+    json_object_put(temp_arr);
+
     return t;
 }
 
