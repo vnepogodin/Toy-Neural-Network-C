@@ -1,29 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-    <Type Name="vnepogodin::Matrix&lt;*&gt;">
-        <DisplayString Condition="len == 0">empty</DisplayString>
-        <DisplayString>{{ size={len} }}</DisplayString>
-        <Expand>
-            <Item Name="[size]" ExcludeView="simple">len</Item>
-            <ArrayItems>
-                <Size>len</Size>
-                <ValuePointer>elem</ValuePointer>
-            </ArrayItems>
-        </Expand>
-    </Type>
-  <!--
-    <Type Name="vnepogodin::Matrix&lt;*&gt;">
-      <DisplayString>{{ Matrix {rows}x{columns} }}</DisplayString>
-      <StringView>elem,[rows]</StringView>
-      <Expand>
-        <Item Name="[size]" ExcludeView="simple">len</Item>
-        <ArrayItems>
-          <Direction>Forward</Direction>
-          <Rank>2</Rank>
-          <Size>{rows, columns}</Size>
-          <ValuePointer>elem</ValuePointer>
-        </ArrayItems>
-       </Expand>
-     </Type>
-   -->
+  <Type Name="vnepogodin::Matrix">
+    <Intrinsic Name="rows" Expression="(size_t)(rows)" />
+    <Intrinsic Name="columns" Expression="(size_t)(columns)" />
+    <Intrinsic Name="size" Expression="(size_t)(len)" />
+    <DisplayString Condition="size() == 0">empty</DisplayString>
+    <DisplayString>{{ rows={rows}, columns={columns} }}</DisplayString>
+    <Expand>
+      <Item Name="[size]" ExcludeView="simple">size()</Item>
+      <IndexListItems>
+        <Size>len</Size>
+        <ValueNode>elem._Mypair._Myval2[$i]</ValueNode>
+      </IndexListItems>
+    </Expand>
+  </Type>
 </AutoVisualizer>
