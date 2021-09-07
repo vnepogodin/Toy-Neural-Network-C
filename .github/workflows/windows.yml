@@ -17,14 +17,14 @@ jobs:
     - name: Build C
       run: cmake --build build --parallel 10
     - name: Test C
-      run: cd build; ctest -j 10 --output-on-failure -C $BUILD_TYPE
+      run: cmake --build build --parallel 10 --target test
 
     - name: Configure CMake CPP
       run: cmake -S . -B build -G "Visual Studio 16 2019" -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_BuildTests=ON
     - name: Build CPP
       run: cmake --build build --parallel 10
     - name: Test CPP
-      run: cd build; ctest -j 10 --output-on-failure -C $BUILD_TYPE
+      run: cmake --build build --parallel 10 --target test
 
   clang10:
     runs-on: windows-latest
@@ -39,14 +39,14 @@ jobs:
       - name: Build C
         run: cmake --build build --parallel 10
       - name: Test C
-        run: cd build; ctest -j 10 --output-on-failure
+        run: cmake --build build --parallel 10 --target test
 
       - name: Configure CMake CPP
         run: cmake -S . -B build -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -G"MinGW Makefiles" -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_BuildTests=ON
       - name: Build CPP
         run: cmake --build build --parallel 10
       - name: Test CPP
-        run: cd build; ctest -j 10 --output-on-failure
+        run: cmake --build build --parallel 10 --target test
 
   clang-cl-10-x64:
     runs-on: windows-latest
@@ -59,11 +59,11 @@ jobs:
       - name: Build C
         run: cmake --build build --parallel 10
       - name: Test C
-        run: cd build; ctest -j 10 --output-on-failure -C $BUILD_TYPE
+        run: cmake --build build --parallel 10 --target test
 
       - name: Configure CMake CPP
         run: cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -T ClangCL -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_BuildTests=ON
       - name: Build CPP
         run: cmake --build build --parallel 10
       - name: Test CPP
-        run: cd build; ctest -j 10 --output-on-failure -C $BUILD_TYPE
+        run: cmake --build build --parallel 10 --target test

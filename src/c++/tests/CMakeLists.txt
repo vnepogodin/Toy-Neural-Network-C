@@ -78,6 +78,7 @@ endif()
 
 set(files
     src/unit-init.cpp
+    src/unit-matrix.cpp
     src/unit-nn_copy.cpp
     src/unit-nn_predict.cpp
     src/unit-nn_train.cpp

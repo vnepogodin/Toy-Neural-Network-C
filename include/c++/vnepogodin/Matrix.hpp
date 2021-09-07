@@ -23,7 +23,7 @@ class Matrix {
     using reverse_iterator       = typename std::reverse_iterator<pointer>;
     using const_reverse_iterator = typename std::reverse_iterator<const_pointer>;
 
-    using function_t         = double (*)(const double&);
+    using function_t         = std::function<double(const double&)>;
     using initializer_list_t = std::initializer_list<std::initializer_list<value_type>>;
 
     // Constructors.

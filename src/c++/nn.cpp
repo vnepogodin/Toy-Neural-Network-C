@@ -16,7 +16,8 @@ auto dsigmoid(const double& y) -> double {
     return y * (1.0 - y);
 }
 
-constexpr auto convert_ActivationFunction(const Matrix::function_t& func) -> std::uint8_t {
+using member_function = double (*)(const double&);
+constexpr auto convert_ActivationFunction(const member_function& func) -> std::uint8_t {
     return (tnn_unlikely(*func == dsigmoid)) ? 2U : 1U;
 }
 
@@ -137,7 +138,7 @@ auto NeuralNetwork::dumps() const noexcept -> std::string {
     /* clang-format off */
     constexpr int resLen = 500;
     auto _str = std::string("{\"activation_function\":")
-              + std::to_string(convert_ActivationFunction(this->activation_function));
+              + std::to_string(convert_ActivationFunction(*this->activation_function.target<member_function>()));
 
     _str.reserve(resLen);
 
