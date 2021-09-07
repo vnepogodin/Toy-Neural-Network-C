@@ -42,6 +42,7 @@ option(NN_LANG "which language do you prefer.\nON - C++\nOFF - C" ON)
 option(NN_BuildTests "Build the unit tests when BUILD_TESTING is enabled." ${MAIN_PROJECT})
 option(NN_Install "Install CMake targets during install step." ${MAIN_PROJECT})
 option(NN_MultipleHeaders "Use non-amalgamated version of the library." OFF)
+option(NN_SIMD "Use of simd library." OFF)
 
 ##
 ## CONFIGURATION
@@ -142,6 +143,22 @@ else()
     message(STATUS "Using the single-header code from ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}")
 endif()
 
+
+if(UNIX AND CMAKE_GENERATOR STREQUAL "Ninja")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "-fcolor-diagnostics")
+    set(CMAKE_C_FLAGS "-fcolor-diagnostics")
+  endif()
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "-fdiagnostics-color")
+    set(CMAKE_C_FLAGS "-fdiagnostics-color")
+  endif()
+endif()
+
+if(NN_SIMD)
+    add_subdirectory(third_party)
+endif()
+
 ##
 ## TARGET
 ## create target and add include path
@@ -183,12 +200,22 @@ else()
     )
 
     list(APPEND CMAKE_TARGETS ${VNEPOGODIN_NN_TARGET_NAME})
+if(NN_SIMD)
+    target_include_directories(${VNEPOGODIN_NN_TARGET_NAME}
+        PUBLIC
+        $<BUILD_INTERFACE:${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/third_party/Vc>
+        $<INSTALL_INTERFACE:include>
+    )
+else()
     target_include_directories(${VNEPOGODIN_NN_TARGET_NAME}
         PUBLIC
         $<BUILD_INTERFACE:${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}>
         $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
         $<INSTALL_INTERFACE:include>
     )
+endif()
 
     # Allow to build static and shared libraries at the same time
     if (BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
@@ -239,6 +266,10 @@ add_library(${PROJECT_NAME}::${VNEPOGODIN_NN_TARGET_NAME} ALIAS ${VNEPOGODIN_NN_
 
 add_compile_definitions(${VNEPOGODIN_NN_DEFS} ${CMAKE_THREAD_DEFS_INIT})
 add_compile_options(${CMAKE_CXX_FLAGS} ${CMAKE_THREAD_DEFS_INIT})
+
+if(NN_SIMD)
+    add_dependencies(${VNEPOGODIN_NN_TARGET_NAME} Vc)
+endif()
 
 if (NOT NN_MultipleHeaders)
     target_link_libraries(${PROJECT_NAME} INTERFACE ${CMAKE_THREAD_LIBS_INIT})

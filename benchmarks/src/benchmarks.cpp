@@ -34,10 +34,14 @@ static void Copy(benchmark::State& state) {
 BENCHMARK(Copy)->DenseRange(13, 26)->ReportAggregatesOnly(1);
 
 static void Predict(benchmark::State& state) {
-    const NeuralNetwork nn(2, 4, 1);
     constexpr double input[2]{1.F, 0.F};
 
+    const int bytes = 1 << state.range(0);
     for (auto _ : state) {
+        state.PauseTiming();
+        const NeuralNetwork nn(state.range(0) / 2, state.range(0), state.range(0) / 4);
+        state.ResumeTiming();
+
         const auto& output = nn.predict(input);
 
         state.PauseTiming();
@@ -45,9 +49,9 @@ static void Predict(benchmark::State& state) {
         state.ResumeTiming();
     }
     state.SetBytesProcessed(
-        static_cast<int64_t>(state.iterations()) * long(1 << state.range(0)));
+        static_cast<int64_t>(state.iterations()) * long(bytes));
 }
-BENCHMARK(Predict)->Range(1, 26)->ReportAggregatesOnly(1);
+BENCHMARK(Predict)->DenseRange(13, 26)->ReportAggregatesOnly(1);
 
 static void Train(benchmark::State& state) {
     const NeuralNetwork nn(2, 4, 1);
@@ -83,19 +87,20 @@ static void Serialize(benchmark::State& state) {
 BENCHMARK(Serialize)->Range(1, 26)->ReportAggregatesOnly(1);
 
 static void Deserialize(benchmark::State& state) {
-    const auto& _str = "{\"activation_function\":1,\"bias_h\":{\"columns\":1,\"data\":[[0.9767036437988281],[0.035740338265895844],[0.6651158332824707],[0.18232037127017975]],\"rows\":4},\"bias_o\":{\"columns\":1,\"data\":[[0.2508050501346588]],\"rows\":1},\"hidden_nodes\":4,\"input_nodes\":2,\"learning_rate\":0.10000000149011612,\"output_nodes\":1,\"weights_ho\":{\"columns\":4,\"data\":[[0.16082069277763367,0.4601464867591858,0.26322486996650696,0.615668535232544]],\"rows\":1},\"weights_ih\":{\"columns\":2,\"data\":[[0.22036688029766083,0.35037320852279663],[0.8787314295768738,0.3239816725254059],[0.7053817510604858,0.045548245310783386],[0.6740343570709229,0.49260538816452026]],\"rows\":4}}"_padded;
-
-    simdjson::dom::parser p;
-    simdjson::dom::element obj = p.parse(_str);
-
+    const int bytes = 1 << state.range(0);
     for (auto _ : state) {
-        const auto& nn = NeuralNetwork::parse(obj);
+        state.PauseTiming();
+        const NeuralNetwork nn(state.range(0) / 2, state.range(0), state.range(0) / 4);
+        const auto& first = nn.dumps();
+        state.ResumeTiming();
 
-        benchmark::DoNotOptimize(nn);
+        const auto& copy = NeuralNetwork::parse(first);
+
+        benchmark::DoNotOptimize(copy);
     }
     state.SetBytesProcessed(
-            static_cast<int64_t>(state.iterations()) * long(1 << state.range(0)));
+        static_cast<int64_t>(state.iterations()) * long(bytes));
 }
-BENCHMARK(Deserialize)->Range(1, 26)->ReportAggregatesOnly(1);
+BENCHMARK(Deserialize)->DenseRange(13, 26)->ReportAggregatesOnly(1);
 
 BENCHMARK_MAIN();

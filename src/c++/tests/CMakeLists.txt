@@ -97,7 +97,11 @@ foreach(file ${files})
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-float-equal>
     )
     target_include_directories(${testcase} PRIVATE ${CMAKE_BINARY_DIR}/include thirdparty/doctest)
+if(NN_SIMD)
+    target_link_libraries(${testcase} PRIVATE ${VNEPOGODIN_NN_TARGET_NAME} Vc)
+else()
     target_link_libraries(${testcase} PRIVATE ${VNEPOGODIN_NN_TARGET_NAME})
+endif()
 
     if (NN_Coverage)
         target_compile_options(${testcase} PRIVATE --coverage)

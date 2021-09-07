@@ -1,11 +1,14 @@
 // Matrix lib
-
 #include <vnepogodin/Matrix.hpp>  // class Matrix
 
 #include <algorithm>  // std::fill
 #include <atomic>     // std::atomic<std::uint32_t>, std::memory_order_release
 #include <iostream>   // std::cerr
 #include <random>     // std::mt19937, std::uniform_real_distribution, std::random_device
+
+#ifdef NN_ENABLE_SIMD
+#include <Vc/Vc>
+#endif
 
 namespace {
 /**
@@ -212,16 +215,32 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
         std::atomic<std::uint32_t> j(0);
         while (j < t.columns) {
             std::atomic<std::uint32_t> k(0);
+#ifdef NN_ENABLE_SIMD
+            Vc::double_v vresult;
+#else
             double sum = 0.0;
+#endif
             while (k < a.columns) {
+#ifdef NN_ENABLE_SIMD
+                const Vc::double_v& va = a[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)];
+                const Vc::double_v& vb = b[k.load(std::memory_order_consume) * b.columns + j.load(std::memory_order_consume)];
+
+                vresult += va * vb;
+#else
                 /* clang-format off */
                 sum += a[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)]
                      * b[k.load(std::memory_order_consume) * b.columns + j.load(std::memory_order_consume)];
 
                 /* clang-format on */
+#endif
+
                 k.fetch_add(1, std::memory_order_release);
             }
+#ifdef NN_ENABLE_SIMD
+            t[counter.load(std::memory_order_consume)] = vresult[0];
+#else
             t[counter.load(std::memory_order_consume)] = sum;
+#endif
 
             counter.fetch_add(1, std::memory_order_release);
             j.fetch_add(1, std::memory_order_release);
@@ -240,11 +259,19 @@ auto Matrix::subtract(const Matrix& a, const Matrix& b) noexcept -> Matrix {
     Matrix t(a.rows, b.columns);
     std::atomic<std::uint32_t> i(0);
     for (auto& iter : t) {
+#ifdef NN_ENABLE_SIMD
+        const Vc::double_v& va = a[i.load(std::memory_order_consume)];
+        const Vc::double_v& vb = b[i.load(std::memory_order_consume)];
+
+        const Vc::double_v& vresult = va - vb;
+        iter                 = vresult[0];
+#else
         /* clang-format off */
         iter = a[i.load(std::memory_order_consume)]
              - b[i.load(std::memory_order_consume)];
 
         /* clang-format on */
+#endif
         PTR_END
     }
     return t;
@@ -271,7 +298,7 @@ auto Matrix::parse(const simdjson::dom::object& obj) noexcept -> Matrix {
     std::uint32_t counter = 0;
     PTR_START(m.rows) {
         const auto& buf_s = '/' + std::to_string(i.load(std::memory_order_consume)) + '/' + std::to_string(counter);
-        *ptr = data.at_pointer(buf_s);
+        *ptr              = data.at_pointer(buf_s);
         ++ptr;
         counter++;
 

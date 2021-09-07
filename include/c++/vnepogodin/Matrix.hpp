@@ -10,6 +10,10 @@
 #include <stdexcept>  // std::overflow_error
 #include <string>     // std::to_string
 
+#ifdef NN_ENABLE_SIMD
+#include <Vc/algorithm>
+#endif
+
 namespace vnepogodin {
 class Matrix {
  public:
@@ -73,6 +77,21 @@ class Matrix {
     /* clang-format on */
 
     tnn_really_inline auto operator=(Matrix&&) noexcept -> Matrix& = default;
+#ifdef NN_ENABLE_SIMD
+    tnn_really_inline auto operator+=(const double& num) noexcept -> Matrix& {
+        Vc::simd_for_each(begin(), end(), [&](auto& el) {
+            el += num;
+        });
+        return *this;
+    }
+    tnn_really_inline auto operator*=(const double& num) & noexcept -> Matrix& {
+        // Scalar product
+        Vc::simd_for_each(begin(), end(), [&](auto& el) {
+            el *= num;
+        });
+        return *this;
+    }
+#else
     tnn_really_inline auto operator+=(const double& num) noexcept -> Matrix& {
         std::for_each(begin(), end(), [&](double& el) {
             el += num;
@@ -86,6 +105,7 @@ class Matrix {
         });
         return *this;
     }
+#endif
 
     // Non member operator.
     friend auto operator<<(std::ostream&, const Matrix&) noexcept -> std::ostream&;
