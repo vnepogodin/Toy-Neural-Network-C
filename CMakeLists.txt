@@ -38,11 +38,12 @@ if (POLICY CMP0077)
     cmake_policy(SET CMP0077 NEW)
 endif ()
 
-option(NN_LANG "which language do you prefer.\nON - C++\nOFF - C" ON)
-option(NN_BuildTests "Build the unit tests when BUILD_TESTING is enabled." ${MAIN_PROJECT})
-option(NN_Install "Install CMake targets during install step." ${MAIN_PROJECT})
-option(NN_MultipleHeaders "Use non-amalgamated version of the library." OFF)
-option(NN_SIMD "Use of simd library." OFF)
+option(NN_LANG                "which language do you prefer.\nON - C++\nOFF - C" ON)
+option(NN_BuildTests          "Build the unit tests when BUILD_TESTING is enabled." ${MAIN_PROJECT})
+option(NN_Install             "Install CMake targets during install step." ${MAIN_PROJECT})
+option(NN_MultipleHeaders     "Use non-amalgamated version of the library." OFF)
+option(NN_SystemInclude       "Include as system headers (skip for clang-tidy)." OFF)
+option(NN_SIMD                "Use of simd library." OFF)
 
 ##
 ## CONFIGURATION
@@ -69,11 +70,22 @@ else()
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffast-math -flto")
 endif()
 
+if(UNIX AND CMAKE_GENERATOR STREQUAL "Ninja")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "-fcolor-diagnostics")
+    set(CMAKE_C_FLAGS "-fcolor-diagnostics")
+  endif()
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "-fdiagnostics-color")
+    set(CMAKE_C_FLAGS "-fdiagnostics-color")
+  endif()
+endif()
+
 if (NN_LANG)
     set(CMAKE_CXX_STANDARD 17)
     set(NN_BUILD_LANG c++)
     if((NOT MSVC) AND ((${CMAKE_SYSTEM_NAME} MATCHES "Linux") OR (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")))
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx2")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx")
     endif()
 
     set(VNEPOGODIN_NN_DEFS SIMDJSON_THREADS_ENABLED)
@@ -127,6 +139,11 @@ if (NN_MultipleHeaders)
 
     if (NN_LANG)
         set(VNEPOGODIN_NN_PKGCONFIG_NAME "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in")
+        if(NN_SIMD)
+            add_compile_definitions(NN_ENABLE_SIMD)
+            add_subdirectory(third_party)
+        endif()
+
     else()
         set(VNEPOGODIN_NN_PKGCONFIG_NAME "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config-c.pc.in")
     endif()
@@ -143,20 +160,8 @@ else()
     message(STATUS "Using the single-header code from ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}")
 endif()
 
-
-if(UNIX AND CMAKE_GENERATOR STREQUAL "Ninja")
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "-fcolor-diagnostics")
-    set(CMAKE_C_FLAGS "-fcolor-diagnostics")
-  endif()
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "-fdiagnostics-color")
-    set(CMAKE_C_FLAGS "-fdiagnostics-color")
-  endif()
-endif()
-
-if(NN_SIMD)
-    add_subdirectory(third_party)
+if (NN_SystemInclude)
+    set(VNEPOGODIN_NN_SYSTEM_INCLUDE "SYSTEM")
 endif()
 
 ##
@@ -167,7 +172,7 @@ if (NOT NN_MultipleHeaders)
     add_library(${VNEPOGODIN_NN_TARGET_NAME} INTERFACE)
     target_include_directories(
         ${VNEPOGODIN_NN_TARGET_NAME}
-        INTERFACE
+        ${VNEPOGODIN_NN_SYSTEM_INCLUDE} INTERFACE
         $<BUILD_INTERFACE:${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}>
         $<INSTALL_INTERFACE:include>
     )
@@ -302,7 +307,7 @@ include(CMakePackageConfigHelpers)
 # write_basic_package_version_file to ensure that it's architecture-independent
 # https://github.com/nlohmann/json/issues/1697
 configure_file(
-    "cmake/${PROJECT_NAME}ConfigVersion.cmake.in"
+    "cmake/vnepogodin_nnConfigVersion.cmake.in"
     ${VNEPOGODIN_NN_CMAKE_VERSION_CONFIG_FILE}
     @ONLY
 )
@@ -314,7 +319,7 @@ configure_file(
 
 if (NN_Install)
     install(
-        DIRECTORY ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin
+        DIRECTORY ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}
         DESTINATION ${VNEPOGODIN_NN_INCLUDE_INSTALL_DIR}
     )
     install(
