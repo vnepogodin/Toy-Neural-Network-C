@@ -35855,7 +35855,6 @@ SIMDJSON_UNTARGET_WESTMERE
 SIMDJSON_POP_DISABLE_WARNINGS
 /* end file src/simdjson.cpp */
 // Matrix lib
-
 // #include <vnepogodin/Matrix.hpp>
 // Matrix lib
 #ifndef MATRIX_HPP_
@@ -35911,6 +35910,10 @@ using vector = std::vector<T>;
 #include <iterator>   // std::reverse_iterator
 #include <stdexcept>  // std::overflow_error
 #include <string>     // std::to_string
+
+#ifdef NN_ENABLE_SIMD
+#include <Vc/algorithm>
+#endif
 
 namespace vnepogodin {
 class Matrix {
@@ -35975,6 +35978,21 @@ class Matrix {
     /* clang-format on */
 
     tnn_really_inline auto operator=(Matrix&&) noexcept -> Matrix& = default;
+#ifdef NN_ENABLE_SIMD
+    tnn_really_inline auto operator+=(const double& num) noexcept -> Matrix& {
+        Vc::simd_for_each(begin(), end(), [&](auto& el) {
+            el += num;
+        });
+        return *this;
+    }
+    tnn_really_inline auto operator*=(const double& num) & noexcept -> Matrix& {
+        // Scalar product
+        Vc::simd_for_each(begin(), end(), [&](auto& el) {
+            el *= num;
+        });
+        return *this;
+    }
+#else
     tnn_really_inline auto operator+=(const double& num) noexcept -> Matrix& {
         std::for_each(begin(), end(), [&](double& el) {
             el += num;
@@ -35988,6 +36006,7 @@ class Matrix {
         });
         return *this;
     }
+#endif
 
     // Non member operator.
     friend auto operator<<(std::ostream&, const Matrix&) noexcept -> std::ostream&;
@@ -36203,6 +36222,10 @@ class Matrix {
 #include <iostream>   // std::cerr
 #include <random>     // std::mt19937, std::uniform_real_distribution, std::random_device
 
+#ifdef NN_ENABLE_SIMD
+#include <Vc/Vc>
+#endif
+
 namespace {
 /**
  * PTR_START(end):
@@ -36408,16 +36431,32 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
         std::atomic<std::uint32_t> j(0);
         while (j < t.columns) {
             std::atomic<std::uint32_t> k(0);
+#ifdef NN_ENABLE_SIMD
+            Vc::double_v vresult;
+#else
             double sum = 0.0;
+#endif
             while (k < a.columns) {
+#ifdef NN_ENABLE_SIMD
+                const Vc::double_v& va = a[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)];
+                const Vc::double_v& vb = b[k.load(std::memory_order_consume) * b.columns + j.load(std::memory_order_consume)];
+
+                vresult += va * vb;
+#else
                 /* clang-format off */
                 sum += a[i.load(std::memory_order_consume) * a.columns + k.load(std::memory_order_consume)]
                      * b[k.load(std::memory_order_consume) * b.columns + j.load(std::memory_order_consume)];
 
                 /* clang-format on */
+#endif
+
                 k.fetch_add(1, std::memory_order_release);
             }
+#ifdef NN_ENABLE_SIMD
+            t[counter.load(std::memory_order_consume)] = vresult[0];
+#else
             t[counter.load(std::memory_order_consume)] = sum;
+#endif
 
             counter.fetch_add(1, std::memory_order_release);
             j.fetch_add(1, std::memory_order_release);
@@ -36436,11 +36475,19 @@ auto Matrix::subtract(const Matrix& a, const Matrix& b) noexcept -> Matrix {
     Matrix t(a.rows, b.columns);
     std::atomic<std::uint32_t> i(0);
     for (auto& iter : t) {
+#ifdef NN_ENABLE_SIMD
+        const Vc::double_v& va = a[i.load(std::memory_order_consume)];
+        const Vc::double_v& vb = b[i.load(std::memory_order_consume)];
+
+        const Vc::double_v& vresult = va - vb;
+        iter                 = vresult[0];
+#else
         /* clang-format off */
         iter = a[i.load(std::memory_order_consume)]
              - b[i.load(std::memory_order_consume)];
 
         /* clang-format on */
+#endif
         PTR_END
     }
     return t;
@@ -36467,7 +36514,7 @@ auto Matrix::parse(const simdjson::dom::object& obj) noexcept -> Matrix {
     std::uint32_t counter = 0;
     PTR_START(m.rows) {
         const auto& buf_s = '/' + std::to_string(i.load(std::memory_order_consume)) + '/' + std::to_string(counter);
-        *ptr = data.at_pointer(buf_s);
+        *ptr              = data.at_pointer(buf_s);
         ++ptr;
         counter++;
 
