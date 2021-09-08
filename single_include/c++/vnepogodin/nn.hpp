@@ -35902,14 +35902,20 @@ using vector = std::vector<T>;
 }  // namespace vnepogodin
 
 #endif  // HELPER_HPP_
-                     // tnn_really_inline, tnn_likely, tnn_unlikely, vector
+                     // for tnn_really_inline
 // #include <vnepogodin/third_party/json/simdjson.hpp>
-  // simdjson::dom::element
+  // for simdjson_result
 
-#include <iosfwd>     // std::ostream
-#include <iterator>   // std::reverse_iterator
-#include <stdexcept>  // std::overflow_error
-#include <string>     // std::to_string
+#include <stdint.h>                                  // for uint32_t, uint8_t
+#include <algorithm>                                 // for for_each, copy
+#include <cstring>                                   // for size_t, memset
+#include <functional>                                // for function
+#include <initializer_list>                          // for initializer_list
+#include <iosfwd>                                    // for ostream
+#include <iterator>                                  // for distance, revers...
+#include <memory>                                    // for unique_ptr
+#include <stdexcept>                                 // for overflow_error
+#include <string>                                    // for string
 
 #ifdef NN_ENABLE_SIMD
 #include <Vc/algorithm>
@@ -36215,12 +36221,17 @@ class Matrix {
 };  // namespace vnepogodin
 
 #endif  // MATRIX_HPP_
-  // class Matrix
+
 
 #include <algorithm>  // std::fill
 #include <atomic>     // std::atomic<std::uint32_t>, std::memory_order_release
 #include <iostream>   // std::cerr
 #include <random>     // std::mt19937, std::uniform_real_distribution, std::random_device
+
+// #include <vnepogodin/helper.hpp>
+                     // for tnn_unlikely
+// #include <vnepogodin/third_party/json/simdjson.hpp>
+  // for simdjson_result
 
 #ifdef NN_ENABLE_SIMD
 #include <Vc/Vc>
@@ -36535,9 +36546,13 @@ auto Matrix::parse(const simdjson::dom::object& obj) noexcept -> Matrix {
 #define NN_HPP_
 
 // #include <vnepogodin/Matrix.hpp>
-  // class Matrix
+                     // for Matrix, Matrix::...
 
-#include <array>
+#include <stdint.h>                                  // for uint32_t, uint8_t
+#include <algorithm>                                 // for max
+#include <array>                                     // for array
+#include <cstddef>                                   // for size_t
+#include <string>                                    // for string
 
 namespace vnepogodin {
 enum class Function : std::uint8_t {
@@ -36657,9 +36672,13 @@ class NeuralNetwork {
 };  // namespace vnepogodin
 
 #endif  // NN_HPP_
-  // class NeuralNetwork
 
-#include <cmath>  // std::exp
+
+#include <string.h>               // for memcpy
+#include <cmath>                  // for exp
+
+// #include <vnepogodin/Matrix.hpp>
+  // for Matrix, Matrix::function_t, Matrix:...
 
 using namespace vnepogodin;
 
