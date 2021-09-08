@@ -1,7 +1,10 @@
 // Other techniques for learning
-#include <vnepogodin/nn.hpp>  // class NeuralNetwork
+#include <vnepogodin/nn.hpp>
 
-#include <cmath>  // std::exp
+#include <string.h>               // for memcpy
+#include <cmath>                  // for exp
+
+#include <vnepogodin/Matrix.hpp>  // for Matrix, Matrix::function_t, Matrix:...
 
 using namespace vnepogodin;
 

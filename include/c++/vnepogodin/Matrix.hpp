@@ -2,13 +2,19 @@
 #ifndef MATRIX_HPP_
 #define MATRIX_HPP_
 
-#include <vnepogodin/helper.hpp>                     // tnn_really_inline, tnn_likely, tnn_unlikely, vector
-#include <vnepogodin/third_party/json/simdjson.hpp>  // simdjson::dom::element
+#include <vnepogodin/helper.hpp>                     // for tnn_really_inline
+#include <vnepogodin/third_party/json/simdjson.hpp>  // for simdjson_result
 
-#include <iosfwd>     // std::ostream
-#include <iterator>   // std::reverse_iterator
-#include <stdexcept>  // std::overflow_error
-#include <string>     // std::to_string
+#include <stdint.h>                                  // for uint32_t, uint8_t
+#include <algorithm>                                 // for for_each, copy
+#include <cstring>                                   // for size_t, memset
+#include <functional>                                // for function
+#include <initializer_list>                          // for initializer_list
+#include <iosfwd>                                    // for ostream
+#include <iterator>                                  // for distance, revers...
+#include <memory>                                    // for unique_ptr
+#include <stdexcept>                                 // for overflow_error
+#include <string>                                    // for string
 
 #ifdef NN_ENABLE_SIMD
 #include <Vc/algorithm>

@@ -1,10 +1,13 @@
 // Matrix lib
-#include <vnepogodin/Matrix.hpp>  // class Matrix
+#include <vnepogodin/Matrix.hpp>
 
 #include <algorithm>  // std::fill
 #include <atomic>     // std::atomic<std::uint32_t>, std::memory_order_release
 #include <iostream>   // std::cerr
 #include <random>     // std::mt19937, std::uniform_real_distribution, std::random_device
+
+#include <vnepogodin/helper.hpp>                     // for tnn_unlikely
+#include <vnepogodin/third_party/json/simdjson.hpp>  // for simdjson_result
 
 #ifdef NN_ENABLE_SIMD
 #include <Vc/Vc>

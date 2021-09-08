@@ -2,9 +2,13 @@
 #ifndef NN_HPP_
 #define NN_HPP_
 
-#include <vnepogodin/Matrix.hpp>  // class Matrix
+#include <vnepogodin/Matrix.hpp>                     // for Matrix, Matrix::...
 
-#include <array>
+#include <stdint.h>                                  // for uint32_t, uint8_t
+#include <algorithm>                                 // for max
+#include <array>                                     // for array
+#include <cstddef>                                   // for size_t
+#include <string>                                    // for string
 
 namespace vnepogodin {
 enum class Function : std::uint8_t {
