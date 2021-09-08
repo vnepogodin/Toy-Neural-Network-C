@@ -41,7 +41,7 @@ jobs:
 
     - name: Configure CMake CPP
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_BuildTests=ON -DNN_SIMD=ON
+      run: cmake $GITHUB_WORKSPACE -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_MultipleHeaders=ON -DNN_BuildTests=ON -DNN_SIMD=ON
       env:
         CC:   gcc-10
         CXX:  g++-10
@@ -89,7 +89,7 @@ jobs:
 
     - name: Configure CMake CPP
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_BuildTests=ON -DNN_SIMD=ON
+      run: cmake $GITHUB_WORKSPACE -DNN_LANG=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DNN_MultipleHeaders=ON -DNN_BuildTests=ON -DNN_SIMD=ON
       env:
         CC:   clang-10
         CXX:  clang++-10
