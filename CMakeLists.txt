@@ -44,6 +44,7 @@ option(NN_Install             "Install CMake targets during install step." ${MAI
 option(NN_MultipleHeaders     "Use non-amalgamated version of the library." OFF)
 option(NN_SystemInclude       "Include as system headers (skip for clang-tidy)." OFF)
 option(NN_SIMD                "Use of simd library." OFF)
+option(NN_OPENCL              "Use of opencl." ON)
 
 ##
 ## CONFIGURATION
@@ -142,6 +143,9 @@ if (NN_MultipleHeaders)
         if(NN_SIMD)
             add_compile_definitions(NN_ENABLE_SIMD)
             add_subdirectory(third_party)
+        endif()
+        if(NN_OPENCL)
+            add_compile_definitions(NN_ENABLE_OPENCL)
         endif()
 
     else()

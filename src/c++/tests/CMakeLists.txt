@@ -47,10 +47,14 @@ foreach(file ${files})
     )
     target_include_directories(${testcase} PRIVATE ${CMAKE_BINARY_DIR}/include thirdparty/doctest)
 if(NN_SIMD)
-    target_link_libraries(${testcase} PRIVATE ${VNEPOGODIN_NN_TARGET_NAME} Vc)
-else()
-    target_link_libraries(${testcase} PRIVATE ${VNEPOGODIN_NN_TARGET_NAME})
+    target_link_libraries(${testcase} PRIVATE Vc)
 endif()
+
+if(NN_OPENCL)
+    target_link_libraries(${testcase} PRIVATE OpenCL)
+endif()
+
+    target_link_libraries(${testcase} PRIVATE ${VNEPOGODIN_NN_TARGET_NAME})
 
     if (NN_FastTests)
         add_test(NAME "${testcase}"
