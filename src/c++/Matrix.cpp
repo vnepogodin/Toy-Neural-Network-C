@@ -118,10 +118,10 @@ __kernel void transpose(__global double* odata, __global const double* idata, in
     }
 })";
 
-    cl::Program program_(s_context, kernel_source.data());
+    cl::Program program_(s_context, kernel_source.data(), false, &err);
 
     // Build the program
-    program_.build(s_devices);
+    err = program_.build(s_devices);
 
     cl::Kernel kernel(program_, "transpose", &err);
 
@@ -143,6 +143,101 @@ __kernel void transpose(__global double* odata, __global const double* idata, in
 
     command_queue.enqueueReadBuffer(out_mem_obj, CL_TRUE, 0,
         mem_size, (void*)t.data());
+
+    return t;
+}
+
+auto Matrix::multiply_cl(const Matrix& a, const Matrix& b) noexcept(false) -> Matrix {
+    Matrix t(a.rows, b.columns);
+
+    cl_int err = CL_SUCCESS;
+    cl::CommandQueue command_queue(s_context, s_devices[0], 0, &err);
+
+    // size of memory required to store the matrix
+    const size_t& a_size   = a.size() * sizeof(Matrix::value_type);
+    const size_t& b_size   = b.size() * sizeof(Matrix::value_type);
+    const size_t& mem_size = t.size() * sizeof(Matrix::value_type);
+
+    // Create memory buffers on the device for each vector
+    cl::Buffer matrix_a_mem_obj(s_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        a_size, (void*)a.data(), &err);
+    cl::Buffer matrix_b_mem_obj(s_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        b_size, (void*)b.data(), &err);
+    cl::Buffer out_mem_obj(s_context, CL_MEM_WRITE_ONLY,
+        mem_size, nullptr, &err);
+
+    // Create a program from the kernel source
+    static constexpr std::string_view kernel_source = R"(
+#define AS(i, j, size) As[j + i * size]
+#define BS(i, j, size) Bs[j + i * size]
+
+__kernel void
+multiply(__global double* C, __global double* A, __global double* B,
+         __local double* As, __local double* Bs, const int uiWA, const int uiWB, const int block_size) {
+    const int bx = get_group_id(0);
+    const int by = get_group_id(1);
+
+    const int tx = get_local_id(0);
+    const int ty = get_local_id(1);
+
+    const int aBegin = uiWA * block_size * by;
+    const int aEnd   = aBegin + uiWA - 1;
+    const int bBegin = block_size * bx;
+
+    int aStep  = block_size;
+    int bStep  = block_size * uiWB;
+    double Csub = 0.0;
+
+    // Loop over all the sub-matrices of A and B
+    // required to compute the block sub-matrix
+    for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
+        AS(ty, tx, block_size) = A[a + uiWA * ty + tx];
+        BS(ty, tx, block_size) = B[b + uiWB * ty + tx];
+
+        barrier(CLK_LOCAL_MEM_FENCE);
+
+        #pragma unroll
+        for (int k = 0; k < block_size; ++k)
+            Csub += AS(ty, k, block_size) * BS(k, tx, block_size);
+
+        barrier(CLK_LOCAL_MEM_FENCE);
+    }
+    C[get_global_id(1) * get_global_size(0) + get_global_id(0)] = Csub;
+})";
+
+    cl::Program program_(s_context, kernel_source.data(), false, &err);
+
+    // Build the program
+    err = program_.build(s_devices);
+
+    cl::Kernel kernel(program_, "multiply", &err);
+
+    // Set the arguments of the kernel
+    kernel.setArg(0, out_mem_obj);
+    kernel.setArg(1, matrix_a_mem_obj);
+    kernel.setArg(2, matrix_b_mem_obj);
+    kernel.setArg(3, mem_size, nullptr);
+    kernel.setArg(4, mem_size, nullptr);
+    kernel.setArg(5, a.columns);
+    kernel.setArg(6, b.columns);
+    kernel.setArg(7, a.rows);
+
+    // Multiplication - non-blocking execution:  launch and push to device(s)
+    cl::Event GPUExecution;
+    command_queue.enqueueNDRangeKernel(kernel, cl::NullRange,
+        cl::NDRange(b.columns, t.size()), cl::NDRange(b.columns, b.columns), nullptr, &GPUExecution);
+    command_queue.flush();
+
+    // sync all queues to host
+    command_queue.finish();
+
+    // Non-blocking copy of result from device to host
+    cl::Event GPUDone;
+    command_queue.enqueueReadBuffer(out_mem_obj, CL_FALSE, 0,
+        mem_size, (void*)t.data(), nullptr, &GPUDone);
+
+    // CPU sync with GPU
+    GPUDone.wait();
 
     return t;
 }
@@ -301,6 +396,10 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
         return Matrix();
     }
 
+#ifdef NN_ENABLE_OPENCL
+    return Matrix::multiply_cl(a, b);
+#else
+
     // Dot product of values in column
     Matrix t(a.rows, b.columns);
 
@@ -342,6 +441,7 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
         PTR_END
     }
     return t;
+#endif
 }
 
 auto Matrix::subtract(const Matrix& a, const Matrix& b) noexcept -> Matrix {

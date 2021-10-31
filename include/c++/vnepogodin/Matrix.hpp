@@ -319,6 +319,7 @@ class Matrix {
 
 #ifdef NN_ENABLE_OPENCL
     static auto transpose_cl(const Matrix& m) noexcept(false) -> Matrix;
+    static auto multiply_cl(const Matrix& a, const Matrix& b) noexcept(false) -> Matrix;
 #endif
 };
 };  // namespace vnepogodin
