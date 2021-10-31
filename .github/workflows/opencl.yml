@@ -20,7 +20,7 @@ jobs:
 
     - name: install_dep
       run: |
-           sudo apt install ocl-icd-opencl-dev
+           sudo apt install ocl-icd-opencl-dev opencl-clhpp-headers
       shell: bash
 
     - name: Create Build Environment
@@ -73,7 +73,7 @@ jobs:
 
     - name: install_dep
       run: |
-           sudo apt install ocl-icd-opencl-dev
+           sudo apt install ocl-icd-opencl-dev opencl-clhpp-headers
       shell: bash
 
     - name: Create Build Environment
