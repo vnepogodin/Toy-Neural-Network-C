@@ -13,6 +13,15 @@
 #include <Vc/Vc>
 #endif
 
+#ifdef NN_ENABLE_OPENCL
+#define CL_HPP_TARGET_OPENCL_VERSION 300
+#if defined(__APPLE__) || defined(__MACOSX)
+#include <OpenCL/cl.hpp>
+#else
+#include <CL/opencl.hpp>
+#endif
+#endif
+
 namespace {
 /**
  * PTR_START(end):
@@ -57,9 +66,182 @@ class random_in_range {
     static constexpr double start = 0.0;
     static constexpr double end   = 2.0;
 };
+
+#ifdef NN_ENABLE_OPENCL
+static auto get_platforms() noexcept -> std::vector<cl::Platform> {
+    std::vector<cl::Platform> platforms_;
+    cl::Platform::get(&platforms_);
+    return platforms_;
+}
+
+static auto get_context(const std::vector<cl::Platform>& platforms) noexcept -> cl::Context {
+    cl_context_properties properties[] = {
+        CL_CONTEXT_PLATFORM,
+        (cl_context_properties)(platforms[0])(),
+        0};
+    cl::Context context_(CL_DEVICE_TYPE_GPU, properties);
+    return context_;
+}
+
+static const std::vector<cl::Platform> s_platforms = get_platforms();
+static const cl::Context s_context                 = get_context(s_platforms);
+static const std::vector<cl::Device>& s_devices    = s_context.getInfo<CL_CONTEXT_DEVICES>();
+#endif
 };  // namespace
 
 namespace vnepogodin {
+#ifdef NN_ENABLE_OPENCL
+auto Matrix::transpose_cl(const Matrix& m) noexcept(false) -> Matrix {
+    cl_int err = CL_SUCCESS;
+
+    cl::CommandQueue command_queue(s_context, s_devices[0], 0, &err);
+
+    // size of memory required to store the matrix
+    const size_t& mem_size = m.size() * sizeof(Matrix::value_type);
+
+    // Create memory buffers on the device for each vector
+    cl::Buffer matrix_mem_obj(s_context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+        mem_size, (void*)m.data(), &err);
+    cl::Buffer out_mem_obj(s_context, CL_MEM_WRITE_ONLY,
+        mem_size, nullptr, &err);
+
+    // Create a program from the kernel source
+    static constexpr std::string_view kernel_source = R"(
+__kernel void transpose(__global double* odata, __global const double* idata, int width, int height) {
+    const int i = get_global_id(0);
+    const int j = get_global_id(1);
+
+    if ((i < width) && (j < height)) {
+        const unsigned int index_in  = i + width * j;
+        const unsigned int index_out = j + height * i;
+        odata[index_out]             = idata[index_in];
+    }
+})";
+
+    cl::Program program_(s_context, kernel_source.data(), false, &err);
+
+    // Build the program
+    err = program_.build(s_devices);
+
+    cl::Kernel kernel(program_, "transpose", &err);
+
+    // Set the arguments of the kernel
+    kernel.setArg(0, out_mem_obj);
+    kernel.setArg(1, matrix_mem_obj);
+    kernel.setArg(2, m.columns);
+    kernel.setArg(3, m.rows);
+
+    // Execute the OpenCL kernel on the list
+    cl::Event event;
+    command_queue.enqueueNDRangeKernel(kernel, cl::NullRange,
+        cl::NDRange(m.columns, m.rows), cl::NDRange(m.columns), nullptr, &event);
+
+    event.wait();
+
+    // Read the memory buffer on the device to the local variable
+    Matrix t(m.columns, m.rows);
+
+    command_queue.enqueueReadBuffer(out_mem_obj, CL_TRUE, 0,
+        mem_size, (void*)t.data());
+
+    return t;
+}
+
+auto Matrix::multiply_cl(const Matrix& a, const Matrix& b) noexcept(false) -> Matrix {
+    Matrix t(a.rows, b.columns);
+
+    cl_int err = CL_SUCCESS;
+    cl::CommandQueue command_queue(s_context, s_devices[0], 0, &err);
+
+    // size of memory required to store the matrix
+    const size_t& a_size   = a.size() * sizeof(Matrix::value_type);
+    const size_t& b_size   = b.size() * sizeof(Matrix::value_type);
+    const size_t& mem_size = t.size() * sizeof(Matrix::value_type);
+
+    // Create memory buffers on the device for each vector
+    cl::Buffer matrix_a_mem_obj(s_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        a_size, (void*)a.data(), &err);
+    cl::Buffer matrix_b_mem_obj(s_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        b_size, (void*)b.data(), &err);
+    cl::Buffer out_mem_obj(s_context, CL_MEM_WRITE_ONLY,
+        mem_size, nullptr, &err);
+
+    // Create a program from the kernel source
+    static constexpr std::string_view kernel_source = R"(
+#define AS(i, j, size) As[j + i * size]
+#define BS(i, j, size) Bs[j + i * size]
+
+__kernel void
+multiply(__global double* C, __global double* A, __global double* B,
+         __local double* As, __local double* Bs, const int uiWA, const int uiWB, const int block_size) {
+    const int bx = get_group_id(0);
+    const int by = get_group_id(1);
+
+    const int tx = get_local_id(0);
+    const int ty = get_local_id(1);
+
+    const int aBegin = uiWA * block_size * by;
+    const int aEnd   = aBegin + uiWA - 1;
+    const int bBegin = block_size * bx;
+
+    int aStep  = block_size;
+    int bStep  = block_size * uiWB;
+    double Csub = 0.0;
+
+    // Loop over all the sub-matrices of A and B
+    // required to compute the block sub-matrix
+    for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
+        AS(ty, tx, block_size) = A[a + uiWA * ty + tx];
+        BS(ty, tx, block_size) = B[b + uiWB * ty + tx];
+
+        barrier(CLK_LOCAL_MEM_FENCE);
+
+        #pragma unroll
+        for (int k = 0; k < block_size; ++k)
+            Csub += AS(ty, k, block_size) * BS(k, tx, block_size);
+
+        barrier(CLK_LOCAL_MEM_FENCE);
+    }
+    C[get_global_id(1) * get_global_size(0) + get_global_id(0)] = Csub;
+})";
+
+    cl::Program program_(s_context, kernel_source.data(), false, &err);
+
+    // Build the program
+    err = program_.build(s_devices);
+
+    cl::Kernel kernel(program_, "multiply", &err);
+
+    // Set the arguments of the kernel
+    kernel.setArg(0, out_mem_obj);
+    kernel.setArg(1, matrix_a_mem_obj);
+    kernel.setArg(2, matrix_b_mem_obj);
+    kernel.setArg(3, mem_size, nullptr);
+    kernel.setArg(4, mem_size, nullptr);
+    kernel.setArg(5, a.columns);
+    kernel.setArg(6, b.columns);
+    kernel.setArg(7, a.rows);
+
+    // Multiplication - non-blocking execution:  launch and push to device(s)
+    cl::Event GPUExecution;
+    command_queue.enqueueNDRangeKernel(kernel, cl::NullRange,
+        cl::NDRange(b.columns, t.size()), cl::NDRange(b.columns, b.columns), nullptr, &GPUExecution);
+    command_queue.flush();
+
+    // sync all queues to host
+    command_queue.finish();
+
+    // Non-blocking copy of result from device to host
+    cl::Event GPUDone;
+    command_queue.enqueueReadBuffer(out_mem_obj, CL_FALSE, 0,
+        mem_size, (void*)t.data(), nullptr, &GPUDone);
+
+    // CPU sync with GPU
+    GPUDone.wait();
+
+    return t;
+}
+#endif
 
 // Operators
 auto Matrix::operator+=(const Matrix& mat_a) noexcept -> Matrix& {
@@ -183,6 +365,9 @@ auto Matrix::fromArray(const_pointer arr, const std::uint32_t& len) noexcept -> 
 
 // @see https://en.wikipedia.org/wiki/Transpose
 auto Matrix::transpose(const Matrix& m) noexcept -> Matrix {
+#ifdef NN_ENABLE_OPENCL
+    return Matrix::transpose_cl(m);
+#else
     Matrix t(m.columns, m.rows);
 
     std::atomic<std::uint32_t> counter(0);
@@ -201,6 +386,7 @@ auto Matrix::transpose(const Matrix& m) noexcept -> Matrix {
     }
 
     return t;
+#endif
 }
 
 auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
@@ -209,6 +395,10 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
         std::cerr << "Columns of A must match rows of B.\n";
         return Matrix();
     }
+
+#ifdef NN_ENABLE_OPENCL
+    return Matrix::multiply_cl(a, b);
+#else
 
     // Dot product of values in column
     Matrix t(a.rows, b.columns);
@@ -251,6 +441,7 @@ auto Matrix::multiply(const Matrix& a, const Matrix& b) noexcept -> Matrix {
         PTR_END
     }
     return t;
+#endif
 }
 
 auto Matrix::subtract(const Matrix& a, const Matrix& b) noexcept -> Matrix {
@@ -267,7 +458,7 @@ auto Matrix::subtract(const Matrix& a, const Matrix& b) noexcept -> Matrix {
         const Vc::double_v& vb = b[i.load(std::memory_order_consume)];
 
         const Vc::double_v& vresult = va - vb;
-        iter                 = vresult[0];
+        iter                        = vresult[0];
 #else
         /* clang-format off */
         iter = a[i.load(std::memory_order_consume)]

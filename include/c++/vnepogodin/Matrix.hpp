@@ -5,16 +5,16 @@
 #include <vnepogodin/helper.hpp>                     // for tnn_really_inline
 #include <vnepogodin/third_party/json/simdjson.hpp>  // for simdjson_result
 
-#include <stdint.h>                                  // for uint32_t, uint8_t
-#include <algorithm>                                 // for for_each, copy
-#include <cstring>                                   // for size_t, memset
-#include <functional>                                // for function
-#include <initializer_list>                          // for initializer_list
-#include <iosfwd>                                    // for ostream
-#include <iterator>                                  // for distance, revers...
-#include <memory>                                    // for unique_ptr
-#include <stdexcept>                                 // for overflow_error
-#include <string>                                    // for string
+#include <algorithm>         // for for_each, copy
+#include <cstring>           // for size_t, memset
+#include <functional>        // for function
+#include <initializer_list>  // for initializer_list
+#include <iosfwd>            // for ostream
+#include <iterator>          // for distance, revers...
+#include <memory>            // for unique_ptr
+#include <stdexcept>         // for overflow_error
+#include <stdint.h>          // for uint32_t, uint8_t
+#include <string>            // for string
 
 #ifdef NN_ENABLE_SIMD
 #include <Vc/algorithm>
@@ -316,6 +316,11 @@ class Matrix {
     S_ptr(const pointer _t) noexcept -> pointer
     { return static_cast<pointer>(_t); }
     /* clang-format on */
+
+#ifdef NN_ENABLE_OPENCL
+    static auto transpose_cl(const Matrix& m) noexcept(false) -> Matrix;
+    static auto multiply_cl(const Matrix& a, const Matrix& b) noexcept(false) -> Matrix;
+#endif
 };
 };  // namespace vnepogodin
 
