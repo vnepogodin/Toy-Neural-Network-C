@@ -3543,17 +3543,15 @@ extern json_object* json_object_from_file_many(const char*);
 #include <string.h>
 
 #include <fcntl.h>
-#include <unistd.h>
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <io.h>
-#include <windows.h>
-#endif /* defined(WIN32) */
-
-#ifdef _WIN32
-#define open _open
-#endif
+# define WIN32_LEAN_AND_MEAN
+# define open _open
+# include <io.h>
+# include <windows.h>
+#else
+# include <unistd.h>
+#endif /* _WIN32 */
 
 #define JSON_FILE_BUF_SIZE 4096
 
