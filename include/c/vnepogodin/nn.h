@@ -44,6 +44,9 @@ json_object* neural_network_serialize(const NeuralNetwork *__restrict const);
 /* Static functions */
 
 NeuralNetwork* neural_network_deserialize(const json_object *__restrict const);
+NeuralNetwork* neural_network_deserialize_file(const char*);
+NeuralNetwork** neural_network_deserialize_many(const json_object *__restrict const, int*);
+NeuralNetwork** neural_network_deserialize_file_many(const char*, int*);
 
 #ifdef __cplusplus
 }

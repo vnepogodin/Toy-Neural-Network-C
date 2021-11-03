@@ -1,16 +1,37 @@
-#include <vnepogodin/nn.h>  /* NeuralNetwork */
+#include <unity.h>
+#include <vnepogodin/nn.h> /* NeuralNetwork */
 
-#include <stdio.h>  /* printf */
+json_object* object1 = NULL;
+json_object* object2 = NULL;
+
+NeuralNetwork* nn   = NULL;
+NeuralNetwork* copy = NULL;
+
+void setUp(void) { }
+void tearDown(void) {
+    /* clang-format off */
+    if (object1) { json_object_put(object1); object1 = NULL; }
+    if (object2) { json_object_put(object2); object2 = NULL; }
+
+    if (nn) { neural_network_free(nn); nn = NULL; }
+    if (copy) { neural_network_free(copy); copy = NULL; }
+    /* clang-format on */
+}
+
+void test_serialize_basic_behavior(void) {
+    nn                = neural_network_new_with_args(2, 4, 1);
+    object1           = neural_network_serialize(nn);
+    const char* first = json_object_to_json_string_ext(object1, 0);
+
+    copy               = neural_network_deserialize(object1);
+    object2            = neural_network_serialize(copy);
+    const char* second = json_object_to_json_string_ext(object2, 0);
+
+    TEST_ASSERT_EQUAL_STRING(first, second);
+}
 
 int main(void) {
-    register NeuralNetwork *nn = neural_network_new_with_args(2, 4, 1);
-
-    register json_object *j = neural_network_serialize(nn);
-
-    register const char* data = json_object_to_json_string_ext(j, JSON_C_TO_STRING_PRETTY);
-    printf("%s\n", data);
-
-    json_object_put(j);
-    neural_network_free(nn);
-    return 0;
+    UnityBegin("unit-json_serialize.c");
+    RUN_TEST(test_serialize_basic_behavior);
+    return UNITY_END();
 }

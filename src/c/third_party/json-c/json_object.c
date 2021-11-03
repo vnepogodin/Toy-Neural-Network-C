@@ -256,7 +256,7 @@ static inline lh_table* json_object_get_object(const json_object* jso) {
  * @param obj the json_object instance
  * @returns an int
  */
-static inline unsigned long json_object_array_length(const json_object* jso) {
+inline unsigned long json_object_array_length(const json_object* jso) {
     return array_list_length(JC_ARRAY_C(jso)->c_array);
 }
 

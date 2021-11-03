@@ -73,7 +73,7 @@ struct json_tokener_srec {
  * in the json tokener API, and will be changed to be an opaque
  * type in the future.
  */
-struct json_tokener {
+struct _Json_Tokener {
     enum json_tokener_error err;
 
     unsigned int is_double;
@@ -127,7 +127,7 @@ unsigned char json_tokener_parse_double(const char* buf, const int len, double* 
 
 /* RESETTING */
 static inline
-void json_tokener_reset_level(struct json_tokener* tok, const int depth) {
+void json_tokener_reset_level(json_tokener* tok, const int depth) {
     tok->stack[depth].state = json_tokener_state_eatws;
     tok->stack[depth].saved_state = json_tokener_state_start;
 
@@ -143,7 +143,7 @@ void json_tokener_reset_level(struct json_tokener* tok, const int depth) {
  * to parse a brand new JSON object.
  */
 static inline
-void json_tokener_reset(struct json_tokener* tok) {
+void json_tokener_reset(json_tokener* tok) {
     if (tok != NULL) {
         while (tok->depth >= 0) {
             json_tokener_reset_level(tok, tok->depth);
@@ -156,8 +156,8 @@ void json_tokener_reset(struct json_tokener* tok) {
 }
 
 /* FREEING */
-static inline
-void json_tokener_free(struct json_tokener* tok) {
+inline
+void json_tokener_free(json_tokener* tok) {
     json_tokener_reset(tok);
     if (tok->pb != NULL)
         printbuf_free(tok->pb);
@@ -166,13 +166,8 @@ void json_tokener_free(struct json_tokener* tok) {
     free(tok);
 }
 
-/**
- * Allocate a new json_tokener with a custom max nesting depth.
- * When done using that to parse objects, free it with json_tokener_free().
- * @see JSON_TOKENER_DEFAULT_DEPTH
- */
-static struct json_tokener* json_tokener_new_ex(const int depth) {
-    struct json_tokener* tok = (struct json_tokener*)calloc(1UL, sizeof(struct json_tokener));
+json_tokener* json_tokener_new_ex(const int depth) {
+    json_tokener* tok = (json_tokener*)calloc(1UL, sizeof(json_tokener));
     if (tok == NULL)
         return NULL;
 
@@ -184,8 +179,8 @@ static struct json_tokener* json_tokener_new_ex(const int depth) {
 
     tok->pb = printbuf_new();
     if (tok->pb == NULL) {
-        free(tok);
         free(tok->stack);
+        free(tok);
         return NULL;
     }
 
@@ -194,7 +189,7 @@ static struct json_tokener* json_tokener_new_ex(const int depth) {
     return tok;
 }
 
-static json_object* json_tokener_parse_ex(struct json_tokener* tok, const char* str, const int len) {
+json_object* json_tokener_parse_ex(json_tokener* tok, const char* str, const int len) {
     tok->char_offset = 0;
     tok->err = json_tokener_success;
 
@@ -427,12 +422,12 @@ redo_char:
                     c = *str;
                 }
                 /*
-                 *	Now we know c isn't a valid number char, but check whether
-                 *	it might have been intended to be, and return a potentially
-                 *	more understandable error right away.
-                 *	However, if we're at the top-level, use the number as-is
+                 *  Now we know c isn't a valid number char, but check whether
+                 *  it might have been intended to be, and return a potentially
+                 *  more understandable error right away.
+                 *  However, if we're at the top-level, use the number as-is
                  *  because c can be part of a new object to parse on the
-                 *	next call to json_tokener_parse().
+                 *  next call to json_tokener_parse().
                  */
                 if ((tok->depth > 0) && (c != ',') && (c != ']') && (c != '}') && (c != '/') &&
                     (c != 'I') && (c != 'i') && (!isspace((int)c))) {
@@ -632,7 +627,7 @@ out:
 
 json_object* json_tokener_parse(const char* str) {
     register json_object* result = NULL;
-    struct json_tokener* tok = json_tokener_new_ex(32);
+    json_tokener* tok = json_tokener_new_ex(32);
 
     if (tok != NULL) {
         register json_object* obj = json_tokener_parse_ex(tok, str, -1);

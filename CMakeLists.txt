@@ -120,6 +120,7 @@ if (NN_MultipleHeaders)
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/linkhash.h
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/printbuf.h
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/json_tokener.h
+            ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/json_util.h
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/third_party/json-c/json.h
 
             ${VNEPOGODIN_NN_INCLUDE_BUILD_DIR}/vnepogodin/matrix.h
@@ -132,6 +133,7 @@ if (NN_MultipleHeaders)
             ${NN_BUILD_LANG_SOURCES_DIR}/third_party/json-c/linkhash.c
             ${NN_BUILD_LANG_SOURCES_DIR}/third_party/json-c/printbuf.c
             ${NN_BUILD_LANG_SOURCES_DIR}/third_party/json-c/json_tokener.c
+            ${NN_BUILD_LANG_SOURCES_DIR}/third_party/json-c/json_util.c
 
             ${NN_BUILD_LANG_SOURCES_DIR}/matrix.c
             ${NN_BUILD_LANG_SOURCES_DIR}/nn.c

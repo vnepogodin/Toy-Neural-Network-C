@@ -1,6 +1,7 @@
 /* Other techniques for learning */
 
 #include <vnepogodin/nn.h>
+#include <vnepogodin/third_party/json-c/json_util.h>
 
 #include <math.h>   /* expf */
 #include <stdlib.h> /* malloc */
@@ -295,4 +296,37 @@ NeuralNetwork* neural_network_deserialize(const json_object* __restrict const __
     neural_network_setActivationFunction(nn, (unsigned char)json_object_get_int(json_find(__json_param, "activation_function")));
 
     return nn;
+}
+
+NeuralNetwork* neural_network_deserialize_file(const char* file_path) {
+    register json_object* obj = json_object_from_file(file_path);
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    register NeuralNetwork* nn = neural_network_deserialize(obj);
+    json_object_put(obj);
+    return nn;
+}
+
+NeuralNetwork** neural_network_deserialize_many(const json_object *__restrict const obj, int* len) {
+    register const int size = json_object_array_length(obj);
+    register NeuralNetwork** vnn = (NeuralNetwork**)malloc(size * sizeof(NeuralNetwork));
+    for (int i = 0; i < size; ++i) {
+        const json_object* temp = json_object_array_get_idx(obj, i);
+        vnn[i] = neural_network_deserialize(temp);
+    }
+    if (len != NULL) { *len = size; }
+    return vnn;
+}
+
+NeuralNetwork** neural_network_deserialize_file_many(const char* file_path, int* len) {
+    register json_object* obj = json_object_from_file_many(file_path);
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    register NeuralNetwork** vnn = neural_network_deserialize_many(obj, len);
+    json_object_put(obj);
+    return vnn;
 }

@@ -42,6 +42,9 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const, const Matrix *__r
 Matrix* matrix_subtract_static(const Matrix *const, const Matrix *const);
 Matrix* matrix_map_static(const Matrix *const, float (*const)(float));
 Matrix* matrix_deserialize(const json_object *__restrict const);
+Matrix** matrix_deserialize_many(const json_object *__restrict const, int*);
+Matrix* matrix_deserialize_file(const char*);
+Matrix** matrix_deserialize_file_many(const char*, int*);
 
 #ifdef __cplusplus
 }

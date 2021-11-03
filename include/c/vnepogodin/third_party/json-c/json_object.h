@@ -17,6 +17,12 @@ typedef struct _Json_Object json_object;
 #define JSON_OBJECT_DEF_HASH_ENTRIES 16
 
 /**
+ * A flag for the json_object_to_json_string_ext() and
+ * json_object_to_file_ext() functions which causes the output
+ * to have no extra whitespace or formatting applied.
+ */
+#define JSON_C_TO_STRING_PLAIN 0
+/**
  * A flag for the json_object_to_json_string_ext() function
  * which causes the output to have
  * minimal whitespace inserted to make things slightly more readable.
@@ -195,6 +201,11 @@ extern unsigned char json_object_object_get_ex(const json_object *, const char*,
  */
 extern json_object *json_object_new_array_ext(const int);
 
+/** Get the length of a json_object of type json_type_array
+ * @param obj the json_object instance
+ * @returns an int
+ */
+extern unsigned long json_object_array_length(const json_object *);
 
 /** Add an element to the end of a json_object of type json_type_array
  *

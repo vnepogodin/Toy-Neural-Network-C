@@ -1,7 +1,7 @@
 #include <vnepogodin/third_party/json-c/arraylist.h>
 
 #include <limits.h> /* ULONG_MAX */
-#include <stdlib.h> /* malloc, calloc */
+#include <stdlib.h> /* malloc */
 
 struct _Array_List {
     unsigned long length;
@@ -49,7 +49,7 @@ array_list* array_list_new(void (*free_fn)(void*), const int initial_size) {
             arr->size = (unsigned long)initial_size;
             arr->length = 0;
             arr->free_fn = free_fn;
-            arr->array = (void**)calloc((unsigned long)initial_size, 8UL);
+            arr->array = (void**)malloc((unsigned long)arr->size * sizeof(void*));
 
             if (arr->array != NULL)
                 result = arr;

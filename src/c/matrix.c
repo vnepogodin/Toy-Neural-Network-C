@@ -1,6 +1,7 @@
 /* Matrix lib */
 
 #include <vnepogodin/matrix.h>
+#include <vnepogodin/third_party/json-c/json_util.h>
 
 #include <stdio.h>  /* printf */
 #include <stdlib.h> /* malloc, posix_memalign, arc4random */
@@ -635,4 +636,38 @@ Matrix* matrix_deserialize(const json_object* __restrict const t_param) {
     free(buf);
 
     return __matrix_m;
+}
+
+Matrix* matrix_deserialize_file(const char* file_path) {
+    register json_object* obj = json_object_from_file(file_path);
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    register Matrix* __matrix_m = matrix_deserialize(obj);
+    json_object_put(obj);
+    return __matrix_m;
+}
+
+
+Matrix** matrix_deserialize_many(const json_object *__restrict const obj, int* len) {
+    register const int size = json_object_array_length(obj);
+    register Matrix** __matrix_vec = (Matrix**)malloc(size * sizeof(Matrix));
+    for (int i = 0; i < size; ++i) {
+        const json_object* temp = json_object_array_get_idx(obj, i);
+        __matrix_vec[i] = matrix_deserialize(temp);
+    }
+    if (len != NULL) { *len = size; }
+    return __matrix_vec;
+}
+
+Matrix** matrix_deserialize_file_many(const char* file_path, int* len) {
+    register json_object* obj = json_object_from_file_many(file_path);
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    register Matrix** __matrix_vec = matrix_deserialize_many(obj, len);
+    json_object_put(obj);
+    return __matrix_vec;
 }

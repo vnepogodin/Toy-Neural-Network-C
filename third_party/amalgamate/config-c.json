@@ -7,7 +7,8 @@
         "../../src/c/third_party/json-c/json_object.c",
         "../../src/c/third_party/json-c/linkhash.c",
         "../../src/c/third_party/json-c/printbuf.c",
-        
+        "../../src/c/third_party/json-c/json_util.c",
+
         "../../src/c/matrix.c",
         "../../src/c/nn.c"
     ],

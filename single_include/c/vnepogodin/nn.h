@@ -46,6 +46,12 @@ typedef struct _Json_Object json_object;
 #define JSON_OBJECT_DEF_HASH_ENTRIES 16
 
 /**
+ * A flag for the json_object_to_json_string_ext() and
+ * json_object_to_file_ext() functions which causes the output
+ * to have no extra whitespace or formatting applied.
+ */
+#define JSON_C_TO_STRING_PLAIN 0
+/**
  * A flag for the json_object_to_json_string_ext() function
  * which causes the output to have
  * minimal whitespace inserted to make things slightly more readable.
@@ -224,6 +230,11 @@ extern unsigned char json_object_object_get_ex(const json_object *, const char*,
  */
 extern json_object *json_object_new_array_ext(const int);
 
+/** Get the length of a json_object of type json_type_array
+ * @param obj the json_object instance
+ * @returns an int
+ */
+extern unsigned long json_object_array_length(const json_object *);
 
 /** Add an element to the end of a json_object of type json_type_array
  *
@@ -354,14 +365,144 @@ float json_object_get_float(const json_object *);
 #endif
 
 
+typedef struct _Json_Tokener json_tokener;
+
+#define JSON_TOKENER_DEFAULT_DEPTH 32
+
+/**
+ * Be strict when parsing JSON input.  Use caution with
+ * this flag as what is considered valid may become more
+ * restrictive from one release to the next, causing your
+ * code to fail on previously working input.
+ *
+ * Note that setting this will also effectively disable parsing
+ * of multiple json objects in a single character stream
+ * (e.g. {"foo":123}{"bar":234}); if you want to allow that
+ * also set JSON_TOKENER_ALLOW_TRAILING_CHARS
+ *
+ * This flag is not set by default.
+ *
+ * @see json_tokener_set_flags()
+ */
+#define JSON_TOKENER_STRICT 0x01
+
+/**
+ * Use with JSON_TOKENER_STRICT to allow trailing characters after the
+ * first parsed object.
+ *
+ * @see json_tokener_set_flags()
+ */
+#define JSON_TOKENER_ALLOW_TRAILING_CHARS 0x02
+
+/**
+ * Cause json_tokener_parse_ex() to validate that input is UTF8.
+ * If this flag is specified and validation fails, then
+ * json_tokener_get_error(tok) will return
+ * json_tokener_error_parse_utf8_string
+ *
+ * This flag is not set by default.
+ *
+ * @see json_tokener_set_flags()
+ */
+#define JSON_TOKENER_VALIDATE_UTF8 0x10
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
+ * Allocate a new json_tokener with a custom max nesting depth.
+ * @see JSON_TOKENER_DEFAULT_DEPTH
+ */
+json_tokener* json_tokener_new_ex(const int);
+
+/**
+ * Free a json_tokener previously allocated with json_tokener_new().
+ */
+extern void json_tokener_free(json_tokener *);
+
+/**
  * Parse a json_object out of the string `str`.
  */
 json_object* json_tokener_parse(const char*);
+
+
+/**
+ * Parse a string and return a non-NULL json_object if a valid JSON value
+ * is found.  The string does not need to be a JSON object or array;
+ * it can also be a string, number or boolean value.
+ *
+ * A partial JSON string can be parsed.  If the parsing is incomplete,
+ * NULL will be returned and json_tokener_get_error() will return
+ * json_tokener_continue.
+ * json_tokener_parse_ex() can then be called with additional bytes in str
+ * to continue the parsing.
+ *
+ * If json_tokener_parse_ex() returns NULL and the error is anything other than
+ * json_tokener_continue, a fatal error has occurred and parsing must be
+ * halted.  Then, the tok object must not be reused until json_tokener_reset()
+ * is called.
+ *
+ * When a valid JSON value is parsed, a non-NULL json_object will be
+ * returned, with a reference count of one which belongs to the caller.  Also,
+ * json_tokener_get_error() will return json_tokener_success. Be sure to check
+ * the type with json_object_is_type() or json_object_get_type() before using
+ * the object.
+ *
+ * Trailing characters after the parsed value do not automatically cause an
+ * error.  It is up to the caller to decide whether to treat this as an
+ * error or to handle the additional characters, perhaps by parsing another
+ * json value starting from that point.
+ *
+ * If the caller knows that they are at the end of their input, the length
+ * passed MUST include the final '\0' character, so values with no inherent
+ * end (i.e. numbers) can be properly parsed, rather than just returning
+ * json_tokener_continue.
+ *
+ * Extra characters can be detected by comparing the value returned by
+ * json_tokener_get_parse_end() against
+ * the length of the last len parameter passed in.
+ *
+ * The tokener does \b not maintain an internal buffer so the caller is
+ * responsible for a subsequent call to json_tokener_parse_ex with an
+ * appropriate str parameter starting with the extra characters.
+ *
+ * This interface is presently not 64-bit clean due to the int len argument
+ * so the function limits the maximum string size to INT32_MAX (2GB).
+ * If the function is called with len == -1 then strlen is called to check
+ * the string length is less than INT32_MAX (2GB)
+ *
+ * Example:
+ * @code
+json_object *jobj = NULL;
+const char *mystring = NULL;
+int stringlen = 0;
+enum json_tokener_error jerr;
+do {
+    mystring = ...  // get JSON string, e.g. read from file, etc...
+    stringlen = strlen(mystring);
+    if (end_of_input)
+        stringlen++;  // Include the '\0' if we know we're at the end of input
+    jobj = json_tokener_parse_ex(tok, mystring, stringlen);
+} while ((jerr = json_tokener_get_error(tok)) == json_tokener_continue);
+if (jerr != json_tokener_success)
+{
+    fprintf(stderr, "Error: %s\n", json_tokener_error_desc(jerr));
+    // Handle errors, as appropriate for your application.
+}
+if (json_tokener_get_parse_end(tok) < stringlen)
+{
+    // Handle extra characters after parsed object as desired.
+    // e.g. issue an error, parse another object from that point, etc...
+}
+// Success, use jobj here.
+@endcode
+ *
+ * @param tok a json_tokener previously allocated with json_tokener_new()
+ * @param str an string with any valid JSON expression, or portion of.  This does not need to be null terminated.
+ * @param len the length of str
+ */
+json_object* json_tokener_parse_ex(json_tokener*, const char*, const int);
 
 #ifdef __cplusplus
 }
@@ -533,7 +674,7 @@ struct json_tokener_srec {
  * in the json tokener API, and will be changed to be an opaque
  * type in the future.
  */
-struct json_tokener {
+struct _Json_Tokener {
     enum json_tokener_error err;
 
     unsigned int is_double;
@@ -587,7 +728,7 @@ unsigned char json_tokener_parse_double(const char* buf, const int len, double* 
 
 /* RESETTING */
 static inline
-void json_tokener_reset_level(struct json_tokener* tok, const int depth) {
+void json_tokener_reset_level(json_tokener* tok, const int depth) {
     tok->stack[depth].state = json_tokener_state_eatws;
     tok->stack[depth].saved_state = json_tokener_state_start;
 
@@ -603,7 +744,7 @@ void json_tokener_reset_level(struct json_tokener* tok, const int depth) {
  * to parse a brand new JSON object.
  */
 static inline
-void json_tokener_reset(struct json_tokener* tok) {
+void json_tokener_reset(json_tokener* tok) {
     if (tok != NULL) {
         while (tok->depth >= 0) {
             json_tokener_reset_level(tok, tok->depth);
@@ -616,8 +757,8 @@ void json_tokener_reset(struct json_tokener* tok) {
 }
 
 /* FREEING */
-static inline
-void json_tokener_free(struct json_tokener* tok) {
+inline
+void json_tokener_free(json_tokener* tok) {
     json_tokener_reset(tok);
     if (tok->pb != NULL)
         printbuf_free(tok->pb);
@@ -626,13 +767,8 @@ void json_tokener_free(struct json_tokener* tok) {
     free(tok);
 }
 
-/**
- * Allocate a new json_tokener with a custom max nesting depth.
- * When done using that to parse objects, free it with json_tokener_free().
- * @see JSON_TOKENER_DEFAULT_DEPTH
- */
-static struct json_tokener* json_tokener_new_ex(const int depth) {
-    struct json_tokener* tok = (struct json_tokener*)calloc(1UL, sizeof(struct json_tokener));
+json_tokener* json_tokener_new_ex(const int depth) {
+    json_tokener* tok = (json_tokener*)calloc(1UL, sizeof(json_tokener));
     if (tok == NULL)
         return NULL;
 
@@ -644,8 +780,8 @@ static struct json_tokener* json_tokener_new_ex(const int depth) {
 
     tok->pb = printbuf_new();
     if (tok->pb == NULL) {
-        free(tok);
         free(tok->stack);
+        free(tok);
         return NULL;
     }
 
@@ -654,7 +790,7 @@ static struct json_tokener* json_tokener_new_ex(const int depth) {
     return tok;
 }
 
-static json_object* json_tokener_parse_ex(struct json_tokener* tok, const char* str, const int len) {
+json_object* json_tokener_parse_ex(json_tokener* tok, const char* str, const int len) {
     tok->char_offset = 0;
     tok->err = json_tokener_success;
 
@@ -887,12 +1023,12 @@ redo_char:
                     c = *str;
                 }
                 /*
-                 *	Now we know c isn't a valid number char, but check whether
-                 *	it might have been intended to be, and return a potentially
-                 *	more understandable error right away.
-                 *	However, if we're at the top-level, use the number as-is
+                 *  Now we know c isn't a valid number char, but check whether
+                 *  it might have been intended to be, and return a potentially
+                 *  more understandable error right away.
+                 *  However, if we're at the top-level, use the number as-is
                  *  because c can be part of a new object to parse on the
-                 *	next call to json_tokener_parse().
+                 *  next call to json_tokener_parse().
                  */
                 if ((tok->depth > 0) && (c != ',') && (c != ']') && (c != '}') && (c != '/') &&
                     (c != 'I') && (c != 'i') && (!isspace((int)c))) {
@@ -1092,7 +1228,7 @@ out:
 
 json_object* json_tokener_parse(const char* str) {
     register json_object* result = NULL;
-    struct json_tokener* tok = json_tokener_new_ex(32);
+    json_tokener* tok = json_tokener_new_ex(32);
 
     if (tok != NULL) {
         register json_object* obj = json_tokener_parse_ex(tok, str, -1);
@@ -1175,7 +1311,7 @@ extern int array_list_shrink(array_list*, const unsigned long);
 
 
 #include <limits.h> /* ULONG_MAX */
-#include <stdlib.h> /* malloc, calloc */
+#include <stdlib.h> /* malloc */
 
 struct _Array_List {
     unsigned long length;
@@ -1223,7 +1359,7 @@ array_list* array_list_new(void (*free_fn)(void*), const int initial_size) {
             arr->size = (unsigned long)initial_size;
             arr->length = 0;
             arr->free_fn = free_fn;
-            arr->array = (void**)calloc((unsigned long)initial_size, 8UL);
+            arr->array = (void**)malloc((unsigned long)arr->size * sizeof(void*));
 
             if (arr->array != NULL)
                 result = arr;
@@ -1915,7 +2051,7 @@ static inline lh_table* json_object_get_object(const json_object* jso) {
  * @param obj the json_object instance
  * @returns an int
  */
-static inline unsigned long json_object_array_length(const json_object* jso) {
+inline unsigned long json_object_array_length(const json_object* jso) {
     return array_list_length(JC_ARRAY_C(jso)->c_array);
 }
 
@@ -3315,6 +3451,226 @@ inline void printbuf_free(printbuf* p) {
         free(p);
     }
 }
+/*
+ * $Id: json_util.c,v 1.4 2006/01/30 23:07:57 mclark Exp $
+ *
+ * Copyright (c) 2004, 2005 Metaparadigm Pte. Ltd.
+ * Michael Clark <michael@metaparadigm.com>
+ *
+ * This library is free software; you can redistribute it and/or modify
+ * it under the terms of the MIT license. See COPYING for details.
+ *
+ */
+
+// #include <vnepogodin/third_party/json-c/json_util.h>
+/*
+ * $Id: json_util.h,v 1.4 2006/01/30 23:07:57 mclark Exp $
+ *
+ * Copyright (c) 2004, 2005 Metaparadigm Pte. Ltd.
+ * Michael Clark <michael@metaparadigm.com>
+ *
+ * This library is free software; you can redistribute it and/or modify
+ * it under the terms of the MIT license. See COPYING for details.
+ *
+ */
+
+/**
+ * @file
+ * @brief Miscllaneous utility functions and macros.
+ */
+
+#ifndef __JSON_UTIL_H__
+#define __JSON_UTIL_H__
+
+// #include <vnepogodin/third_party/json-c/json_object.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* utility functions */
+/**
+ * Read the full contents of the given file, then convert it to a
+ * json_object using json_tokener_parse().
+ *
+ * Returns NULL on failure.
+ */
+extern json_object* json_object_from_file(const char*);
+
+/**
+ * Create a JSON object from already opened file descriptor.
+ *
+ * This function can be helpful, when you opened the file already,
+ * e.g. when you have a temp file.
+ * Note, that the fd must be readable at the actual position, i.e.
+ * use lseek(fd, 0, SEEK_SET) before.
+ *
+ * The depth argument specifies the maximum object depth to pass to
+ * json_tokener_new_ex().  When depth == -1, JSON_TOKENER_DEFAULT_DEPTH
+ * is used instead.
+ *
+ * Returns NULL on failure.
+ */
+json_object* json_object_from_fd_ex(const int, const int);
+
+/**
+ * Create a JSON object from an already opened file descriptor, using
+ * the default maximum object depth. (JSON_TOKENER_DEFAULT_DEPTH)
+ *
+ * See json_object_from_fd_ex() for details.
+ */
+extern json_object* json_object_from_fd(const int);
+
+
+extern json_object* json_object_from_fd_many(const int, const int);
+extern json_object* json_object_from_file_many(const char*);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+// #include <vnepogodin/third_party/json-c/json_object.h>
+
+// #include <vnepogodin/third_party/json-c/json_tokener.h>
+
+// #include <vnepogodin/third_party/json-c/printbuf.h>
+
+
+#include <stdio.h>
+#include <string.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <io.h>
+#include <windows.h>
+#endif /* defined(WIN32) */
+
+#ifdef _WIN32
+#define open _open
+#endif
+
+#define JSON_FILE_BUF_SIZE 4096
+
+inline json_object* json_object_from_fd(const int fd) {
+    return json_object_from_fd_ex(fd, -1);
+}
+
+static printbuf* printbuf_from_fd_ex(const int fd) {
+    printbuf* pb;
+    if (!(pb = printbuf_new())) {
+        return NULL;
+    }
+
+    int ret = 0;
+    char buf[JSON_FILE_BUF_SIZE] = {0};
+    while ((ret = read(fd, buf, JSON_FILE_BUF_SIZE)) > 0) {
+        printbuf_memappend(pb, buf, ret);
+    }
+    if (ret < 0) {
+        printbuf_free(pb);
+        return NULL;
+    }
+
+    return pb;
+}
+
+json_object* json_object_from_fd_ex(const int fd, const int in_depth) {
+    printbuf* pb = printbuf_from_fd_ex(fd);
+    if (!pb) {
+        return NULL;
+    }
+
+    int depth = JSON_TOKENER_DEFAULT_DEPTH;
+    if (in_depth != -1) {
+        depth = in_depth;
+    }
+    json_tokener* tok = json_tokener_new_ex(depth);
+    if (!tok) {
+        printbuf_free(pb);
+        return NULL;
+    }
+
+    json_object* obj = json_tokener_parse_ex(tok, printbuf_getBuf(pb), printbuf_getPos(pb));
+
+    json_tokener_free(tok);
+    printbuf_free(pb);
+    return obj;
+}
+
+json_object* json_object_from_fd_many(const int fd, const int in_depth) {
+    static const char* delim = "\n";
+    printbuf* pb = printbuf_from_fd_ex(fd);
+    if (!pb) {
+        return NULL;
+    }
+
+    int depth = JSON_TOKENER_DEFAULT_DEPTH;
+    if (in_depth != -1) {
+        depth = in_depth;
+    }
+    json_tokener* tok = json_tokener_new_ex(depth);
+    if (!tok) {
+        printbuf_free(pb);
+        return NULL;
+    }
+
+    int newlines = 0;
+    char* c = printbuf_getBuf(pb);
+    while (*c != '\0') {
+        if (*c == '\n') { ++newlines; }
+        ++c;
+    }
+
+    char* save_token = NULL;
+    json_object* nj = json_object_new_array_ext(newlines);
+
+#ifdef _WIN32
+    char* token = strtok_s(printbuf_getBuf(pb), delim, &save_token);
+#else
+    char* token = strtok_r(printbuf_getBuf(pb), delim, &save_token);
+#endif /* _WIN32 */
+
+    for (int i = 0; i < newlines; ++i) {
+        json_object* j = json_tokener_parse_ex(tok, token, strlen(token));
+        json_object_array_add(nj, j);
+
+#ifdef _WIN32
+        token = strtok_s(NULL, delim, &save_token);
+#else
+        token = strtok_r(NULL, delim, &save_token);
+#endif /* _WIN32 */
+    }
+
+    json_tokener_free(tok);
+    printbuf_free(pb);
+    return nj;
+}
+
+inline json_object* json_object_from_file(const char* filename) {
+    int fd = 0;
+    if ((fd = open(filename, O_RDONLY)) < 0) {
+        return NULL;
+    }
+    json_object* obj = json_object_from_fd(fd);
+    close(fd);
+    return obj;
+}
+
+inline json_object* json_object_from_file_many(const char* filename) {
+    int fd = 0;
+    if ((fd = open(filename, O_RDONLY)) < 0) {
+        return NULL;
+    }
+    json_object* obj = json_object_from_fd_many(fd, -1);
+    close(fd);
+    return obj;
+}
 /* Matrix lib */
 
 // #include <vnepogodin/matrix.h>
@@ -3372,12 +3728,17 @@ Matrix* matrix_multiply_static(const Matrix *__restrict const, const Matrix *__r
 Matrix* matrix_subtract_static(const Matrix *const, const Matrix *const);
 Matrix* matrix_map_static(const Matrix *const, float (*const)(float));
 Matrix* matrix_deserialize(const json_object *__restrict const);
+Matrix** matrix_deserialize_many(const json_object *__restrict const, int*);
+Matrix* matrix_deserialize_file(const char*);
+Matrix** matrix_deserialize_file_many(const char*, int*);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __MATRIX_H__ */
+
+// #include <vnepogodin/third_party/json-c/json_util.h>
 
 
 #include <stdio.h>  /* printf */
@@ -4014,6 +4375,40 @@ Matrix* matrix_deserialize(const json_object* __restrict const t_param) {
 
     return __matrix_m;
 }
+
+Matrix* matrix_deserialize_file(const char* file_path) {
+    register json_object* obj = json_object_from_file(file_path);
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    register Matrix* __matrix_m = matrix_deserialize(obj);
+    json_object_put(obj);
+    return __matrix_m;
+}
+
+
+Matrix** matrix_deserialize_many(const json_object *__restrict const obj, int* len) {
+    register const int size = json_object_array_length(obj);
+    register Matrix** __matrix_vec = (Matrix**)malloc(size * sizeof(Matrix));
+    for (int i = 0; i < size; ++i) {
+        const json_object* temp = json_object_array_get_idx(obj, i);
+        __matrix_vec[i] = matrix_deserialize(temp);
+    }
+    if (len != NULL) { *len = size; }
+    return __matrix_vec;
+}
+
+Matrix** matrix_deserialize_file_many(const char* file_path, int* len) {
+    register json_object* obj = json_object_from_file_many(file_path);
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    register Matrix** __matrix_vec = matrix_deserialize_many(obj, len);
+    json_object_put(obj);
+    return __matrix_vec;
+}
 /* Other techniques for learning */
 
 // #include <vnepogodin/nn.h>
@@ -4064,12 +4459,17 @@ json_object* neural_network_serialize(const NeuralNetwork *__restrict const);
 /* Static functions */
 
 NeuralNetwork* neural_network_deserialize(const json_object *__restrict const);
+NeuralNetwork* neural_network_deserialize_file(const char*);
+NeuralNetwork** neural_network_deserialize_many(const json_object *__restrict const, int*);
+NeuralNetwork** neural_network_deserialize_file_many(const char*, int*);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __NN_H__ */
+
+// #include <vnepogodin/third_party/json-c/json_util.h>
 
 
 #include <math.h>   /* expf */
@@ -4365,4 +4765,37 @@ NeuralNetwork* neural_network_deserialize(const json_object* __restrict const __
     neural_network_setActivationFunction(nn, (unsigned char)json_object_get_int(json_find(__json_param, "activation_function")));
 
     return nn;
+}
+
+NeuralNetwork* neural_network_deserialize_file(const char* file_path) {
+    register json_object* obj = json_object_from_file(file_path);
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    register NeuralNetwork* nn = neural_network_deserialize(obj);
+    json_object_put(obj);
+    return nn;
+}
+
+NeuralNetwork** neural_network_deserialize_many(const json_object *__restrict const obj, int* len) {
+    register const int size = json_object_array_length(obj);
+    register NeuralNetwork** vnn = (NeuralNetwork**)malloc(size * sizeof(NeuralNetwork));
+    for (int i = 0; i < size; ++i) {
+        const json_object* temp = json_object_array_get_idx(obj, i);
+        vnn[i] = neural_network_deserialize(temp);
+    }
+    if (len != NULL) { *len = size; }
+    return vnn;
+}
+
+NeuralNetwork** neural_network_deserialize_file_many(const char* file_path, int* len) {
+    register json_object* obj = json_object_from_file_many(file_path);
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    register NeuralNetwork** vnn = neural_network_deserialize_many(obj, len);
+    json_object_put(obj);
+    return vnn;
 }
