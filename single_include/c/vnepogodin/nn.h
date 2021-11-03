@@ -3548,7 +3548,6 @@ extern json_object* json_object_from_file_many(const char*);
 # define WIN32_LEAN_AND_MEAN
 # define open _open
 # include <io.h>
-# include <windows.h>
 #else
 # include <unistd.h>
 #endif /* _WIN32 */
