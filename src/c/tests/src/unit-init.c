@@ -1,5 +1,5 @@
-#include <unity.h>
 #include <vnepogodin/nn.h> /* NeuralNetwork */
+#include <unity.h>
 
 NeuralNetwork* nn = NULL;
 

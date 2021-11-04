@@ -1,5 +1,5 @@
-#include <unity.h>
 #include <vnepogodin/nn.h> /* NeuralNetwork */
+#include <unity.h>
 
 json_object* object1 = NULL;
 json_object* object2 = NULL;
