@@ -3539,6 +3539,10 @@ extern json_object* json_object_from_file_many(const char*);
 // #include <vnepogodin/third_party/json-c/printbuf.h>
 
 
+#include <stdio.h>
+#include <string.h>
+#include <fcntl.h>
+
 #ifdef _WIN32
 # define WIN32_LEAN_AND_MEAN
 # define open _open
@@ -3546,10 +3550,6 @@ extern json_object* json_object_from_file_many(const char*);
 #else
 # include <unistd.h>
 #endif /* _WIN32 */
-
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
 
 #define JSON_FILE_BUF_SIZE 4096
 
