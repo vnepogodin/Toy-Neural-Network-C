@@ -320,6 +320,8 @@ void test_mapping_with_instance_map(void) {
     TEST_ASSERT(matrix_equal(m, test));
 }
 
+#ifndef _WIN32
+
 void error_handling_of_addition_when_colr_ofA_dont_match_ofB(void) {
     fflush(stderr);
     /* save stderr */
@@ -420,43 +422,6 @@ void error_handling_of_matrix_product_when_col_ofA_dont_match_r_ofB(void) {
     TEST_ASSERT_EQUAL_STRING(expected, sbuffer);
 }
 
-void test_matrix_from_array(void) {
-    const float array[]    = {1, 2, 3};
-    const float test_arr[] = {
-        1.0,
-        2.0,
-        3.0};
-
-    const int size = 3;
-    m              = matrix_fromArray(array, size);
-    test           = matrix_new_with_args(3, 1);
-    memcpy(matrix_data(test), test_arr, size * sizeof(float));
-
-    TEST_ASSERT(matrix_equal(m, test));
-}
-
-void test_matrix_to_array(void) {
-    const float m_arr[] = {
-        1.0, 2.0, 3.0,
-        4.0, 5.0, 6.0,
-        7.0, 8.0, 9.0};
-
-    const int size = 9;
-    m              = matrix_new_with_args(3, 3);
-    memcpy(matrix_data(m), m_arr, size * sizeof(float));
-    float* test_arr = matrix_toArray(m);
-    int is_equal    = 1;
-    float* ptr      = matrix_data(m);
-    for (int i = 0; i < size; ++i) {
-        if (ptr[i] != test_arr[i]) {
-            is_equal = 0;
-            break;
-        }
-    }
-    free(test_arr);
-    TEST_ASSERT(is_equal);
-}
-
 void test_chanining_matrix_methods(void) {
     const float m_arr[] = {
         1.0, 2.0, 3.0,
@@ -497,6 +462,45 @@ void test_chanining_matrix_methods(void) {
     TEST_ASSERT(matrix_equal(m, test));
 }
 
+#endif
+
+void test_matrix_from_array(void) {
+    const float array[]    = {1, 2, 3};
+    const float test_arr[] = {
+        1.0,
+        2.0,
+        3.0};
+
+    const int size = 3;
+    m              = matrix_fromArray(array, size);
+    test           = matrix_new_with_args(3, 1);
+    memcpy(matrix_data(test), test_arr, size * sizeof(float));
+
+    TEST_ASSERT(matrix_equal(m, test));
+}
+
+void test_matrix_to_array(void) {
+    const float m_arr[] = {
+        1.0, 2.0, 3.0,
+        4.0, 5.0, 6.0,
+        7.0, 8.0, 9.0};
+
+    const int size = 9;
+    m              = matrix_new_with_args(3, 3);
+    memcpy(matrix_data(m), m_arr, size * sizeof(float));
+    float* test_arr = matrix_toArray(m);
+    int is_equal    = 1;
+    float* ptr      = matrix_data(m);
+    for (int i = 0; i < size; ++i) {
+        if (ptr[i] != test_arr[i]) {
+            is_equal = 0;
+            break;
+        }
+    }
+    free(test_arr);
+    TEST_ASSERT(is_equal);
+}
+
 void test_matrix_de_serialization(void) {
     m = matrix_new_with_args(5, 5);
     matrix_randomize(m);
@@ -534,13 +538,15 @@ int main(void) {
     RUN_TEST(test_matrix_transpose_51_to_15);
     RUN_TEST(test_mapping_with_static_map);
     RUN_TEST(test_mapping_with_instance_map);
+#ifndef _WIN32
     RUN_TEST(error_handling_of_addition_when_colr_ofA_dont_match_ofB);
     RUN_TEST(error_handling_of_static_sub_when_colr_ofA_dont_match_ofB);
     RUN_TEST(error_handling_of_hadamard_product_when_colr_ofA_dont_match_ofB);
     RUN_TEST(error_handling_of_matrix_product_when_col_ofA_dont_match_r_ofB);
+    RUN_TEST(test_chanining_matrix_methods);
+#endif
     RUN_TEST(test_matrix_from_array);
     RUN_TEST(test_matrix_to_array);
-    RUN_TEST(test_chanining_matrix_methods);
     RUN_TEST(test_matrix_de_serialization);
     RUN_TEST(test_matrix_copy);
     return UNITY_END();
