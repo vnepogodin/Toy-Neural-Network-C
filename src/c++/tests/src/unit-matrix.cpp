@@ -181,7 +181,7 @@ TEST_CASE("matrix")
         CHECK(mt == test);
     }
 
-    SECTION("mapping with static map")
+    SECTION("mapping with instance map")
     {
         auto m = Matrix{
             {1.0, 2.0, 3.0},

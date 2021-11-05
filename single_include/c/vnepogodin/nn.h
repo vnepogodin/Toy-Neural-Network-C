@@ -3715,6 +3715,8 @@ void matrix_randomize(register Matrix *);
 void matrix_map(register Matrix *, float (*const)(float));
 void matrix_print(const Matrix *const);
 json_object* matrix_serialize(const Matrix *const);
+int matrix_equal(const Matrix *__restrict const, const Matrix *__restrict const);
+float* matrix_data(Matrix *);
 
 /* Static functions */
 
@@ -3737,7 +3739,7 @@ Matrix** matrix_deserialize_file_many(const char*, int*);
 // #include <vnepogodin/third_party/json-c/json_util.h>
 
 
-#include <stdio.h>  /* printf */
+#include <stdio.h>  /* printf, fprintf */
 #include <stdlib.h> /* malloc, posix_memalign, arc4random */
 #include <string.h> /* strtof, strtok_r, strtok_s */
 #ifdef __linux__
@@ -3972,7 +3974,7 @@ void matrix_add_matrix(register Matrix* a_param, const Matrix* const b_param) {
             ++ref_ptr;
         PTR_END
     } else
-        printf("Columns and Rows of A must match Columns and Rows of B.\n");
+        fprintf(stderr, "Columns and Rows of A must match Columns and Rows of B.\n");
 }
 
 /**
@@ -3999,7 +4001,7 @@ void matrix_multiply(register Matrix* a_param, const Matrix* const b_param) {
             ++b_ptr;
         PTR_END
     } else
-        printf("Columns and Rows of A must match Columns and Rows of B.\n");
+        fprintf(stderr, "Columns and Rows of A must match Columns and Rows of B.\n");
 }
 
 /**
@@ -4172,9 +4174,44 @@ json_object* matrix_serialize(const Matrix* const m_param) {
     return t;
 }
 
+
+/**
+ * Compare matrices.
+ * @param a The const #Matrix.
+ * @param b The const #Matrix.
+ * @returns boolean value
+ *
+ */
+int matrix_equal(const Matrix *__restrict const a_param, const Matrix *__restrict const b_param) {
+    if (!a_param || !b_param || (a_param == b_param) || (a_param->len != b_param->len)) {
+        return 0;
+    }
+    register const float* ptr = &a_param->data[0];
+    register const float* b_ptr = &b_param->data[0];
+
+    PTR_START(a_param->len)
+        if (*ptr != *b_ptr) {
+            return 0;
+        }
+        ++b_ptr;
+    PTR_END
+    return 1;
+}
+
+/**
+ * Access matrix data.
+ * @param matrix The #Matrix.
+ * @returns float array
+ *
+ */
+float* matrix_data(Matrix *matrix_param) {
+    return matrix_param->data;
+}
+
 /**
  * Create #Matrix by `arr`.
  * @param arr The reference float array.
+ * @param len The reference array size.
  * @returns The new #Matrix
  * @example
  *        2 rows, 1 columns
@@ -4235,7 +4272,7 @@ Matrix* matrix_multiply_static(const Matrix* __restrict const a_param, const Mat
 
     /* Matrix product */
     if (a_param->columns != b_param->rows) {
-        printf("Columns of A must match rows of B.\n");
+        fprintf(stderr, "Columns of A must match rows of B.\n");
     } else {
         register Matrix* t = matrix_new_with_args(a_param->rows, b_param->columns);
 
@@ -4291,7 +4328,7 @@ Matrix* matrix_subtract_static(const Matrix* const a_param, const Matrix* const 
     Matrix* result = NULL;
 
     if ((a_param->rows != b_param->rows) || (a_param->columns != b_param->columns)) {
-        printf("Columns and Rows of A must match Columns and Rows of B.\n");
+        fprintf(stderr, "Columns and Rows of A must match Columns and Rows of B.\n");
     } else {
         register Matrix* t = matrix_new_with_args(a_param->rows, b_param->columns);
 

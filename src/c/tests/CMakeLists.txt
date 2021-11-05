@@ -21,7 +21,7 @@ foreach(file ${files})
     string(REGEX REPLACE "unit-([^$]+)" "test-\\1" testcase ${file_basename})
 
     add_executable(${testcase} ${file})
-    target_compile_definitions(${testcase} PRIVATE NN_TEST_DIR=${NN_TEST_DIR})
+    target_compile_definitions(${testcase} PRIVATE NN_TEST_DIR=${NN_TEST_DIR} UNITY_OUTPUT_COLOR)
     target_compile_options(${testcase} PRIVATE
         $<$<C_COMPILER_ID:MSVC>:/EHsc;$<$<CONFIG:Release>:/Od>>
         $<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wno-deprecated;-Wno-float-equal>

@@ -1742,10 +1742,10 @@ void UNITY_OUTPUT_CHAR(int);
 struct UNITY_STORAGE_T Unity;
 
 #ifdef UNITY_OUTPUT_COLOR
-const char PROGMEM UnityStrOk[]                            = "\033[42mOK\033[00m";
-const char PROGMEM UnityStrPass[]                          = "\033[42mPASS\033[00m";
-const char PROGMEM UnityStrFail[]                          = "\033[41mFAIL\033[00m";
-const char PROGMEM UnityStrIgnore[]                        = "\033[43mIGNORE\033[00m";
+const char PROGMEM UnityStrOk[]                            = "\033[32mOK\033[00m";
+const char PROGMEM UnityStrPass[]                          = "\033[32mPASS\033[00m";
+const char PROGMEM UnityStrFail[]                          = "\033[31mFAIL\033[00m";
+const char PROGMEM UnityStrIgnore[]                        = "\033[33mIGNORE\033[00m";
 #else
 const char PROGMEM UnityStrOk[]                            = "OK";
 const char PROGMEM UnityStrPass[]                          = "PASS";
@@ -3564,7 +3564,7 @@ void UnityDefaultTestRun(UnityTestFunction Func, const char* FuncName, const int
 /*-----------------------------------------------*/
 void UnitySetTestFile(const char* filename)
 {
-	Unity.TestFile = filename;
+    Unity.TestFile = filename;
 }
 
 /*-----------------------------------------------*/

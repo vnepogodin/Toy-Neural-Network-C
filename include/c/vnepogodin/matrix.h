@@ -33,6 +33,8 @@ void matrix_randomize(register Matrix *);
 void matrix_map(register Matrix *, float (*const)(float));
 void matrix_print(const Matrix *const);
 json_object* matrix_serialize(const Matrix *const);
+int matrix_equal(const Matrix *__restrict const, const Matrix *__restrict const);
+float* matrix_data(Matrix *);
 
 /* Static functions */
 
