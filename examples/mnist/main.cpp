@@ -46,7 +46,7 @@ int current_used_ram() {
 
 #endif
 
-static void render_user_input(SDL_Event* const event, Uint32* user_input_pixels) {
+static void render_user_input(SDL_Event* const event, Uint32* user_input_pixels) noexcept {
     const std::int32_t& mouseX = event->motion.x - 200;
     const std::int32_t& mouseY = event->motion.y - 20;
     const auto& is_mouse_valid = [=] {
@@ -105,7 +105,7 @@ static void testing_stage() noexcept {
     }
 }
 
-static void guess_user_digit(Uint32* user_digit) {
+static void guess_user_digit(const Uint32* user_digit) noexcept {
     if (!user_has_drawing) {
         user_guess_element = fmt::format("User Guess: _");
         //user_guess_ele.html('_');
@@ -129,7 +129,7 @@ static void guess_user_digit(Uint32* user_digit) {
     //user_guess_ele.html(guess);
 }
 
-static void train(TrainAsset* train_asset, bool show) {
+static void train(TrainAsset* train_asset, const bool& show) noexcept {
     std::array<double, nn_inputs_size> inputs{};
     std::for_each(std::execution::par, inputs.begin(), inputs.end(), [&](double& input) {
         std::lock_guard<std::mutex> guard(m);
@@ -169,21 +169,23 @@ static void train(TrainAsset* train_asset, bool show) {
     train_index = (train_index + 1) % std::get<0>(mnist[label_data::train_labels]).size();
 }
 
-static void on_draw(Uint32* user_digit, TrainAsset* train_asset) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+static void on_draw(const Uint32* user_digit, TrainAsset* train_asset) noexcept {
     guess_user_digit(user_digit);
 
     static constexpr std::uint32_t total1 = 5;
     for (std::uint32_t i = 0; i < total1; ++i) {
-        if (i == (total1 - 1)) {
-            train(train_asset, true);
-        } else {
-            train(train_asset, false);
-        }
+        train(train_asset, i == (total1 - 1));
     }
     static constexpr std::uint32_t total2 = 25;
     for (std::uint32_t i = 0; i < total2; i++) {
         testing_stage();
+    }
+}
+
+static void compute_thread(Uint32* user_digit, TrainAsset* train_asset) noexcept {
+    while (running) {
+        on_draw(user_digit, train_asset);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / refresh_rate));
     }
 }
 
@@ -207,7 +209,7 @@ int main() {
         return -1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     if (renderer == nullptr) {
         std::cerr << "Error renderer creation";
         return -1;
@@ -225,7 +227,7 @@ int main() {
 
     TrainAsset train_asset{train_image_pixels, train_image_texture.get()};
 
-    static TTF_Font* font = TTF_OpenFont("Hack-Regular.ttf", 18);
+    TTF_Font* font = TTF_OpenFont("Hack-Regular.ttf", 18);
     if (font == nullptr) {
         std::cerr << "Error font opening\n"
                   << SDL_GetError() << '\n';
@@ -236,10 +238,9 @@ int main() {
     TextSize percent_text_size{};
     TextSize guess_text_size{};
 
-    //std::thread poll(on_draw, user_input_pixels, &train_asset);
+    std::thread poll(compute_thread, user_input_pixels, &train_asset);
 
     bool leftMouseButtonDown = false;
-    bool running             = true;
     while (running) {
         SDL_UpdateTexture(user_input_texture.get(), nullptr, user_input_pixels, 200 * sizeof(Uint32));
         percent_texture.loadFromText(percent_element.c_str(), {});
@@ -285,13 +286,7 @@ int main() {
                 }
                 break;
             }
-
-#ifndef NDEBUG
-            PrintEvent(&e);
-#endif
         }
-
-        on_draw(user_input_pixels, &train_asset);
 
         SDL_SetRenderDrawColor(renderer, red, green, blue, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
@@ -306,6 +301,10 @@ int main() {
         train_image_texture.render(nullptr, &dstrect);
 
         SDL_RenderPresent(renderer);
+    }
+
+    if (poll.joinable()) {
+        poll.join();
     }
 
     delete[] user_input_pixels;
