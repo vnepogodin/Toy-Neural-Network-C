@@ -39,9 +39,9 @@ static auto createArray(const Bytes& buffer, const uint32_t& headerCount) -> std
 }
 
 static auto loadFile(const std::string_view& file) noexcept(false) -> mnist_array {
-    auto buffer          = readFile(file);
+    const auto& buffer   = readFile(file);
     uint32_t headerCount = 4;
-    auto headers         = createArray(buffer, headerCount);
+    const auto& headers  = createArray(buffer, headerCount);
     // Get file type from the magic number
     dataset_types type;
     std::uint8_t dataLength;
